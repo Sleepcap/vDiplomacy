@@ -111,7 +111,7 @@ function adminCPTabs()
 			'CP Logs'=>l_t('Log of recent admin tasks'),
 			'Multi-accounts'=>l_t('Multi-account detector'),
 			'Chatlogs'=>l_t('Check the ingame chat.'),
-			'AcessLog'=>l_t('Check the user-actions sort by IP and Username.'),
+			'AccessLog'=>l_t('Check the user-actions sort by IP and Username.'),
 			'Locales'=>l_t('Locale management')
 		);
 
@@ -175,7 +175,7 @@ switch($tab)
 	case 'Chatlogs':
 		require_once(l_r('admin/adminChatAnalyser.php'));
 		break;
-	case 'AcessLog':
+	case 'AccessLog':
 		require_once(l_r('admin/adminAdvancedAccessLog.php'));
 		break;
 	default:
@@ -186,3 +186,4 @@ print '</div>';
 libHTML::footer();
 
 ?>
+

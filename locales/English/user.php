@@ -26,30 +26,6 @@ defined('IN_CODE') or die('This script can not be run by itself.');
  */
 
 ?>
-	<li class="formlisttitle">E-mail address</li>
-	<li class="formlistfield"><input type="text" name="userForm[email]" size="50" value="<?php
-		if ( isset($_REQUEST['userForm']['email'] ) )
-		{
-			print $_REQUEST['userForm']['email'];
-		}
-		elseif( isset($User->email) )
-		{
-			print $User->email;
-		}
-		?>" <?php if ( isset($_REQUEST['emailToken']) ) print 'readonly '; ?> /></li>
-	<li class="formlistdesc">Your e-mail address; this will <strong>not</strong> be spammed or given out to anyone.</li>
-
-	<li class="formlisttitle">Hide e-mail address:</li>
-	<li class="formlistfield">
-		<input type="radio" name="userForm[hideEmail]" value="Yes" <?php if($User->hideEmail=='Yes') print "checked"; ?>>Yes
-		<input type="radio" name="userForm[hideEmail]" value="No" <?php if($User->hideEmail=='No') print "checked"; ?>>No
-	</li>
-	<li class="formlistdesc">
-		Select whether or not you would like other users to be able
-		to see your e-mail address. If you choose to show your e-mail it
-		will be embedded into an image to prevent spam bots from picking it up,
-		so only humans can see it even if you choose to show it.
-	</li>
 
 	<li class="formlisttitle">Password:</li>
 	<li class="formlistfield">
@@ -192,12 +168,15 @@ if( $User->type['User'] ) {
  * This is done in PHP because Eclipse complains about HTML syntax errors otherwise
  * because the starting <form><ul> is elsewhere
  */
+
+
 print '</ul>
 
 <div class="hr"></div>
 
-<input type="submit" class="form-submit notice" value="Update">
+<input type="submit" class="form-submit notice" value="Submit">
 </form>';
 
 
 ?>
+

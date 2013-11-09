@@ -815,7 +815,7 @@ $sql[]="CREATE TABLE `wD_VariantData` (
 	`val_float` float NOT NULL DEFAULT '0'
 	) ENGINE=InnoDB DEFAULT CHARSET=latin1;";
 
-$sql[]="ALTER TABLE `wD_VariantData` ADD PRIMARY KEY ( `variantID` , `gameID`, `systemToken` , `typeID` , `userID` , `offset` ) ;"
+$sql[]="ALTER TABLE `wD_VariantData` ADD PRIMARY KEY ( `variantID` , `gameID`, `systemToken` , `typeID` , `userID` , `offset` );";
 
 $sql[]="INSERT INTO wD_VariantData (variantID, systemToken, userID, offset, val_float )
 	SELECT 1, 948379409, u.id, 1, ChanceEngland
@@ -846,6 +846,10 @@ $sql[]="ALTER TABLE `wD_Users` CHANGE `type` `type` SET( 'Banned', 'Guest', 'Sys
 // Set the correct version-information in the database	
 $sql[]="UPDATE `wD_Misc`     SET `value` = '135' WHERE `name` = 'Version';";
 $sql[]="UPDATE `wD_vDipMisc` SET `value` = '34'  WHERE `name` = 'Version';";
+
+
+// vDipTest 1.35
+$sql[]="ALTER TABLE wD_Users DROP INDEX email;";
 
 // Create a default Admin-Account
 require_once ('lib/auth.php');

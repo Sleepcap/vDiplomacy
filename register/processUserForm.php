@@ -33,10 +33,11 @@ try
 
 	$SQLVars = User::processForm($_REQUEST['userForm'], $errors);
 
+	$SQLVars['hideEmail'] = 'Yes';
+
 	$set = '';
 
-	$required = array('Username' => 'username', 'E-mail' => 'email',
-					'E-mail hiding' => 'hideEmail');
+	$required = array('Username' => 'username', 'E-mail hiding' => 'hideEmail');
 
 	$allowed = array('Homepage'=>'homepage','Comment'=>'comment');
 
@@ -82,8 +83,6 @@ try
 
 	if( User::findUsername($SQLVars['username']) )
 		throw new Exception(l_t("The username '%s' is already in use. Please choose another.",$SQLVars['username']));
-	elseif( User::findEmail($SQLVars['email']) )
-		throw new Exception(l_t("The e-mail address '%s', is already in use. Please choose another.",$SQLVars['email']));
 
 	$DB->sql_put("INSERT INTO wD_Users SET ".$set);
 	$DB->sql_put("COMMIT");
@@ -97,7 +96,7 @@ try
 	// libHTML does not like letting registered users access the registration page
 	$User = new User(GUESTID);
 
-	print libHTML::pageTitle(l_t('Register a webDiplomacy account'),l_t('Validate your e-mail address -&gt; Enter your account settings -&gt; <strong>Play webDiplomacy!</strong>'));
+	print libHTML::pageTitle(l_t('Register a webDiplomacy account'),l_t('Enter your account settings -&gt; Pass anti-bot test -&gt; <strong>Play webDiplomacy!</strong>'));
 
 	print "<h3>".l_t("Welcome to webDiplomacy!")."</h3>
 			<p>".l_t("Welcome, %s!",$SQLVars['username'])."<br /><br />
@@ -126,3 +125,4 @@ catch(Exception $e)
 print '<div class="content"><p class="notice">'.$formOutput.'</p></div>';
 
 ?>
+

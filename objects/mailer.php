@@ -63,6 +63,8 @@ class Mailer
 					$this->PHPMailer->{$SMTPSetting} = Config::$mailerConfig['SMTPSettings'][$SMTPSetting];
 			}
 		}
+		elseif ( !Config::$mailerConfig["UseMail"] )
+			trigger_error(l_t("No mailer type chosen; either sendmail, smtp, or mail need to be selected for e-mailing."));
 	}
 
 	private function Clear()
@@ -143,4 +145,3 @@ class Mailer
 }
 
 ?>
-

@@ -417,7 +417,7 @@ class libHome
 if( !$User->type['User'] )
 {
 	print '<div class="content-notice" style="text-align:center">'.libHome::globalInfo().'</div>';
-	print libHTML::pageTitle(l_t('Welcome to vDiplomacyTest!'),l_t('The purpose of this <a href=http://www.vdiplomacy.com>vDiplomacy</a> fork is to allow players to create multiple accounts to test out strategies.'));
+	print libHTML::pageTitle(l_t('Welcome to vDiplomacy!'),l_t('A multiplayer web implementation of the popular turn-based strategy game Diplomacy.'));
 	//print '<div class="content">';
 	?>
 	<p style="text-align: center;"><img
@@ -438,6 +438,7 @@ Who do you trust?"<br />
 		'.libHome::globalInfo()
 		.'</div>';*/
 
+	require_once(l_r('locales/English/intro.php'));
 	print '</div>';
 }
 elseif( isset($_REQUEST['notices']) )

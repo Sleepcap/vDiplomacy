@@ -55,7 +55,7 @@ if ( isset($_REQUEST['checkIPs']))
  * Print a form for selecting which users to check
  */
 print '<FORM method="get" action="admincp.php">
-		<INPUT type="hidden" name="tab" value="AccessLog" />
+		<INPUT type="hidden" name="tab" value="AcessLog" />
 		<TABLE>
 		<TR><TD>User IDs:</TD><TD></STRONG><INPUT type="text" name="userIDs"  value="'.$userIDs .'" size="50" /></TD></TR>
 		<TR><TD>IPs:</TD><TD></STRONG><INPUT type="text" name="checkIPs" value="'.$checkIPs.'" size="50" /></TD></TR>
@@ -269,4 +269,3 @@ elseif ($userIDs.$checkIPsLong.$gameIDs != '')
 	print '</table>';
 }
 ?>
-

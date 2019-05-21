@@ -71,7 +71,7 @@ class datcGame extends processGame
 		}
 		else
 		{
-			$Game = processGame::create($this->variantID, $gameName, '', 5,'Winner-takes-all', 30,30,'No','Regular', 'Normal', 'draw-votes-hidden', 0, 0, 0, 0, 0, 0, 0, 0, 'No', '', '', 'No');
+			$Game = processGame::create($this->variantID, $gameName, '', 5,'Winner-takes-all', 30,30,'No','Regular', 'Normal', 'draw-votes-hidden', 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 'No', 'No');
 			$id = $Game->id;
 			$DB->sql_put("UPDATE wD_Games SET phase = 'Diplomacy', turn = ".($testID%1000)." WHERE id = ".$id);
 		}

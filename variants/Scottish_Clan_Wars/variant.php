@@ -34,7 +34,7 @@ class Scottish_Clan_WarsVariant extends WDVariant {
 	public $author      ='alifeee';
 	public $adapter     ='alifeee';
 	public $version     ='1';
-	public $codeVersion ='1.0';
+	public $codeVersion ='1.0.1';
 
 	public $countries=array('Edinburgh','Glasgow','Dundee','Aberdeen','Orkney Islands','Outer Hebrides','Kintyre');
 

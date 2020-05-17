@@ -257,18 +257,6 @@ class panelGame extends Game
 					'<span class="gameHoursPerPhase">'.$this->gameHoursPerPhase().'</span>'.$this->phaseSwitchInfo().
 				'</div>';
 			
-			
-		$date='<span class="gameDate">'.$this->datetxt().'</span>, <span class="gamePhase">';
-		
-		if ($this->phase == 'Pre-game')
-		{
-			$needed = count($this->Variant->countries) - count($this->Members->ByID);
-			$date .= '<b>'.$needed.'</b> player'.($needed == 1 ? '' : 's').' (of '.count($this->Variant->countries).') missing</span>';
-		}
-		else
-			$date .= l_t($this->phase).'</span>';
-
-				
 		$rightMiddle .= '</div>';
 		
 		$rightBottom = '<div class="titleBarRightSide">'.
@@ -286,7 +274,16 @@ class panelGame extends Game
 		$rightBottom .=				
 				'</div>';
 
-		$date=' - <span class="gameDate">'.$this->datetxt().'</span>, <span class="gamePhase">'.l_t($this->phase).'</span>';
+		$date=' - <span class="gameDate">'.$this->datetxt().'</span>, <span class="gamePhase">';
+
+		if ($this->phase == 'Pre-game')
+		{
+			$needed = count($this->Variant->countries) - count($this->Members->ByID);
+			$date .= $needed.' player'.($needed == 1 ? '' : 's').' (of '.count($this->Variant->countries).') missing.</span>';
+		}
+		else
+			$date .= l_t($this->phase).'</span>';
+
 
 		$leftTop = '<div class="titleBarLeftSide">
 				'.$this->gameIcons().
@@ -309,7 +306,6 @@ class panelGame extends Game
 			$leftBottom .= '</a>)</i>';
 		}
 		
-		$leftBottom .= ' - ';
 		$leftBottom .= $date.'</div>';
 		
 		$leftBottom .= '<div>'.$this->gameVariants().'</div>';

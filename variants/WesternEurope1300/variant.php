@@ -34,7 +34,7 @@ class WesternEurope1300Variant extends WDVariant {
 	public $author      ='Matthew Medeiros';
 	public $adapter     ='Fake Al & Oliver Auth';
 	public $version     ='1';
-	public $codeVersion ='1.2';
+	public $codeVersion ='1.2.1';
 	public $homepage    ='http://www.dipwiki.com/index.php?title=DipWiki';
 
 	public $countries=array('France','England','Castile','Aragon','Burgundy');

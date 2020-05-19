@@ -399,7 +399,7 @@ function check_edit() {
 		$tabl = $DB->sql_tabl("SELECT id, name FROM wD_Territories WHERE name LIKE '% Coast)%' AND mapID=" . $mapID);
 		while ( list($id, $name) = $DB->tabl_row($tabl) )
 		{
-			$mainTerrName=substr($name, 0, strpos($name," ("));
+			$mainTerrName=substr($name, 0, strrpos($name," ("));
 			list($check_mainTerritoryID) = $DB->sql_row(
 				"SELECT id FROM wD_Territories WHERE name = '".$mainTerrName."' AND mapID=" . $mapID);
 			if ($check_mainTerritoryID == 0)

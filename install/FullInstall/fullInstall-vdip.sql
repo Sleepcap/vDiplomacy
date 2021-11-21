@@ -505,4 +505,13 @@ ALTER TABLE `wD_CivilDisorders`
 ALTER TABLE `wD_vDipMisc` CHANGE COLUMN `name` `name` ENUM('Version', 'LastMail') NOT NULL ;
 INSERT INTO `wD_vDipMisc` VALUES ('LastMail',0);
 
-UPDATE `wD_vDipMisc` SET `value` = '70' WHERE `name` = 'Version';
+/* vDip 71 */
+ALTER TABLE `wD_Users`
+CHANGE `type` `type` SET(
+	'Banned', 'Guest', 'System', 'User', 'Moderator',
+	'Admin', 'Donator', 'DonatorBronze', 'DonatorSilver',
+	'DonatorGold', 'DonatorPlatinum', 'DevBronze', 'DevSilver', 'DevGold', 'ForumModerator', 'ModAlert', 'FtfTD',
+	'DonatorAdamantium', 'DonatorService', 'DonatorOwner', 'Bot', 'SeniorMod'
+) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'User';
+
+UPDATE `wD_vDipMisc` SET `value` = '71' WHERE `name` = 'Version';

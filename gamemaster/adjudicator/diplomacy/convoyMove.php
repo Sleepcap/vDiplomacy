@@ -59,7 +59,7 @@ class adjConvoyMove extends adjMove
 			return;
 		}
 		
-		foreach ($chain as $var)
+		foreach ($chain as &$var)
 		{
 			// &$var means that the chain is edited, and $var isn't just a copy
 			

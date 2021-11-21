@@ -350,15 +350,18 @@ abstract class drawMap
 		{
 			foreach($orderArrow as $name => &$param)
 			{
-				if ( $name == 'headAngle' ) $param = M_PI/$param;
+				if ($name == 'headAngle') $param = M_PI / $param;
 
-				if ( ! is_array($param) ) continue;
+				if (!is_array($param)) continue;
 
-				if ( count($param) == 3 )
+				if (count($param) == 3)
+				{
 					$param = $this->color($param);
-
-				else if ( count($param) == 2 )
-					$param = $param[ $this->smallmap ? 0 : 1 ];
+				}
+				else if (count($param) == 2)
+				{
+					$param = $param[$this->smallmap ? 0 : 1];
+				}
 			}
 		}
 	}
@@ -1381,5 +1384,3 @@ abstract class drawMap
 	}
 	
 }
-
-?>

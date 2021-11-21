@@ -75,7 +75,7 @@ class processGame extends Game
 	 */
 	function applyVotes()
 	{
-		assert('$this->phase != "Finished"');
+		assert($this->phase != 'Finished');
 		if($this->phase != "Pre-game")
 		{
 			$votes = $this->Members->votesPassed();
@@ -124,7 +124,7 @@ class processGame extends Game
 	 */
 	function setAbandoned()
 	{
-		assert('$this->phase != "Finished"');
+		assert($this->phase != 'Finished');
 
 		$this->Members->setAbandoned();
 
@@ -139,7 +139,7 @@ class processGame extends Game
 	 */
 	function setCancelled()
 	{
-		assert('$this->phase != "Finished"');
+		assert($this->phase != 'Finished');
 
 		$this->Members->setCancelled();
 
@@ -200,7 +200,7 @@ class processGame extends Game
 	 * Restores a game from a backup table, or throws an exception if it isn't in a backup table.
 	 * Will erase the live game before restoring it from backup.
 	 *
-	 * @param $gameID The game ID
+	 * @param int $gameID The game ID
 	 */
 	static function restoreGame($gameID)
 	{
@@ -420,7 +420,7 @@ class processGame extends Game
 	{
 		global $Misc, $DB;
 
-		assert('$this->processStatus != "Paused"');
+		assert($this->processStatus != 'Paused');
 
 		$this->gamelog('Game crashed');
 

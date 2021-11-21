@@ -252,7 +252,7 @@ class panelMember extends Member
 		else 
 			$ipStr = '';
 			
-		return '<a href="profile.php?userID='.$this->userID.'">'.$this->username.'</a>
+		return '<a href=userprofile.php?userID='.$this->userID.'">'.$this->username.'</a>
 				'.'
 				<span class="points">('.$this->vpoints.libHTML::vpoints().User::typeIcon($this->userType,false).'</b>'.
 				$ccStr.$ipStr.				
@@ -277,7 +277,7 @@ class panelMember extends Member
 		if ( $this->isNameHidden() )
 			$buf .= '<span class="country'.$this->countryID.'">'.l_t($this->country).'</span>';
 		else
-			$buf .= '<a class="country'.$this->countryID.'" href="profile.php?userID='.$this->userID.'">'.$this->username.'</a>';
+			$buf .= '<a class="country'.$this->countryID.'" href="userprofile.php?userID='.$this->userID.'">'.$this->username.'</a>';
 
 		$buf .= '</span>';
 

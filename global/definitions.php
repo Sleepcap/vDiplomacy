@@ -24,7 +24,7 @@
 
 defined('IN_CODE') or die('This script can not be run by itself.');
 
-define("VERSION", 164);
+define("VERSION", 166);
 define("VDIPVERSION", 70);
 
 // Some integer values which are named for clarity.
@@ -47,7 +47,7 @@ define("JSDIR", 'javascript');
 define("CSSDIR", 'css');
 
 //Increment these versions whenever you update any js or css files for cachebusting
-define("JSVERSION",1.41);
+define("JSVERSION",1.71);
 define("CSSVERSION",1.37);
 
 if( !defined('FACEBOOK') )

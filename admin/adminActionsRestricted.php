@@ -59,9 +59,19 @@ class adminActionsRestricted extends adminActionsRestrictedVDip
 				'description' => 'Gives moderator status to the specified user ID.',
 				'params' => array('userID'=>'User ID'),
 			),
+			'giveSeniorModerator' => array(
+				'name' => 'Give senior moderator status',
+				'description' => 'Gives senior moderator status to the specified user ID.',
+				'params' => array('userID'=>'User ID'),
+			),
 			'takeModerator' => array(
 				'name' => 'Take moderator status',
 				'description' => 'Takes moderator status from the specified user ID.',
+				'params' => array('userID'=>'Mod User ID'),
+			),
+			'takeSeniorModerator' => array(
+				'name' => 'Take senior moderator status',
+				'description' => 'Takes senior moderator status from the specified user ID.',
 				'params' => array('userID'=>'Mod User ID'),
 			),
 			'giveForumModerator' => array(
@@ -238,6 +248,12 @@ class adminActionsRestricted extends adminActionsRestrictedVDip
 				'name' => 'API - Show API key and permissions for a user',
 				'description' => 'Display API key and permissions for a user.',
 				'params' => array('userID'=>'User ID'),
+			),
+			'calculateGR' => array(
+				'name' => 'Calculate Ghost Ratings',
+				'description' => 'Calculate GR for next x games and populate out the database. Note that this only needs to be done when 
+				first adding GR to the server. After that, games will automatically calculate GR adjustments as they finish.',
+				'params' => array('batchSize'=>'Batch Size'),
 			),
 			'updateVariantInfo' => array(
 				'name' => 'Update wD_VariantInfo',
@@ -500,6 +516,25 @@ class adminActionsRestricted extends adminActionsRestrictedVDip
 		return l_t('This user was given moderator status.');
 	}
 
+	public function giveSeniorModerator(array $params)
+	{
+		global $DB;
+
+		$userID = (int)$params['userID'];
+
+		$modUser = new User($userID);
+
+		if( $modUser->type['SeniorMod'] )
+			throw new Exception(l_t("This user is already a senior moderator"));
+		
+		if( ! $modUser->type['Moderator'] )
+			throw new Exception(l_t("This user is not a moderator"));
+
+		$DB->sql_put("UPDATE wD_Users SET type = CONCAT_WS(',',type,'SeniorMod') WHERE id = ".$userID);
+
+		return l_t('This user was given senior moderator status.');
+	}
+
 	public function takeModerator(array $params)
 	{
 		global $DB;
@@ -511,9 +546,28 @@ class adminActionsRestricted extends adminActionsRestrictedVDip
 		if( ! $modUser->type['Moderator'] )
 			throw new Exception(l_t("This user isn't a moderator"));
 
+		if( $modUser->type['SeniorMod'] )
+			throw new Exception(l_t("Remove Senior Mod status first."));
+
 		$DB->sql_put("UPDATE wD_Users SET type = REPLACE(type,'Moderator','') WHERE id = ".$userID);
 
 		return l_t('This user had their moderator status taken.');
+	}
+
+	public function takeSeniorModerator(array $params)
+	{
+		global $DB;
+
+		$userID = (int)$params['userID'];
+
+		$modUser = new User($userID);
+
+		if( ! $modUser->type['SeniorMod'] )
+			throw new Exception(l_t("This user isn't a senior moderator"));
+
+		$DB->sql_put("UPDATE wD_Users SET type = REPLACE(type,'SeniorMod','') WHERE id = ".$userID);
+
+		return l_t('This user had their senior moderator status taken.');
 	}
 
 	public function giveForumModerator(array $params)
@@ -525,7 +579,7 @@ class adminActionsRestricted extends adminActionsRestrictedVDip
 		$modUser = new User($userID);
 
 		if( $modUser->type['ForumModerator'] )
-			throw new Exception(l_t("This user is already a moderator"));
+			throw new Exception(l_t("This user is already a forum moderator"));
 
 		$DB->sql_put("UPDATE wD_Users SET type = CONCAT_WS(',',type,'ForumModerator') WHERE id = ".$userID);
 
@@ -770,12 +824,10 @@ class adminActionsRestricted extends adminActionsRestrictedVDip
 
 			// - Move the old TerrStatusArchive back to TerrStatus
 			$DB->sql_put("INSERT INTO wD_TerrStatus ( terrID, standoff, gameID, countryID, occupyingUnitID )
-						SELECT t.terrID, t.standoff, t.gameID, t2.countryID, u.id
+						SELECT t.terrID, t.standoff, t.gameID, t.countryID, u.id
 						FROM wD_TerrStatusArchive t
 							LEFT JOIN wD_Units u
 							ON ( ".$Game->Variant->deCoastCompare('t.terrID','u.terrID')." AND u.gameID = t.gameID )
-							LEFT JOIN wD_TerrStatusArchive t2
-							ON ( t2.gameID = t.gameID AND t2.terrID = t.terrID AND t2.turn = ".( ( $lastTurn == 0 ) ? 0 : $lastTurn-1 ).")
 						WHERE t.gameID = ".$Game->id." AND t.turn = ".$lastTurn);
 		}
 
@@ -840,7 +892,7 @@ class adminActionsRestricted extends adminActionsRestrictedVDip
 
 		return l_t('The unit destroy indexes were recreated for map ID #%s ; there were %s entries before and there are currently %s entries.', $mapID, $entriesBefore, $entriesAfter);
 	}
-	
+
 	public function recalculateRR(array $params)
 	{
 		require_once(l_r('gamemaster/gamemaster.php'));
@@ -1109,6 +1161,43 @@ class adminActionsRestricted extends adminActionsRestrictedVDip
 		<div><strong>listGamesWithPlayersInCD</strong>: ".$row['listGamesWithPlayersInCD']."</div>
 		<div><strong>submitOrdersForUserInCD</strong>: ".$row['submitOrdersForUserInCD']."</div>
 		";
+	}
+
+	public function calculateGR($params)
+	{
+		require_once(l_r('ghostratings/calculations.php'));
+		global $DB;
+		$batch_size = (int)$params['batchSize'];
+		if ($batch_size <= 0)
+		{
+			return l_t('Invalid batch size. Please enter a positive integer.');
+		}
+		$data = $DB->sql_tabl("SELECT id, variantID, pressType, potType, turn, gameOver, phaseMinutes, processTime, playerTypes FROM wD_Games WHERE gameOver <> 'No' AND grCalculated <> 1 ORDER BY processTime ASC LIMIT ".$batch_size.";");
+		while (list($gameID, $variantID, $pressType, $potType, $turn, $gameOver, $phaseMinutes, $time, $playerTypes) = $DB->tabl_row($data))
+		{
+			$winnerID = 0;
+			list($SCTarget, $SCTotal) = $DB->sql_row("SELECT supplyCenterTarget, supplyCenterCount FROM wD_VariantInfo WHERE variantID=".$variantID);
+			$players = $DB->sql_tabl("SELECT userID, supplyCenterNo, status FROM wD_Members WHERE gameID =".$gameID);
+			$SCcounts = array();
+			$memberStatus = array();
+			while(list($userID, $SCcount, $status) = $DB->tabl_row($players))
+			{
+				$SCcounts[$userID] = $SCcount;
+				$memberStatus[$userID] = $status;
+				if ($status == 'Won')
+				{
+					$winnerID = $userID;
+				}
+			}
+			$botGame = True;
+			if($playerTypes == 'Members')
+			{
+				$botGame = False;
+			}
+			$ghostRatings = new GhostRatings($gameID, $SCcounts, $memberStatus, $variantID, $pressType, $potType, $turn, $gameOver, $phaseMinutes, $SCTarget, $SCTotal, $winnerID, $botGame, $time);
+		  $ghostRatings->processGR();
+		}
+		return l_t('GR Calculated');
 	}
 
 	public function updateVariantInfo($params) 

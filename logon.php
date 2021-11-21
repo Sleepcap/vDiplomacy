@@ -60,6 +60,14 @@ if( isset($_REQUEST['forgotPassword']) and $User->type['Guest'] )
 					"<a href='logon.php?forgotPassword=1' class='light'>go back</a> and check your spelling."));
 			}
 
+			if( $MC->get('forgot_'.$forgottenUser->id) !== false )
+			{
+				throw new Exception(l_t("To help prevent abuse please wait 5 minutes before resending forgotten e-mail recovery links. ".
+					"In the meantime please check your spam folder for a missing recovery e-mail, or contact the moderator team."));
+			}
+			
+			$MC->set('forgot_'.$forgottenUser->id, 0, 5*60); // Set a flag preventing resends for 5 minutes
+
 			require_once(l_r('objects/mailer.php'));
 			$Mailer = new Mailer();
 			$Mailer->Send(array($forgottenUser->email=>$forgottenUser->username), l_t('vDiplomacy forgotten password verification link'),
@@ -73,10 +81,15 @@ l_t("You can use this link to get a new password generated:")."<br>
 		}
 		elseif ( $_REQUEST['forgotPassword'] == 3 && isset($_REQUEST['emailToken']) )
 		{
-			$email = $DB->escape(libAuth::emailToken_email($_REQUEST['emailToken']));
-
-			$userID = User::findEmail($email);
-
+			$validatedEmail = libAuth::emailToken_email($_REQUEST['emailToken']);
+			if( $validatedEmail === false )
+				throw new Exception(l_t("Account not found"));
+			
+			$validatedEmail = $DB->escape($validatedEmail);
+			$userID = User::findEmail($validatedEmail);
+			if( $userID == 0 )
+				throw new Exception(l_t("Account not found"));
+				
 			$newPassword = base64_encode(rand(1000000000,2000000000));
 
 			$DB->sql_put("UPDATE wD_Users

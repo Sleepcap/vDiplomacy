@@ -132,16 +132,20 @@ if ( isset($_REQUEST['DATC']) )
 ini_set('memory_limit',"14M");
 ini_set('max_execution_time','12');
 
+// If we are drawing a requested variant ID that means the request is for a blank sample map for that variant.
 if( !isset($_REQUEST['variantID']) )
 {
+	// This is a board map request, we need some sort of locking because if we are outputting the JSON orders for a new turn we need to be sure processing has completed
+	// We need to lock the game, and UPDATE is the safest (though share mode might do?), but this is a common  source of deadlock exceptions. To prevent this do a commit
+	// before selecting the game so that we aren't holding any other rows, that way we are only waiting on one row so can't deadlock.
 	/*
 	 * Get the two required parameters; game ID and turn
 	 */
 	global $Game;
 	$Variant=libVariant::loadFromGameID((int)$_REQUEST['gameID']);
 	libVariant::setGlobals($Variant);
-	// The game is locked for update so the map isn't drawn twice at the same time
-	$Game=$Variant->Game((int)$_REQUEST['gameID'],UPDATE);
+	// Locking this game for update is excessive; worst case the map is overwritten
+	$Game=$Variant->Game((int)$_REQUEST['gameID']);
 
 	/*
 	 * Determine which turn we are viewing. This is made a little trickier because

@@ -23,6 +23,7 @@ defined('IN_CODE') or die('This script can not be run by itself.');
 require_once(l_r('admin/adminActions.php'));
 require_once(l_r('admin/adminActionsVDip.php'));
 require_once(l_r('admin/adminActionsForum.php'));
+require_once(l_r('admin/adminActionsSeniorMod.php'));
 require_once(l_r('admin/adminActionsRestrictedVDip.php'));
 require_once(l_r('admin/adminActionsRestricted.php'));
 require_once(l_r('admin/adminActionsTD.php'));
@@ -113,7 +114,8 @@ class adminActionsForms
 
 	private static function isActionDangerous($actionCode)
 	{
-		if ( method_exists('adminActions', $actionCode.'Confirm')||method_exists('adminActionsRestricted', $actionCode.'Confirm') )
+		if ( method_exists('adminActions', $actionCode.'Confirm')|| method_exists('adminActionsRestricted', $actionCode.'Confirm') 
+			|| method_exists('adminActionsSeniorMods', $actionCode.'Confirm'))
 			return false;
 		else
 			return true;
@@ -375,6 +377,8 @@ else
 
 	if ( $User->type['Admin'] )
 		$adminActions = new adminActionsRestricted();
+	elseif ( $User->type['SeniorMod'] )
+	 	$adminActions = new adminActionsSeniorMod();
 	elseif ( $User->type['ForumModerator'] )
 		$adminActions = new adminActionsForum();
 	else

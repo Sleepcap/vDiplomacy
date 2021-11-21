@@ -61,6 +61,8 @@ $GamesData = array();
 // Get values from posted contact requests. 
 if(isset($_POST['submit'])) 
 {
+    libAuth::formToken_Valid();
+
     $submitted = true;
     if (isset($_POST['issueType']))
     {
@@ -298,7 +300,7 @@ if ($submitted == true)
             {
                 $Mailer->Send(array($email=>$email), $subject.' '.$User->username,
                 "
-                This request is from <a href='https://www.webdiplomacy.net/profile.php?userID=".$User->id."' class = 'contactUs'>".$User->username."</a>, 
+                This request is from <a href='https://www.webdiplomacy.net/userprofile.php?userID=".$User->id."' class = 'contactUs'>".$User->username."</a>, 
                 and their registered email is: ".$User->email."<br><br>
 
                 <strong>An emergency pause was used because of ".$actualProblem."</strong>
@@ -334,7 +336,7 @@ if ($submitted == true)
         {
             $Mailer->Send(array($email=>$email), $subject.' '.$User->username,
             "
-            This request is from <a href='https://www.webdiplomacy.net/profile.php?userID=".$User->id."' class = 'contactUs'>".$User->username."</a>, 
+            This request is from <a href='https://www.webdiplomacy.net/userprofile.php?userID=".$User->id."' class = 'contactUs'>".$User->username."</a>, 
             and their registered email is: ".$User->email."<br><br>
 
             <strong>The user called out ".$userPickedGame. ".</strong><br><br>
@@ -396,6 +398,7 @@ else
     print '<div class = "contactUsShow">';
     
     print '<form action="#" method="post">';
+    print libAuth::formTokenHTML();
     print   '<p><strong>What do you need to contact us about?</strong></p>
             Issue with game(s) <input type="radio" value="gameIssue" onclick="javascript:gameIssueCheck();" name="issueType" id="gameIssue" required> 
             </br>Other issue <input type="radio" value="otherIssue" onclick="javascript:gameIssueCheck();" name="issueType" id="otherIssue">';

@@ -16,7 +16,7 @@
         </ul>
         <p>
             For these issues use the info below to send reports. For general questions you should go elsewhere (e.g. the
-            <a href="/contrib/phpBB3/">forum</a>).
+            <a href="forum.php">forum</a>).
         </p>
         <h4>Where to send</h4>
         <ul>

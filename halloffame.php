@@ -44,7 +44,7 @@ if ( $User->type['User'] && $User->vpoints > 1000 )
 	list($players) = $DB->sql_row("SELECT COUNT(id)+1 FROM wD_Users WHERE vpoints > 1000");
 	
 	print '<p class = "hof">'.l_t('You are ranked %s out of %s players with over 1000%s','<a href="#me" class="light">#'.$position.'</a>',$players,libHTML::vpoints()).
-		l_t('. For more stats on your ranking, visit <a class="light" href="userprofile.php?userID='.$User->id.'">your profile</a>.').'</p>';
+		l_t('. For more stats on your ranking, visit <a class="light" href="profile.php?userID='.$User->id.'">your profile</a>.').'</p>';
 }
 
 $i=1;
@@ -63,12 +63,12 @@ while ( list($id, $username, $points) = $DB->tabl_row($crashed) )
 			<td class="hof"> '.number_format($points).' '.libHTML::vpoints().' - #'.$i.' </td>';
 	if ($User->username == $username)
 	{
-		print '<td class="hof"><a class="hof-self" href="userprofile.php?userID='.$id.'">'.$username.'</a></td> ';
+		print '<td class="hof"><a class="hof-self" href="profile.php?userID='.$id.'">'.$username.'</a></td> ';
 		$showMe = 0;
 	}
 	else
 	{
-		print '<td class="hof"><a href="userprofile.php?userID='.$id.'">'.$username.'</a></td> ';
+		print '<td class="hof"><a href="profile.php?userID='.$id.'">'.$username.'</a></td> ';
 	}
 	print'	</tr>';
 	$i++;
@@ -98,7 +98,7 @@ if ( $User->type['User'] && $User->vpoints > 1000 && $User->timeLastSessionEnded
 	list($playersSixMonths) = $DB->sql_row("SELECT COUNT(1) FROM wD_Users WHERE vpoints > 1000  AND timeLastSessionEnded > ".$sixMonths);
 	
 	print '<p class = "hof">'.l_t('You are ranked %s out of %s players with over 1000%s who have been active in the last six months','<a href="#me" class="light">#'.$position.'</a>',$playersSixMonths,libHTML::vpoints()).
-		l_t('. For more stats on your ranking visit <a class="light" href="userprofile.php?userID='.$User->id.'">your profile</a>.').'</p>';
+		l_t('. For more stats on your ranking visit <a class="light" href="profile.php?userID='.$User->id.'">your profile</a>.').'</p>';
 }
 
 $i=1;
@@ -118,12 +118,12 @@ while ( list($id, $username, $points) = $DB->tabl_row($crashed) )
 			<td class="hof"> '.number_format($points).' '.libHTML::vpoints().' - #'.$i.' </td>';
 	if ($User->username == $username)
 	{
-		print '<td class="hof"><a class="hof-self" href="userprofile.php?userID='.$id.'">'.$username.'</a></td> ';
+		print '<td class="hof"><a class="hof-self" href="profile.php?userID='.$id.'">'.$username.'</a></td> ';
 		$showMe = 0;
 	}
 	else
 	{
-		print '<td class="hof"><a href="userprofile.php?userID='.$id.'">'.$username.'</a></td> ';
+		print '<td class="hof"><a href="profile.php?userID='.$id.'">'.$username.'</a></td> ';
 	}
 	print'	</tr>';
 	$i++;

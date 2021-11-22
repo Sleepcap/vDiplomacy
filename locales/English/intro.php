@@ -258,7 +258,7 @@ print libHTML::pageTitle('Intro to webDiplomacy','A quick guide to playing Diplo
 	On webDiplomacy, we pride ourselves on being reliable players. Missing deadlines causes delays and makes the game less fun for everyone. To help 
 	facilitate reliable gameplay, we implemented our Reliability Rating, better known as RR. Players with a low RR can find themselves blocked out of 
 	games with high RR requirements to join, and players who miss phases frequently may find themselves temporarily suspended from joining or creating 
-	new games. You can see your RR on your <a href="userprofile.php" class="light">profile</a> by expanding the Reliability Rating section, and read 
+	new games. You can see your RR on your <a href="profile.php" class="light">profile</a> by expanding the Reliability Rating section, and read 
 	about how our reliability rating works in detail.
 	<br><br>
 	In order to rank players, webDiplomacy uses the <a href="ghostRatings.php" class="light">Ghost Ratings</a>. This is a true skill rating system 

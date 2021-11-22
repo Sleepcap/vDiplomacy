@@ -72,7 +72,7 @@ print libHTML::pageTitle('Ghost Ratings Explained','A comprehensive guide to web
             </button>
             <div class="gr-guide-detail">
                 <p>
-                    You can visit your <a href="userprofile.php?userID=<?php print($User->id)?>" class="light">profile</a> 
+                    You can visit your <a href="profile.php?userID=<?php print($User->id)?>" class="light">profile</a> 
                     to see how you stack up. Just expand the Ghost Ratings categories in the middle section to see your 
                     current rating and rank among all players. You can also see how you trend over time. 
                     <br><br>

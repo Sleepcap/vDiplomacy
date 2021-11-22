@@ -57,7 +57,7 @@ if( isset($_REQUEST['searchUser']) )
 
     // Redirect to user's profile
     if ($userID > 0)
-        header('refresh: 0; url=userprofile.php?userID='.$userID);
+        header('refresh: 0; url=profile.php?userID='.$userID);
 }
 
 libHTML::starthtml();

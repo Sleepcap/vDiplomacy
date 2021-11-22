@@ -222,7 +222,7 @@ class Member
 	{
 		if ( $this->Game->phase == 'Pre-game' )
 		{
-			$output = '<a href="userprofile.php?userID='.$this->userID.'">'.$this->username;
+			$output = '<a href="profile.php?userID='.$this->userID.'">'.$this->username;
 		}
 		else
 		{
@@ -233,7 +233,7 @@ class Member
 				$output .= 'style="text-decoration: line-through" ';
 			}
 
-			$output .= 'href="userprofile.php?userID='.$this->userID.'">'.$this->username;
+			$output .= 'href="profile.php?userID='.$this->userID.'">'.$this->username;
 		}
 		return $output.' ('.$this->vpoints.User::typeIcon($this->userType).')</a>';
 	}

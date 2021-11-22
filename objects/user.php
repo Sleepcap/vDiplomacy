@@ -789,7 +789,7 @@ class User {
 
 		if ( $this->type['User'] )
 		{
-			$buffer .= '<a href="./userprofile.php?userID='.$this->id.'"';
+			$buffer .= '<a href="./profile.php?userID='.$this->id.'"';
 
 			$buffer.='>'.$this->username;
 

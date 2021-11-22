@@ -241,7 +241,7 @@ Start a new game; you decide the name, how long it runs, and how much it's worth
 					</p>
 				</div>
 			</div>
-			<select class = "gameCreate" id="pressType" name="newGame[pressType]" onchange="setBotFill()">
+			<select class = "gameCreate" id="pressType" name="newGame[pressType]" onchange="/*setBotFill()*/">
 				<option name="newGame[pressType]" value="Regular" selected>All </option>
 				<option name="newGame[pressType]" value="PublicPressOnly">Global only</option>
 				<option name="newGame[pressType]" value="NoPress">None (No messaging)</option>

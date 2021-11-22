@@ -254,6 +254,8 @@ switch($tab)
 		require_once(l_r('locales/English/user.php'));
 }
 
+print libAuth::formTokenHTML();
+print '</form></div>';
 print '</div>';
 
 libHTML::$footerIncludes[] = l_j('help.js');

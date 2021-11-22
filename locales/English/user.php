@@ -192,8 +192,5 @@ if( $User->type['User'] )
 print '</ul>
 
 <p><input type="submit" class="green-Submit" value="Update"></p>';
-print libAuth::formTokenHTML();
-print '</form>
-</div>';
 
 ?>

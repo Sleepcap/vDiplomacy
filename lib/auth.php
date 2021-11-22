@@ -140,6 +140,15 @@ class libAuth
 		}
 		return self::$formToken_cached; // One token per page is fine
 	}
+	private static $formTokeURL_cached = false;
+	public static function formTokenURLParameter()
+	{
+		if( self::$formTokeURL_cached === false ){
+			$time=time();
+			self::$formTokeURL_cached = 'formToken='.$time.'_'.self::formToken_Key($time);
+		}
+		return self::$formTokeURL_cached;
+	}
 
 	/**
 	 * Return a URL allowing the user to validate a given e-mail.

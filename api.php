@@ -598,7 +598,7 @@ class SetOrders extends ApiEntry {
 		// Leave a hint for the game master that this game should be checked:
         if ($orderInterface->orderStatus->Ready && !$previousReadyValue)
 	{
-		$MC->append('processHint',','.$gameID,0);
+		$MC->append('processHint',','.$gameID);
 	}
 	/*       
 	Disabled; all game processing must be done via one path

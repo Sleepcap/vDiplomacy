@@ -744,7 +744,7 @@ class processMembers extends Members
 		//	does also avoid overwriting records of the past)
 		$DB->sql_put("UPDATE wD_Users u
 				INNER JOIN wD_Members m ON m.userID = u.id
-				SET u.yearlyPhaseCount = u.yearlyPhaseCount + 1
+				SET u.yearlyPhaseCount = u.yearlyPhaseCount + 1,
 				u.phaseCount = u.phaseCount + 1
 				WHERE m.gameID = ".$this->Game->id." 
 					AND ( m.status='Playing' OR m.status='Left' )

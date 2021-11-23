@@ -77,18 +77,11 @@ class libGameMaster
 
 			$DB->sql_put("DELETE FROM wD_Sessions WHERE userID IN (".$userIDs.")");
 
-			if( isset(Config::$customForumURL) )
-			{
-				$DB->sql_put("UPDATE wD_Users
+			$DB->sql_put("UPDATE wD_Users
 					SET timeLastSessionEnded = ".time().", lastMessageIDViewed = (SELECT MAX(f.id) FROM wD_ForumMessages f)
 					, lastModMessageIDViewed = (SELECT MAX(fm.id) FROM wD_ModForumMessages fm)
 					WHERE id IN (".$userIDs.")");
-			}
-			else
-			{
-				// No need for this query if using a third party DB
-				$DB->sql_put("UPDATE wD_Users SET timeLastSessionEnded = ".time()." WHERE id IN (".$userIDs.")");
-			}
+
 		}
 
 		$DB->sql_put("COMMIT");

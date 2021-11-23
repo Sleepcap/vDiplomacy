@@ -732,7 +732,7 @@ class libHTML
 			$notice[]=$contents;
 		}
 
-		if ( $Misc->Notice && !is_null($DB))
+		if ( $Misc->Notice )
 		{
 			list($contents) = $DB->sql_row("SELECT message FROM wD_Config WHERE name = 'Notice'");
 			$notice[]=$contents;

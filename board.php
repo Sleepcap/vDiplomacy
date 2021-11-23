@@ -294,11 +294,6 @@ if( ( (isset($Member) && $Member->status == 'Playing') || $User->id == $Game->di
 
 			$Orders = '<div id="orderDiv'.$Member->id.'">'.$OI->html().'</div>';
 			unset($OI);
-			
-			if( $Game->needsProcess() )
-			{
-				$MC->append('processHint',','.$Game->id);
-			}
 		}
 		else
 		{

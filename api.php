@@ -390,7 +390,7 @@ class SetOrders extends ApiEntry {
 	 * @throws ClientForbiddenException
 	 */
 	public function run($userID, $permissionIsExplicit) {
-		global $DB, $MC;
+		global $DB;
 		$args = $this->getArgs();
 		$gameID = $args['gameID'];	// checked in getAssociatedGame()
 		$turn = $args['turn'];

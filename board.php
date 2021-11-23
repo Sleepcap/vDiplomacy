@@ -195,7 +195,7 @@ if( ( (isset($Member) && $Member->status == 'Playing') || $User->id == $Game->di
 	{
 		if( isset($Member) && $Game->Members->votesPassed() && $Game->phase!='Finished' )
 		{
-			$MC->append('processHint',','.$Game->id);
+			if( false===($MC->append('processHint',','.$Game->id)) ) $MC->set('processHint', ','.$Game->id);
 			
 			$DB->get_lock('gamemaster',1);
 
@@ -226,7 +226,7 @@ if( ( (isset($Member) && $Member->status == 'Playing') || $User->id == $Game->di
 		}
 		else if( $Game->needsProcess() )
 		{
-			$MC->append('processHint',','.$Game->id);
+			if( false===($MC->append('processHint',','.$Game->id)) ) $MC->set('processHint', ','.$Game->id);
 		}
 		else if ( false )
 		{

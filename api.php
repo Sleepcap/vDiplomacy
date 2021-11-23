@@ -34,6 +34,7 @@ require_once('lib/html.php');
 require_once('lib/time.php');
 require_once('lib/gamemessage.php');
 $DB = new Database();
+$MC = new Memcached();
 
 /**
  * Exception class - missing credentials (API key).
@@ -593,9 +594,15 @@ class SetOrders extends ApiEntry {
 				'viaConvoy' => $row['viaConvoy']
 			);
 		}
-
-		// Processing game
-        if ($orderInterface->orderStatus->Ready && !$previousReadyValue) {
+		
+		// Leave a hint for the game master that this game should be checked:
+        if ($orderInterface->orderStatus->Ready && !$previousReadyValue)
+	{
+		$MC->append('processHint',','.$gameID,0);
+	}
+	/*       
+	Disabled; all game processing must be done via one path
+	elseif (false && $orderInterface->orderStatus->Ready && !$previousReadyValue) {
             require_once(l_r('objects/misc.php'));
             require_once(l_r('objects/notice.php'));
             require_once(l_r('objects/user.php'));

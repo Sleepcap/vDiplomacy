@@ -99,11 +99,12 @@ try
 	$NewUser->options->load();
 
 	// Give user access to tutorial views for 365 days
+	/* vDip: Disabled tutorial as this is too webdip specific, might be enabled later when texts are adjusted
 	setcookie('wD-Tutorial', 'wD-Tutorial', time()+60*60*24*365);
 	setcookie('wD-Tutorial-Index', 'wD-Tutorial-Index', time()+60*60*24*365);
 	setcookie('wD-Tutorial-GameCreate', 'wD-Tutorial-GameCreate', time()+60*60*24*365);
 	setcookie('wD-Tutorial-JoinNewGame', 'wD-Tutorial-JoinNewGame', time()+60*60*24*365);
-	setcookie('wD-Tutorial-Settings', 'wD-Tutorial-Settings', time()+60*60*24*365);
+	setcookie('wD-Tutorial-Settings', 'wD-Tutorial-Settings', time()+60*60*24*365);*/
 
 	// libHTML does not like letting registered users access the registration page
 	$User = new User(GUESTID);

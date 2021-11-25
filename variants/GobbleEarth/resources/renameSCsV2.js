@@ -9,13 +9,13 @@ Array.prototype.inArray = function (value)	{
 };	
 
 function RenameSCs(homeSCs) {
-	if (ordersData[0].type != "Destroy")
+	if (ordersData.length > 0 && ordersData[0].type != "Destroy")
 	{
 		Territories.each(function(p){
 			var t=p[1];
 			if( !homeSCs.inArray(t.coastParent.name ))
 			{
-				t.coastParent.name = t.coastParent.name + " (colonial build)";
+				t.name = t.name + " (colonial build)";
 			}
 		},this);
 	}

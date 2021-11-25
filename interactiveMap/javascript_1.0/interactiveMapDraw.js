@@ -91,6 +91,28 @@ interactiveMap.visibleMap.load = function() {
         } else {
             interactiveMap.visibleMap.oldMap.replace(interactiveMap.visibleMap.element);
         }
+		
+		
+		// Load territory positions for terrGreyOut
+		if (typeof interactiveMap.TerritoryPositions == "undefined") {
+			interactiveMap.greyOut.requested = false;
+			
+            new Ajax.Request('interactiveMap/php/IAgetMapTerrDat.php', {
+                parameters: {"gameID": context.gameID},
+                onSuccess: function(response) {
+                    interactiveMap.TerritoryPositions = response.responseJSON;
+					if(interactiveMap.greyOut.requested) // initiate greyOut by calling resetOrder when grey out was called at least one time during loading.
+						if(typeof interactiveMap.TerritoryPositions !== "undefined") 
+							interactiveMap.resetOrder();
+                },
+                onFailure: function() {
+                    var alertWindow = window.open('interactiveMap/php/IAgetMapTerrDat.php?gameID=' + context.gameID, '', 'height=100, width=500, scrollbars=yes');
+                    alertWindow.focus();
+                }
+            });
+            return;
+    }
+		
     } else {
         interactiveMap.visibleMap.element.replace(interactiveMap.visibleMap.oldMap);
     }
@@ -1035,22 +1057,14 @@ interactiveMap.greyOut.draw = function(terrChoices) {
     function matchColor(IAcolor, pixelPos) {
         return IAcolor == interactiveMap.hiddenMap.imageData.data[pixelPos] + "," + interactiveMap.hiddenMap.imageData.data[pixelPos + 1] + "," + interactiveMap.hiddenMap.imageData.data[pixelPos + 2] + "," + interactiveMap.hiddenMap.imageData.data[pixelPos + 3]
     }
-    
-    if (typeof interactiveMap.TerritoryPositions == "undefined") {
-            new Ajax.Request('interactiveMap/php/IAgetMapTerrDat.php', {
-                parameters: {"gameID": context.gameID},
-                onSuccess: function(response) {
-                    interactiveMap.TerritoryPositions = response.responseJSON;
-                    if(typeof interactiveMap.TerritoryPositions !== "undefined") 
-                        interactiveMap.greyOut.draw(terrChoices);
-                },
-                onFailure: function() {
-                    var alertWindow = window.open('interactiveMap/php/IAgetMapTerrDat.php?gameID=' + context.gameID, '', 'height=100, width=500, scrollbars=yes');
-                    alertWindow.focus();
-                }
-            });
-            return;
-    }
+	
+	if (typeof interactiveMap.TerritoryPositions == "undefined") {
+		// GreyOut is not ready yet as territory data still loading
+		// -> request a redraw once loading is finished
+		
+		interactiveMap.greyOut.requested = true;
+		return;
+	}
 
     var width = interactiveMap.hiddenMap.imageData.width;
     var height = interactiveMap.hiddenMap.imageData.height;

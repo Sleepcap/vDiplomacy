@@ -3,48 +3,6 @@
 defined('IN_CODE') or die('This script can not be run by itself.');
 
 class GobbleEarthVariant_processOrderBuilds extends processOrderBuilds {
-
-	public function archiveMoves()
-	{
-		global $DB, $Game;
-		
-		parent::archiveMoves();
-		
-		// Add Wait-orders in the database too...
-		$DB->sql_put(
-			"INSERT INTO wD_MovesArchive (
-				gameID, turn, type, terrID, /* Index */
-				countryID, toTerrID, fromTerrID, viaConvoy, /* Order */
-				unitType, /* Unit */
-				success, dislodged /* Move */
-			)
-			SELECT
-				o.gameID, ".$Game->turn.", o.type, NULL,
-				o.countryID, NULL, NULL, 'No',
-				NULL,
-				'Yes', 'Yes'
-			FROM wD_Orders o
-			INNER JOIN wD_Moves m ON ( m.orderID = o.id AND m.gameID=".$GLOBALS['GAMEID']." )
-			WHERE o.gameID = ".$Game->id." AND o.type = 'Wait'");
-			
-			$DB->sql_put(
-				"INSERT INTO wD_MovesArchive (
-					gameID, turn, type, terrID, /* Index */
-					countryID, toTerrID, fromTerrID, viaConvoy, /* Order */
-					unitType, /* Unit */
-					success, dislodged /* Move */
-				)
-				SELECT
-					o.gameID, ".$Game->turn.", o.type, o.toTerrID,
-					o.countryID, NULL, NULL, 'No',
-					NULL,
-					m.success, 'No'
-				FROM wD_Orders o
-				/* Moves needed to get success/dislodged results data */
-				INNER JOIN wD_Moves m ON ( m.orderID = o.id AND m.gameID=".$GLOBALS['GAMEID']." )
-				WHERE o.gameID = ".$Game->id." AND NOT o.type = 'Wait' AND success = 'No'");
-
-	}
 	
 	public function create()
 	{

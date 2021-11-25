@@ -36,36 +36,43 @@ class Member
 	 * @var int
 	 */
 	var $id;
+
 	/**
 	 * The user ID
 	 * @var int
 	 */
 	var $userID;
+
 	/**
 	 * The game ID
 	 * @var int
 	 */
 	var $gameID;
+
 	/**
 	 * The countryID this member is playing as.
 	 * @var int
 	 */
 	var $countryID;
+
 	/**
 	 * The country this member is playing as. Will be 'Unassigned' if pre-game.
 	 * @var string
 	 */
 	var $country;
+
 	/**
 	 * The member status; 'Playing','Left','Defeated'
 	 * @var string
 	 */
 	var $status;
+
 	/**
 	 * The username corresponding to this member
 	 * @var string
 	 */
 	var $username;
+
 	/**
 	 * The number of points the user currently has available to bet
 	 * @var int
@@ -77,6 +84,7 @@ class Member
 	 * @var int
 	 */
 	var $bet;
+	
 	/**
 	 * An array of countries from which this member has new messages. 'Global' may
 	 * also be within this array.

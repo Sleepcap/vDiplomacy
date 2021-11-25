@@ -31,7 +31,7 @@ a private game there.
 
 requirements
 ------------
-- PHP 5.2+ (and < 7.2)
+- PHP 5.2 to 7.0. 7.1+ is not yet supported. webDip runs on PHP 7.0
 - MySQL 5, with support for MyISAM, InnoDB, and memory tables
 - The GD 2 PHP extension, with FreeType support
 - Ability to send e-mail from the server (Access to an SMTP server or sendmail)
@@ -109,8 +109,17 @@ page without saving the results)
 => Check
 Once you're seeing the Last process time at the bottom of the page staying within 5 
 minutes of the current time the background processing is working, and everything should 
-be up and running. 
+be up and running.
 
+Troubleshooting Installation
+----------------------------
+
+If you're having issues with access to the CP Admin, make sure you have a user created,
+and that the user in the `wD_Users` table has the following `type`:
+
+System,User,Moderator,Admin
+
+Then load the gamemaster page above again, and it should work as expected.
 
 Updating
 --------

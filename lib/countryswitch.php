@@ -195,9 +195,9 @@ class libSwitch
 		{
 			$html .= '<TR> <TD><a href="board.php?gameID='.$gameID.'">'.$gameName.'</a></TD><TD><a href="profile.php?userID='.$toID.'">'.$toName.'</a></TD><TD>You</TD>';
 			if ($status == "Send")
-				$html .= '<TD>Send</TD> <TD><a href="usercp.php?tab=CountrySwitch&CancelSwitch='.$id.'"><img src="images/icons/cross.png"> ('.l_t('Cancel').')</a></TD> </TR>';
+				$html .= '<TD>Send</TD> <TD><a href="usercp.php?tab=CountrySwitch&CancelSwitch='.$id.'&'.libAuth::formTokenURLParameter().'"><img src="images/icons/cross.png"> ('.l_t('Cancel').')</a></TD> </TR>';
 			elseif ($status == "Active")
-				$html .= '<TD><b>Active</b></TD><TD><a href="usercp.php?tab=CountrySwitch&ClaimBackSwitch='.$id.'"><img src="images/icons/cross.png"> ('.l_t('Claim back').')</a></TD></TR>';
+				$html .= '<TD><b>Active</b></TD><TD><a href="usercp.php?tab=CountrySwitch&ClaimBackSwitch='.$id.'&'.libAuth::formTokenURLParameter().'"><img src="images/icons/cross.png"> ('.l_t('Claim back').')</a></TD></TR>';
 		}
 		
 		$sql='SELECT cs.id, g.name, g.id, cs.status, tu.username, tu.id FROM wD_Games g
@@ -209,9 +209,9 @@ class libSwitch
 		{
 			$html .= '<TR><TD><a href="board.php?gameID='.$gameID.'">'.$gameName.'</a></TD><TD>You</TD><TD><a href="profile.php?userID='.$toID.'">'.$toName.'</a></TD>';
 			if ($status == "Send")
-				$html .= '<TD>Send</TD><TD><a href="usercp.php?tab=CountrySwitch&AcceptSwitch='.$id.'"><img src="images/icons/tick.png"> ('.l_t('Accept').')</a> - <a href="usercp.php?tab=CountrySwitch&RejectSwitch='.$id.'"><img src="images/icons/cross.png"> (Cancel)</a></TD></TR>';
+				$html .= '<TD>Send</TD><TD><a href="usercp.php?tab=CountrySwitch&AcceptSwitch='.$id.'&'.libAuth::formTokenURLParameter().'"><img src="images/icons/tick.png"> ('.l_t('Accept').')</a> - <a href="usercp.php?tab=CountrySwitch&RejectSwitch='.$id.'&'.libAuth::formTokenURLParameter().'"><img src="images/icons/cross.png"> (Cancel)</a></TD></TR>';
 			elseif ($status == "Active")
-				$html .= '<TD><b>Active</b></TD><TD><a href="usercp.php?tab=CountrySwitch&ReturnSwitch='.$id.'"><img src="images/icons/cross.png"> ('.l_t('Pass back').')</a></TD></TR>';
+				$html .= '<TD><b>Active</b></TD><TD><a href="usercp.php?tab=CountrySwitch&ReturnSwitch='.$id.'&'.libAuth::formTokenURLParameter().'"><img src="images/icons/cross.png"> ('.l_t('Pass back').')</a></TD></TR>';
 		}
 		
 		$html .= '</TABLE>';

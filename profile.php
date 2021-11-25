@@ -239,8 +239,8 @@ if ( isset($_REQUEST['detail']) )
 				delays do not hurt your score in any way.
 				</br>
 				</br>
-				<strong>Live Game:</strong> If a game had phases 60 minutes long or less any excused missed turns will only impact your rating for 28 days total. The penality is the same, 
-				5% long term and 6% short term, except the long term penality is for 28 days and the short term is for 7 days.</br>
+				<strong>Live Game:</strong> If a game had phases 60 minutes long or less any excused missed turns will only impact your rating for 28 days total. The penalty is the same, 
+				5% long term and 6% short term, except the long term penalty is for 28 days and the short term is for 7 days.</br>
 				<strong>System Excused:</strong> If you had an "excused missed turn" left this will be yes and will not cause additional penalties against your rating.</br>
 				<strong>Mod Excused:</strong> If a moderator excused the missed turn this field will be yes and will not cause additional penalties against your rating.</br>
 				<strong>Same Period Excused:</strong> If you have multiple un-excused missed turns in a 24 hour period you are only penalized once with the exception of live games, 

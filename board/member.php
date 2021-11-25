@@ -142,7 +142,8 @@ class userMember extends panelMember
 		if(!in_array($voteName, Members::$votes))
 			throw new Exception(l_t("Invalid vote"));
 
-		if(in_array($voteName, $this->votes))
+		$voteOn = in_array($voteName, $this->votes);
+		if($voteOn)
 			unset($this->votes[array_search($voteName, $this->votes)]);
 		else
 		{
@@ -154,7 +155,7 @@ class userMember extends panelMember
 					$count++;
 			if ($count == 1 && !($this->Game->drawType == 'draw-votes-hidden' && $voteText == 'Draw'))
 			{
-				require_once "lib/gamemessage.php";
+				require_once l_r('lib/gamemessage.php');
 				$msg = $this->country.' voted for a '.$voteText.'. ';
 				if ($voteText == 'Draw')
 					$msg .= 'If everyone votes Draw the game will end and the points are split equally among all the surviving players, regardless of how many supply centers each player has.';
@@ -171,6 +172,10 @@ class userMember extends panelMember
 				libGameMessage::send(0, 'GameMaster', $msg , $this->Game->id);
 			}
 		}
+
+		// Keep a log that a vote was set in the game messages, so the vote time is recorded
+		require_once(l_r('lib/gamemessage.php'));
+		libGameMessage::send($this->countryID, $this->countryID, ($voteOn?'Un-':'').'Voted for '.$voteName, $this->gameID);
 		$DB->sql_put("UPDATE wD_Members SET votes='".implode(',',$this->votes)."' WHERE id=".$this->id);
 	}
 

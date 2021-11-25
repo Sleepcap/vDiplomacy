@@ -28,9 +28,11 @@ require_once('api/responses/members_in_cd.php');
 require_once('api/responses/unordered_countries.php');
 require_once('api/responses/game_state.php');
 require_once('objects/game.php');
+require_once('objects/user.php');
 require_once('lib/cache.php');
 require_once('lib/html.php');
 require_once('lib/time.php');
+require_once('lib/gamemessage.php');
 $DB = new Database();
 
 /**
@@ -229,6 +231,7 @@ abstract class ApiEntry {
 		return in_array('gameID', $this->requirements);
 	}
 
+	private $gameCache = null;
 	/**
 	 * Return Game object for game associated to this API entry call.
 	 * To get associated game, API entry must expect a parameter named `gameID`.
@@ -237,6 +240,7 @@ abstract class ApiEntry {
 	 */
 	public function getAssociatedGame() {
 		global $DB;
+		if( !is_null($this->gameCache) ) return $this->gameCache;
 		if (!in_array('gameID', $this->requirements))
 			throw new RequestException('No game ID available for this request.');
 		$args = $this->getArgs();
@@ -249,7 +253,8 @@ abstract class ApiEntry {
 		$gameRow = $DB->sql_hash('SELECT * from wD_Games WHERE id = '.$gameID);
 		if (!$gameRow)
 			throw new RequestException('Invalid game ID');
-		return new Game($gameRow);
+		$this->gameCache = new Game($gameRow, UPDATE);
+		return  $this->gameCache; // Lock game for update, which just ensures the game is always processed sequentially
 	}
 
 	/**
@@ -287,6 +292,58 @@ class ListGamesWithMissingOrders extends ApiEntry {
 }
 
 /**
+ * API entry game/togglevote
+ */
+class ToggleVote extends ApiEntry {
+	public function __construct() {
+		parent::__construct('game/togglevote', 'GET', '', array('gameID','countryID','vote'));
+	}
+	public function run($userID, $permissionIsExplicit) {
+		global $DB;
+
+		$args = $this->getArgs();
+		$gameID = intval($args['gameID']);
+		$countryID = intval($args['countryID']);
+		$vote = $args['vote'];
+		if( $vote === 'Draw' ) $vote = 'Draw';
+		else if( $vote === 'Pause' ) $vote = 'Pause';
+		else if( $vote === 'Cancel' ) $vote = 'Cancel';
+		else if( $vote === 'Concede' ) $vote = 'Concede';
+		else throw new RequestException('Invalid vote type; allowed are Draw, Concede, Pause, Cancel');
+
+		if (!empty(Config::$apiConfig['restrictToGameIDs']) && !in_array($gameID, Config::$apiConfig['restrictToGameIDs']))
+			throw new ClientForbiddenException('Game ID is not in list of gameIDs where API usage is permitted.');
+
+		$game = 
+		$currentVotes = $DB->sql_hash("SELECT votes FROM wD_Members WHERE gameID = ".$gameID." AND countryID = ".$countryID." AND userID = ".$userID);
+		$currentVotes = $currentVotes['votes'];
+		$newVotes = '';
+		if( strpos($currentVotes, $vote) !== false )
+		{
+			// The vote is currently set, so unset it:
+			$voteArr = explode(',',$currentVotes);
+			$newVoteArr = array();
+			for($i=0; $i< count($voteArr); $i++)
+				if( $voteArr[$i] != $vote )
+					$newVoteArr[] = $voteArr[$i];
+			$newVotes = implode(',', $newVoteArr);
+		}
+		else
+		{
+			if( strpos($currentVotes,',') !== false )
+				$voteArr = explode(',',$currentVotes);
+			else
+				$voteArr = array($currentVotes);
+			$voteArr[] = $vote;
+			$newVotes = implode(',', $voteArr);
+		}
+		$DB->sql_put("UPDATE wD_Members SET votes = '".$newVotes."' WHERE gameID = ".$gameID." AND userID = ".$userID." AND countryID = ".$countryID);
+		$DB->sql_put("COMMIT");
+		return $newVotes;
+	}
+}
+
+/**
  * API entry game/status
  */
 class GetGamesStates extends ApiEntry {
@@ -306,6 +363,9 @@ class GetGamesStates extends ApiEntry {
 			throw new RequestException('Invalid country ID.');
 		if (!empty(Config::$apiConfig['restrictToGameIDs']) && !in_array($gameID, Config::$apiConfig['restrictToGameIDs']))
 		    throw new ClientForbiddenException('Game ID is not in list of gameIDs where API usage is permitted.');
+		$game = $this->getAssociatedGame();
+		if (!isset($game->Members->ByUserID[$userID]) || $countryID != $game->Members->ByUserID[$userID]->countryID)
+			throw new ClientForbiddenException('A user can only view game state for the country it controls.');
 		$gameState = new \webdiplomacy_api\GameState(intval($gameID), intval($countryID));
 		return $gameState->toJson();
 	}
@@ -533,8 +593,8 @@ class SetOrders extends ApiEntry {
 				'viaConvoy' => $row['viaConvoy']
 			);
 		}
-
-		// Processing game
+		
+		// Process Game
         if ($orderInterface->orderStatus->Ready && !$previousReadyValue) {
             require_once(l_r('objects/misc.php'));
             require_once(l_r('objects/notice.php'));
@@ -570,6 +630,52 @@ class SetOrders extends ApiEntry {
 
         // Returning current orders
 		return json_encode($currentOrders);
+	}
+}
+/**
+ * API entry game/sendmessage
+ */
+class SendMessage extends ApiEntry {
+	public function __construct() {
+		parent::__construct('game/sendmessage', 'JSON', '', array('gameID','countryID','toCountryID', 'message'));
+	}
+	public function run($userID, $permissionIsExplicit) {
+		global $DB;
+
+		$args = $this->getArgs();
+
+		if ($args['toCountryID'] === null)
+			throw new RequestException('toCountryID is required.');
+
+		if ($args['message'] === null)
+			throw new RequestException('message is required.');
+
+
+		$gameID = intval($args['gameID']);
+		$countryID = intval($args['countryID']);
+		$toCountryID = intval($args['toCountryID']);
+		$message = $args['message'];
+
+		$game = $this->getAssociatedGame();
+		if ($game->pressType != 'Regular') {
+			throw new RequestException('Game is not regular press.');
+		}
+
+		if (!(isset($game->Members->ByUserID[$userID]) && $countryID == $game->Members->ByUserID[$userID]->countryID)) {
+			throw new ClientForbiddenException('User does not have explicit permission to make this API call.');
+		}
+
+		if ($toCountryID < 1 || $toCountryID > count($game->Members) || $toCountryID == $countryID) {
+			throw new RequestException('Invalid toCountryID');
+		}
+
+		$toUser = new User($game->Members->ByCountryID[$toCountryID]->userID);
+		if(!$toUser->isCountryMuted($game->id, $countryID)) {
+			libGameMessage::send($toCountryID, $countryID, $message);
+		}
+
+		// FIXME: what to return?
+		return json_encode($args);
 	}
 }
 
@@ -752,6 +858,8 @@ try {
 	$api->load(new ListGamesWithMissingOrders());
 	$api->load(new GetGamesStates());
 	$api->load(new SetOrders());
+	$api->load(new ToggleVote());
+	$api->load(new SendMessage());
 	$jsonEncodedResponse = $api->run();
 	// Set JSON header.
 	header('Content-Type: application/json');

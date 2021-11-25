@@ -160,6 +160,7 @@ if ( isset($_REQUEST['viewArchive']) )
 if ( $Game->watched() && isset($_REQUEST['unwatch'])) {
 	print '<div class="content-notice gameTimeRemaining">'
 		.'<form method="post" action="redirect.php">'
+		.libAuth::formTokenHTML()
 		.'Are you sure you wish to remove this game from your spectated games list? '
 		.'<input type="hidden" name="gameID" value="'.$Game->id.'">'
 		.'<input type="submit" class="form-submit" name="unwatch" value="Confirm">
@@ -208,7 +209,7 @@ if( ( (isset($Member) && $Member->status == 'Playing') || $User->id == $Game->di
 			{
 				if( $e->getMessage() == "Abandoned" || $e->getMessage() == "Cancelled" )
 				{
-					assert('$Game->phase=="Pre-game" || $e->getMessage() == "Cancelled"');
+					assert($Game->phase == 'Pre-game' || $e->getMessage() == 'Cancelled');
 					$DB->sql_put("COMMIT");
 					libHTML::notice(l_t('Cancelled'), l_t("Game was cancelled or didn't have enough players to start."));
 				}
@@ -237,7 +238,7 @@ if( ( (isset($Member) && $Member->status == 'Playing') || $User->id == $Game->di
 				{
 					if( $e->getMessage() == "Abandoned" || $e->getMessage() == "Cancelled" )
 					{
-						assert('$Game->phase=="Pre-game" || $e->getMessage() == "Cancelled"');
+						assert($Game->phase == 'Pre-game' || $e->getMessage() == 'Cancelled');
 						$DB->sql_put("COMMIT");
 						libHTML::notice(l_t('Cancelled'), l_t("Game was cancelled or didn't have enough players to start."));
 					}

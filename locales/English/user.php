@@ -191,8 +191,6 @@ if( $User->type['User'] )
  */
 print '</ul>
 
-<p><input type="submit" class="green-Submit" value="Update"></p>
-</form>
-</div>';
+<p><input type="submit" class="green-Submit" value="Update"></p>';
 
 ?>

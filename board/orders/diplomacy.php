@@ -53,6 +53,9 @@ class userOrderDiplomacy extends userOrder
 		}
 	}
 
+    /**
+     * @return bool
+     */
 	protected function typeCheck()
 	{
 		switch($this->type) {

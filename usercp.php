@@ -23,6 +23,8 @@
  * @subpackage Forms
  */
 
+// Staging test commit
+
 require_once('header.php');
 
 require_once(l_r('objects/mailer.php'));
@@ -39,6 +41,8 @@ libHTML::starthtml();
 
 if ( isset($_REQUEST['emailToken']))
 {
+	libAuth::formToken_Valid();
+
 	if( !($email = libAuth::emailToken_email($_REQUEST['emailToken'])) )
 		libHTML::notice(l_t("Email change validation"), l_t("A bad email token was given, please check the validation link try again"));
 
@@ -56,6 +60,8 @@ if ( isset($_REQUEST['emailToken']))
 
 if ( isset($_REQUEST['userForm']) )
 {
+	libAuth::formToken_Valid();
+	
 	
 	// A small hack for the RSS-Button
 	if (isset($_POST['rssButton']))
@@ -173,6 +179,24 @@ if ( isset($_REQUEST['userForm']) )
 	}
 }
 
+// settings page tutorial
+if (isset($_COOKIE['wD-Tutorial-Settings'])) 
+{
+	$tutorialMessage = l_t('
+		These are your account settings. You can update your registered email here, change your password,
+		and add a comment to your profile. You can also adjust the game board for different types of 
+		colorblindness, set your site theme to a light theme or high-contrast dark theme, choose whether you
+		display upcoming live games on your home screen, and more. Please set your registered email to one
+		that you regularly check if you did not already when you registered, as your account can be banned 
+		if the moderators attempt to contact you by email but do not receive a reply.
+	');
+
+	libHTML::help('Settings', $tutorialMessage);
+
+	unset($_COOKIE['wD-Tutorial-Settings']);
+	setcookie('wD-Tutorial-Settings', '', time()-3600);
+}
+
 function printAndFindTab()
 {
 	global $User, $Misc;
@@ -230,7 +254,11 @@ switch($tab)
 		require_once(l_r('locales/English/user.php'));
 }
 
+print libAuth::formTokenHTML();
+print '</form></div>';
 print '</div>';
+
+libHTML::$footerIncludes[] = l_j('help.js');
 libHTML::footer();
 
 ?>

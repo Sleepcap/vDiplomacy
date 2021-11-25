@@ -46,8 +46,8 @@ $credits = array(
 	),
 	array(
 		'Managing the <a href="https://discord.gg/f2ram4w">webDiplomacy Discord Server</a>',
-		'<a href="http://webdiplomacy.net/profile.php?userID=100862">Aurelin</a><br />
-		<a href="http://webdiplomacy.net/profile.php?userID=41379">captainmeme</a><br />'
+		'<a href="profile.php?userID=100862">Aurelin</a><br />
+		<a href="profile.php?userID=41379">captainmeme</a><br />'
 	),
 	array(
 		'Co-owners of webDiplomacy',
@@ -86,13 +86,10 @@ $credits = array(
 		<a href="profile.php?userID=13677">Alderian</a>'
 	),
 	array(
-		'Maintenance of the Ghost Ratings List',
-		'<a href="profile.php?userID=38739">bo_sox48</a><br/>
-		<a href="profile.php?userID=15658">jmo1121109</a><br/></br>
-		<a href="profile.php?userID=2188">TheGhostMaker</a> (past)<br/>
-		<a href="profile.php?userID=13677">Alderian</a> (past)<br/>
-		<a href="profile.php?userID=23172">Hellenic Riot</a> (past)<br/>
-		<a href="profile.php?userID=37168">ghug</a> (past)'
+		'Integration of Ghost Ratings into the codebase',
+		'<a href="profile.php?userID=59641">Squigs44</a><br />
+		<a href="profile.php?userID=38739">bo_sox48</a><br/>
+		<a href="profile.php?userID=15658">jmo1121109</a>'
 	),
 	array(
 		'Creator of the webDiplomacy AI',

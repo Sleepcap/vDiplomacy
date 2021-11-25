@@ -167,7 +167,7 @@ class OrderInterface
 		}
 		
 		if( $checkTurn != $this->turn || $checkPhase != $this->phase )
-			throw new Exception(l_t("The game has moved on, you can no longer alter these orders, please refresh."));
+			libHTML::notice(l_t("Please refresh"), l_t("The game has moved on, you can no longer alter these orders, please refresh."));
 
 		if( $this->maxOrderID == false ) $this->maxOrderID = $maxOrderID;
 		//elseif( $this->maxOrderID < $maxOrderID )

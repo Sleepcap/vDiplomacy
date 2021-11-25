@@ -27,29 +27,87 @@ defined('IN_CODE') or die('This script can not be run by itself.');
 class ClassicChaoctopiVariant_panelMembersHome extends panelMembersHome
 {
 
-	/**
-	* Split the Home-View after 9 Countries for a better readability.
-	**/
 	function membersList()
 	{
-		$ret = parent::membersList();
-		$ret = preg_replace ( '~ style="width:\d%"~' , '' , $ret);
-		$parts = explode('</td>', $ret);
-
-		$html=$part1=$part2='';
-		for ($i=0; $i<count($this->Game->Variant->countries); $i++)
-		{
-			$part1.=$parts[$i].'</td>';
-			$part2.=$parts[$i+35].'</td>';
-			if (ceil(($i+1)/2) == (($i+1)/2))
-			{
-				$html .= $part1.'</tr><tr>'.$part2.'</tr><tr>';
-				$part1=$part2='';
-			}			
-		}
-		$html .= $part1.'</tr><tr>'.$part2.'</tr></table>';
+		global $User;
 		
-		return $html;		
+		// $membersList[$i]=array($nameOrCountry,$iconOne,$iconTwo,...);
+		$membersList = array();
+		
+		if( $this->Game->phase == 'Pre-game')
+		{
+			$count=count($this->ByID);
+			for($i=0;$i<$count;$i++)
+				$membersList[]=array(($i+1),'<img src="images/icons/tick.png" alt=" " title="Player joined, spot filled" />');
+			for($i=$count+1;$i<=count($this->Game->Variant->countries);$i++)
+				$membersList[]=array(($i), '');
+		}
+		else
+		{
+			for($countryID=1; $countryID<=count($this->Game->Variant->countries); $countryID++)
+			{
+				$Member = $this->ByCountryID[$countryID];
+				$membersList[] = $Member->memberColumn();
+			}
+		}
+		
+		// print countries with members > $maxPerRow on multiple rows on home page
+		$buf = '<table class="homeMembersTable">';
+		$memberNum = count($membersList);
+		$maxPerRow = 7;
+		$rowsCount= count($membersList[0]);
+		$rowsCount2 = ceil($memberNum / $maxPerRow);
+		$numPerLine = round($memberNum / $rowsCount2);
+		$div = $maxPerRow;
+		if ($rowsCount2 > 1) 
+		{
+			$div = $memberNum / $rowsCount2;
+		} 
+		else 
+		{
+			$div = count($membersList);
+		}
+		$div = ceil($div);
+		$alternate = libHTML::$alternate;
+		for ($j = 0; $j < $rowsCount2; $j++)
+		{ 
+			for ($i = 0; $i < $rowsCount; $i++)
+			{
+				if ($i == 0 && $div % 2 == 0) libHTML::alternate();
+				$rowBuf='';
+				$dataPresent=false;
+				$count = -1;
+				$width = $memberNum / $maxPerRow;
+				foreach($membersList as $data)
+				{
+					$count++;
+					if($count < $j * $div || $count >= ($j + 1)*$div) 
+					{
+						continue;
+					}
+					if($data[$i]) 
+					{
+						$dataPresent=true;
+					}
+					else {
+						$data[$i] = '&nbsp;';
+					}
+					$rowBuf .= '<td style="width:'.$width.'%;" class="barAlt'.libHTML::alternate().'">'.$data[$i].'</td>';
+				}
+				// account for odd numbers
+				if ($j == ($rowsCount2 - 1) && ($memberNum % $div) != 0) 
+				{
+					$rowBuf .='<td style="display: none;" class="barAlt'.libHTML::alternate().'">&nbsp;</td>';
+				}
+				if ($i + 1 < $rowsCount && $div % 2 != 0 ) libHTML::alternate();
+				if($dataPresent)
+				{
+					$buf .= '<tr class="homeMembersTableTr">'.$rowBuf.'</tr>';
+				}
+			}
+		}
+		$buf .= '</table>';
+		return $buf;
 	}
 
 

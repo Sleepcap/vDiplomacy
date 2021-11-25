@@ -46,21 +46,22 @@ class User {
 		file_put_contents($dir.'/index.html', '');
 	}
 	
-	public function getSilences() {
+	public function getSilences() 
+	{
 		global $DB;
 		
 		$tabl = $DB->sql_tabl("SELECT 
-			silence.id as silenceID,
-			silence.userID as silenceUserID,
-			silence.postID as silencePostID,
-			silence.moderatorUserID as silenceModeratorUserID,
-			silence.enabled as silenceEnabled,
-			silence.startTime as silenceStartTime,
-			silence.length as silenceLength,
-			silence.reason as silenceReason
-		FROM wD_Silences silence
-		WHERE silence.userID = ".$this->id."
-		ORDER BY silence.startTime DESC");
+			s.id as silenceID,
+			s.userID as silenceUserID,
+			s.postID as silencePostID,
+			s.moderatorUserID as silenceModeratorUserID,
+			s.enabled as silenceEnabled,
+			s.startTime as silenceStartTime,
+			s.length as silenceLength,
+			s.reason as silenceReason
+		FROM wD_Silences s
+		WHERE s.userID = ".$this->id."
+		ORDER BY s.startTime DESC");
 		
 		$silences = array();
 		while( $record = $DB->tabl_hash($tabl) )
@@ -71,24 +72,26 @@ class User {
 	
 	private $ActiveSilence;
 	
-	public function isSilenced() {
+	public function isSilenced() 
+	{
 		if( !$this->silenceID ) 
 			return false;
 		
 		$ActiveSilence = new Silence($this->silenceID);
 		
-		if( $ActiveSilence->isEnabled() ) {
+		if( $ActiveSilence->isEnabled() ) 
+		{
 			$this->ActiveSilence = $ActiveSilence;
 			return true;
 		}
 		else
 			return false;
 	}
-	public function getActiveSilence() {
-		
+
+	public function getActiveSilence() 
+	{
 		if( !$this->isSilenced() ) return null;
 		else return $this->ActiveSilence;
-		
 	}
 	
 	/**
@@ -336,7 +339,7 @@ class User {
 	{
 		global $DB;
 
-		assert('$points >= 0');
+		assert($points >= 0);
 
 		$userPassed = new User($userID);
 
@@ -481,8 +484,7 @@ class User {
 
 		if( isset($userForm['password']) and $userForm['password'] )
 		{
-			if ( isset($userForm['passwordcheck'])
-				and $userForm['password'] == $userForm['passwordcheck'] )
+			if ( isset($userForm['passwordcheck']) and $userForm['password'] == $userForm['passwordcheck'] )
 			{
 				$SQLVars['password'] = "UNHEX('".libAuth::pass_Hash($userForm['password'])."')";
 			}
@@ -495,6 +497,7 @@ class User {
 		if(isset($userForm['email']) and $userForm['email'] )
 		{
 			$userForm['email'] = trim($DB->escape($userForm['email']));
+
 			if( !libAuth::validate_email($userForm['email']) )
 			{
 				$errors[] = l_t("The e-mail address you entered isn't valid. Please enter a valid one");
@@ -742,16 +745,19 @@ class User {
 		{
 			$this->{$name} = $value;
 		}
+
 		// For display, cdCount should include deletedCDs
 		$this->{'cdCount'} = $this->{'cdCount'} + $this->{'deletedCDs'};
+
 		// RR should be rounded
 		$this->reliabilityRating = round($this->reliabilityRating);
 
 		// Convert an array of types this user has into an array of true/false indexed by type
 		$this->type = explode(',', $this->type);
 		$validTypes = array('System','Banned','User','Moderator','Guest','Admin','Donator','DonatorBronze','DonatorSilver','DonatorGold','DonatorPlatinum','ForumModerator'
-								,'DevBronze','DevSilver','DevGold', 'ModAlert','Bot');
+								,'DevBronze','DevSilver','DevGold', 'ModAlert','Bot','SeniorMod');
 		$types = array();
+
 		foreach($validTypes as $type)
 		{
 			if ( in_array($type, $this->type) )
@@ -797,12 +803,11 @@ class User {
 		return $buffer;
 	}
 
-	static function typeIcon($type, $showMod=true) {
-	
-		global $User;
-		
+	static function typeIcon($type, $showMod=true) 
+	{
 		// This must take either a list as it comes from a SQL query, or a built-in $this->type['Admin'] style array
-		if( is_array($type) ) {
+		if( is_array($type) ) 
+		{
 			$types=array();
 
 			foreach($type as $n=>$v)
@@ -909,7 +914,7 @@ class User {
 		}
 	}
 
-        /**
+    /**
 	 * This will clear a notification value in both the object and the wd_users table if not already cleared.
 	 * @param notification notification value to clear, must be 'PrivateMessage', 'GameMessage', 'Unfinalized', or 'GameUpdate'.
 	 **/
@@ -943,11 +948,6 @@ class User {
 
 		session_name('wD_Sess_User-'.$this->id);
 
-		/*if( $this->type['User'] )
-			session_cache_limiter('private_no_expire');
-		else
-			session_cache_limiter('public');*/
-
 		session_start();
 
 		// Non-users can't get banned
@@ -971,33 +971,6 @@ class User {
 
 		if($this->type['Banned'])
 			libHTML::notice(l_t('Banned'), l_t('You have been banned from this server. If you think there has been a mistake contact the moderator team at %s , and if you still aren\'t satisfied contact the admin at %s (with details of what happened).',Config::$modEMail, Config::$adminEMail));
-
-		/*
-		$bans=array();
-		$tabl = $DB->sql_tabl("SELECT numberType, number, userID FROM wD_BannedNumbers
-			WHERE ( number = INET_ATON('".$_SERVER['REMOTE_ADDR']."') AND numberType='IP')
-				OR ( number = ".$cookieCode." AND numberType='CookieCode')
-				OR ( userID=".$this->id.")");
-		while(list($banType,$banNum)=$DB->tabl_row($tabl))
-			$bans[$banType]=$banNum;
-
-		if($this->type['Banned'])
-		{
-			//if( isset($bans['IP']) and $cookieCode!=$bans['CookieCode'] )
-				//setcookie('wD_Code', $bans['CookieCode'],time()+365*7*24*60*60);
-
-			if(!isset($bans['IP']) || ip2long($_SERVER['REMOTE_ADDR'])!=$bans['IP'])
-				self::banIP(ip2long($_SERVER['REMOTE_ADDR']), $this->id);
-
-			libHTML::notice('Banned', 'You have been banned from this server. If you think there has been
-					a mistake contact '.Config::$adminEMail.' .');
-		}
-		elseif( isset($bans['IP']) )
-		{
-			self::banUser($this->id,"You share an IP with a banned user account.", $_SERVER['REMOTE_ADDR']);
-			libHTML::notice('Banned', 'You have been banned from this server. If you think there has been
-				a mistake contact '.Config::$adminEMail.' .');
-		}*/
 
 		$DB->sql_put("INSERT INTO wD_Sessions (userID, lastRequest, hits, ip, userAgent, cookieCode)
 					VALUES (".$this->id.",CURRENT_TIMESTAMP,1, INET_ATON('".$_SERVER['REMOTE_ADDR']."'),
@@ -1040,7 +1013,7 @@ class User {
 	 * 
 	 * @param int $userID The id of the user to be temp banned.
 	 * @param int $days The time of the ban in days.
-	 * @param text $reason The reason for the temp ban.
+	 * @param string $reason The reason for the temp ban.
 	 * @param boolean $overwrite True, if the temp ban value should be overwritten
 	 *		in any case. If false, an existing temp ban might be only extended (for
 	 *		automated temp bans).
@@ -1080,8 +1053,7 @@ class User {
 		list($rankingDetails['vPosition']) = $DB->sql_row("SELECT COUNT(id)+1
 			FROM wD_Users WHERE vpoints > ".$this->vpoints);
 
-		list($rankingDetails['worth']) = $DB->sql_row(
-			"SELECT SUM(bet) FROM wD_Members WHERE userID = ".$this->id." AND status = 'Playing'");
+		list($rankingDetails['worth']) = $DB->sql_row( "SELECT SUM(bet) FROM wD_Members WHERE userID = ".$this->id." AND status = 'Playing'");
 
 		$rankingDetails['worth'] += $this->points;
 
@@ -1116,6 +1088,7 @@ class User {
 			$points += $bets;
 			$rankingDetails['anon'][$status] = $number;
 		}
+
 		$rankingDetails['anon']['points'] = $points;
 
 		list($rankingDetails['stats']['Playing']) = $DB->sql_row("SELECT COUNT(id) FROM wD_Members WHERE userID = ".$this->id." AND status='Playing'");
@@ -1123,9 +1096,9 @@ class User {
 
 		list($rankingDetails['takenOver']) = $DB->sql_row(
 			"SELECT COUNT(c.userID) FROM wD_CivilDisorders c
-			INNER JOIN wD_Games g ON ( g.id = c.gameID )
-			LEFT JOIN wD_Members m ON ( c.gameID = m.gameID and c.userID = ".$this->id." )
-			WHERE c.userID = ".$this->id." AND m.userID IS NULL"
+				INNER JOIN wD_Games g ON ( g.id = c.gameID )
+				LEFT JOIN wD_Members m ON ( c.gameID = m.gameID and c.userID = ".$this->id." )
+				WHERE c.userID = ".$this->id." AND m.userID IS NULL"
 			);
 
 
@@ -1348,9 +1321,12 @@ class User {
 
 		while(list($muteGameID,$muteCountryID) = $DB->tabl_row($tabl))
 		{
-			if( $gameID<0 ) // No game ID given, we are collecting all game IDs
+			// No game ID given, we are collecting all game IDs
+			if( $gameID < 0 ) 
 				$muteCountries[$gameID][] = array($muteGameID, $muteCountryID);
-			else // Game ID given, this is for just one game ID
+
+			// Game ID given, this is for just one game ID
+			else 
 				$muteCountries[$gameID][] = $muteCountryID;
 		}
 
@@ -1375,7 +1351,6 @@ class User {
 
 	public function likeMessageToggleLink($messageID, $fromUserID=-1) 
 	{
-		
 		if( $this->type['User'] && $this->id != $fromUserID && !in_array($messageID, $this->getLikeMessages()))
 			return '<a id="likeMessageToggleLink'.$messageID.'" 
 			href="#" title="'.l_t('Give a mark of approval for this post').'" class="light likeMessageToggleLink" '.
@@ -1516,6 +1491,7 @@ class User {
 	public function getYearlyUnExcusedMissedTurns() 
 	{
 		global $DB;
+		if( is_null($DB) ) return 0;
 		list($totalNonLiveMissedTurns) = $DB->sql_row("SELECT COUNT(1) FROM wD_MissedTurns t  
 		WHERE t.userID = ".$this->id." AND t.modExcused = 0 and t.liveGame = 0 and t.samePeriodExcused = 0 and t.systemExcused = 0 and t.turnDateTime > ".(time() - 31536000));
 		
@@ -1528,6 +1504,7 @@ class User {
 	public function getRecentUnExcusedMissedTurns() 
 	{
 		global $DB;
+		if( is_null($DB) ) return 0;
 		list($totalMissedTurns) = $DB->sql_row("SELECT COUNT(1) FROM wD_MissedTurns t  
 			WHERE t.userID = ".$this->id." AND t.modExcused = 0 and t.liveGame = 0 and t.samePeriodExcused = 0 and t.systemExcused = 0 and t.turnDateTime > ".(time() - 2419200));
 		
@@ -1540,6 +1517,7 @@ class User {
 	public function getMissedTurns() 
 	{
 		global $DB;
+		if( is_null($DB) ) return 0;
 		list($totalMissedTurns) = $DB->sql_row("SELECT COUNT(1) FROM wD_MissedTurns t  
 			WHERE t.userID = ".$this->id." AND t.liveGame = 0 and t.modExcused = 0 and t.turnDateTime > ".(time() - 31536000));
 		
@@ -1553,6 +1531,7 @@ class User {
 	{
 		global $DB;
 
+		if( is_null($DB) ) return 0;
 		list($totalLiveMissedTurns) = $DB->sql_row("SELECT COUNT(1) FROM wD_MissedTurns t  
 		WHERE t.userID = ".$this->id." AND t.modExcused = 0 and t.liveGame = 1 and t.samePeriodExcused = 0 and t.systemExcused = 0 and t.turnDateTime > ".(time() - 2419200));
 		
@@ -1565,6 +1544,7 @@ class User {
 	public function getLiveRecentUnExcusedMissedTurns() 
 	{
 		global $DB;
+		if( is_null($DB) ) return 0;
 		list($totalMissedTurns) = $DB->sql_row("SELECT COUNT(1) FROM wD_MissedTurns t  
 			WHERE t.userID = ".$this->id." AND t.modExcused = 0 and t.liveGame = 1 and t.samePeriodExcused = 0 and t.systemExcused = 0 and t.turnDateTime > ".(time() - (86400 * 7)));
 		
@@ -1577,6 +1557,7 @@ class User {
 	public function getLiveMissedTurns() 
 	{
 		global $DB;
+		if( is_null($DB) ) return 0;
 		list($totalMissedTurns) = $DB->sql_row("SELECT COUNT(1) FROM wD_MissedTurns t  
 			WHERE t.userID = ".$this->id." AND t.liveGame = 1 and t.modExcused = 0 and t.turnDateTime > ".(time() - 2419200));
 		
@@ -1589,6 +1570,9 @@ class User {
 	public function userIsTempBanned() 
 	{
 		global $DB;
+	
+		if( is_null($DB) ) return false; // Don't use the database if we are in an error page without the database handle
+
 		list($tempBan) = $DB->sql_row("SELECT u.tempBan FROM wD_Users u  WHERE u.id = ".$this->id);
 
 		return $tempBan > time();
@@ -1628,6 +1612,8 @@ class User {
 	{
 		global $DB;
 
+		if( is_null($DB) ) return 'No';
+
 		list($variable) = $DB->sql_row("SELECT darkMode FROM wD_UserOptions WHERE userID=".$this->id);
 		if ($variable == null) 
 		{
@@ -1645,6 +1631,7 @@ class User {
 	public function getBotGameCount() 
 	{
 		global $DB;
+		if( is_null($DB) ) return 0;
 		list($totalBotGames) = $DB->sql_row("SELECT COUNT(1) FROM wD_Games g inner join wD_Members m on m.gameID = g.id  
 			WHERE m.userID = ".$this->id." AND g.gameOver = 'No' and g.playerTypes = 'MemberVsBots'");
 		
@@ -1657,6 +1644,7 @@ class User {
 	public function modLastCheckedOn() 
 	{
 		global $DB;
+		if( is_null($DB) ) return time();
 		list($modLastCheckedOn) = $DB->sql_row("SELECT c.modLastCheckedOn FROM wD_UserConnections c WHERE c.userID = ".$this->id);
 		
 		return $modLastCheckedOn;
@@ -1668,9 +1656,58 @@ class User {
 	public function modLastCheckedBy() 
 	{
 		global $DB;
+		if( is_null($DB) ) return time();
 		list($modLastCheckedBy) = $DB->sql_row("SELECT c.modLastCheckedBy FROM wD_UserConnections c WHERE c.userID = ".$this->id);
 		
 		return $modLastCheckedBy;
+	}
+
+	/*
+	 * Get the GR category, rating, peak, and position for a given user for all categories.
+	 */
+	public function getCurrentGRByCategory() 
+	{
+		global $DB;		
+		$ghostRatingCategories = array();
+
+		$tabl = $DB->sql_tabl(
+				"SELECT g.categoryID, g.rating, g.peakRating, 
+				(select count(1)+1 from wD_GhostRatings g1 where g1.categoryID = g.categoryID and g1.rating > g.rating) as position 
+				FROM wD_GhostRatings g WHERE g.userID = ".$this->id
+			);
+
+		while ( list($categoryID, $rating, $peakRating, $position) = $DB->tabl_row($tabl) )
+		{
+			$categoryName = Config::$grCategories[$categoryID]["name"];
+
+			$ghostRatingCategories[$categoryName]['Rating'] = $rating; 
+			$ghostRatingCategories[$categoryName]['Peak'] = $peakRating; 
+			$ghostRatingCategories[$categoryName]['Position'] = $position; 
+		}
+
+		return $ghostRatingCategories;
+	}
+
+	/*
+	 * Get the GR category, rating, peak, and position for a given user for all categories.
+	 */
+	public function getGRTrending($categoryID, $limit) 
+	{
+		global $DB;		
+		$ghostRatingTrends = array();
+
+		$tabl = $DB->sql_tabl(
+				"SELECT concat(LEFT(g.yearMonth,4), '-', RIGHT(g.yearMonth,2)) as timePeriod, g.rating 
+				FROM wD_GhostRatingsHistory g WHERE g.userID = ".$this->id. " and g.categoryID = ".(int)$categoryID." order by g.yearMonth desc limit ".(int)$limit
+			);
+
+		while ( list($timePeriod, $rating) = $DB->tabl_row($tabl) )
+		{
+			$ghostRatingTrends[$timePeriod] = $rating; 
+		}
+
+		$reversed = array_reverse($ghostRatingTrends);
+		return $reversed;
 	}
 }
 ?>

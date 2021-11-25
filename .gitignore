@@ -11,6 +11,7 @@
 *.tgz
 *.tbz
 *.bz2
+*.7z
 /cache/
 /mapstore/
 /doc/phpDoc/
@@ -25,6 +26,9 @@ pointlog.txt
 ghostRatingData.*
 gr.php
 adminInfo.php
+tmp/
+apilog.txt
+git*
 /variants/*/install-save*
 Thumbs.db
 /piwik

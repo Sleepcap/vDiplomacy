@@ -1,4 +1,5 @@
 <?php
+
 /*
     Copyright (C) 2004-2010 Kestas J. Kuliukas
 
@@ -188,6 +189,7 @@ if ( $Misc->vDipVersion < VDIPVERSION )
 header("Last-Modified: Mon, 26 Jul 1997 05:00:00 GMT");
 header("Cache-Control: no-store, no-cache, must-revalidate");
 header("Cache-Control: post-check=0, pre-check=0", false);
+header("X-Frame-Options: SAMEORIGIN"); //@ibarrionuevo
 
 if( defined('FACEBOOKSCRIPT') ) {
 	require_once(l_r('facebook/facebook-platform/php/facebook.php'));

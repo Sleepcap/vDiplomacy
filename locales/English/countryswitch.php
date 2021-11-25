@@ -24,27 +24,38 @@ require_once('lib/countryswitch.php');
 
 $User->clearNotification('CountrySwitch');
 
-if ( isset($_REQUEST['CancelSwitch']) )
-	libSwitch::CancelSwitch((int)$_REQUEST['CancelSwitch']);
+if( isset($_REQUEST['CancelSwitch']) ||
+		isset($_REQUEST['RejectSwitch']) ||
+		isset($_REQUEST['ClaimBackSwitch']) ||
+		isset($_REQUEST['ReturnSwitch']) ||
+		isset($_REQUEST['AcceptSwitch']) ||
+		isset($_REQUEST['newSwitch']) ){
+	
+	// check whether a valid token is provided (i.e. this request is called from the settings page)
+	
+	libAuth::formToken_Valid();
 
-if ( isset($_REQUEST['RejectSwitch']) )
-	libSwitch::RejectSwitch((int)$_REQUEST['RejectSwitch']);
+	if ( isset($_REQUEST['CancelSwitch']) )
+		libSwitch::CancelSwitch((int)$_REQUEST['CancelSwitch']);
 
-if ( isset($_REQUEST['ClaimBackSwitch']) )
-	libSwitch::ClaimBackSwitch((int)$_REQUEST['ClaimBackSwitch']);
+	if ( isset($_REQUEST['RejectSwitch']) )
+		libSwitch::RejectSwitch((int)$_REQUEST['RejectSwitch']);
 
-if ( isset($_REQUEST['ReturnSwitch']) )
-	libSwitch::ReturnSwitch((int)$_REQUEST['ReturnSwitch']);
+	if ( isset($_REQUEST['ClaimBackSwitch']) )
+		libSwitch::ClaimBackSwitch((int)$_REQUEST['ClaimBackSwitch']);
 
-if ( isset($_REQUEST['AcceptSwitch']) )
-	libSwitch::AcceptSwitch((int)$_REQUEST['AcceptSwitch']);
+	if ( isset($_REQUEST['ReturnSwitch']) )
+		libSwitch::ReturnSwitch((int)$_REQUEST['ReturnSwitch']);
 
-if ( isset($_REQUEST['newSwitch']) )
-	$error = libSwitch::NewSwitch($_REQUEST['newSwitch']);
+	if ( isset($_REQUEST['AcceptSwitch']) )
+		libSwitch::AcceptSwitch((int)$_REQUEST['AcceptSwitch']);
+
+	if ( isset($_REQUEST['newSwitch']) )
+		$error = libSwitch::NewSwitch($_REQUEST['newSwitch']);
+}
 ?>
 
 	<a name="Switch"></a>
-	<form method="post"><ul class="formlist">
 	<li class="formlisttitle">Countries given away:</li>
 	<li class="formlistfield"><?php print libSwitch::allSwitchesHTML($User->id);?></li>
 	<li class="formlistdesc">All active switches.</li>

@@ -86,14 +86,15 @@ class processMember extends Member
 	/**
 	 * Create a new member record, load it into the Members object, should only occur in a Pre-game setting.
 	 *
-	 * @param $userID The userID
-	 * @param $bet The bet, will throw an exception if the user doesn't have enough
+	 * @param int $userID The userID
+	 * @param string $bet The bet, will throw an exception if the user doesn't have enough
+	 * @param int $countryID
 	 */
-	static function create($userID, $bet, $countryID=0)
+	static function create($userID, $bet, $countryID = 0)
 	{
 		global $DB, $Game;
 
-		assert('$Game instanceof processGame');
+		assert($Game instanceof processGame);
 
 		// It is assumed this is being run within a transaction
 
@@ -173,7 +174,7 @@ class processMember extends Member
 			if( isset($supplementAmount) && $supplementAmount>0 ) $bet -= $supplementAmount;
 		}
 
-		assert('$bet <= $this->Game->pot');
+		assert($bet <= $this->Game->pot);
 
 		User::pointsTransfer($this->userID, 'Cancel', $bet, $this->gameID, $this->id);
 

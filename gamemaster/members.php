@@ -328,7 +328,7 @@ class processMembers extends Members
 	function setDrawn()
 	{
 		$this->prepareLog();
-		assert('count($this->ByStatus[\'Playing\']) > 0');
+		assert(count($this->ByStatus['Playing']) > 0);
 
 		// Calculate the points each player gets.
 		// These are pre-calculated because if they aren't the pot has to be decreased, and active
@@ -353,7 +353,7 @@ class processMembers extends Members
 	function setConcede()
 	{
 		$this->prepareLog();
-		assert('count($this->ByStatus[\'Playing\']) > 0');
+		assert(count($this->ByStatus['Playing']) > 0);
 
 		foreach($this->ByStatus['Left'] as $Member)
 			$Member->setResigned();
@@ -458,7 +458,7 @@ class processMembers extends Members
 		if( !isset(Config::$pointsLogFile) || !Config::$pointsLogFile )
 			return;
 
-		assert('is_array($this->logBefore);');
+		assert(is_array($this->logBefore));
 
 		$before=$this->logBefore;
 		$after=$this->pointsInfoLog();
@@ -558,7 +558,7 @@ class processMembers extends Members
 		$countryID=(int)$countryID;
 
 		// If we're not locked for UPDATE we can't keep things consistant
-		assert('$this->Game->lockMode == UPDATE');
+		assert($this->Game->lockMode == UPDATE);
 
 		if ( $this->Game->private and md5($password) != $this->Game->password and $password != $this->Game->password )
 			throw new Exception(l_t("The invite code you supplied is incorrect, please try again."));
@@ -739,12 +739,12 @@ class processMembers extends Members
 					AND ( m.status='Playing' OR m.status='Left' ) 
 					AND EXISTS(SELECT o.id FROM wD_Orders o WHERE o.gameID = m.gameID AND o.countryID = m.countryID)");
 		
-		// update the turn count
+		// increment the turn count (turn counts are decremented after 1 year in /gamemaster.php)
 		// vdip: readded phaseCount increment (the old simple increment is sufficient and 
 		//	does also avoid overwriting records of the past)
 		$DB->sql_put("UPDATE wD_Users u
 				INNER JOIN wD_Members m ON m.userID = u.id
-				SET u.yearlyPhaseCount = (SELECT count(1) as yearlyTurns FROM wD_TurnDate AS t WHERE t.userID = u.id and t.turnDateTime > (".time()." - (31536000))),
+				SET u.yearlyPhaseCount = u.yearlyPhaseCount + 1,
 				u.phaseCount = u.phaseCount + 1
 				WHERE m.gameID = ".$this->Game->id." 
 					AND ( m.status='Playing' OR m.status='Left' )

@@ -252,7 +252,7 @@ class panelMember extends Member
 		else 
 			$ipStr = '';
 			
-		return '<a href="profile.php?userID='.$this->userID.'">'.$this->username.'</a>
+		return '<a href=profile.php?userID='.$this->userID.'">'.$this->username.'</a>
 				'.'
 				<span class="points">('.$this->vpoints.libHTML::vpoints().User::typeIcon($this->userType,false).'</b>'.
 				$ccStr.$ipStr.				

@@ -97,9 +97,9 @@ if ( isset($_COOKIE['imageToken']) && isset($_REQUEST['imageText']) && isset($_R
 			".l_t("There are two main rules to keep in mind:")."<br>
 			".l_t("1. You may only have one account.")."<br>
 			".l_t("2. You need to have an invitation code on any game you play with people you know from outside the site to keep games fair.")."<br>
-			".l_t("The rest of the rules can be found here: http://".$_SERVER['SERVER_NAME']."/rules.php")."<br><br>
+			".l_t("The rest of the rules can be found here: https://".$_SERVER['SERVER_NAME']."/rules.php")."<br><br>
 
-			".l_t("If you forgot your password, use the lost password finder here: http://".$_SERVER['SERVER_NAME']."/logon.php?forgotPassword=1")."<br><br>
+			".l_t("If you forgot your password, use the lost password finder here: https://".$_SERVER['SERVER_NAME']."/logon.php?forgotPassword=1")."<br><br>
 			".l_t("If you have any further problems contact the server's admin at %s.",Config::$adminEMail)."<br><br>
 
 			".l_t("Enjoy your new account!")."<br>"

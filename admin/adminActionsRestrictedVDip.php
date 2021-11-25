@@ -20,7 +20,7 @@
  
 defined('IN_CODE') or die('This script can not be run by itself.');
 
-class adminActionsRestrictedVDip extends adminActionsForum
+class adminActionsRestrictedVDip extends adminActionsSeniorMod
 {
 	public function __construct()
 	{

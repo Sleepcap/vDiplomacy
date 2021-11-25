@@ -78,7 +78,6 @@ print '</ul>
 
 <div class="hr"></div>
 
-<input type="submit" class="form-submit notice" value="Update">
-</form>';
+<input type="submit" class="form-submit notice" value="Update">';
 
 ?>

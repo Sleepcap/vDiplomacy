@@ -1,5 +1,9 @@
 <?php
 
+/*
+ * 1.2.3:	Fixes of Colonial builds after code base updates
+ */
+
 defined('IN_CODE') or die('This script can not be run by itself.');
 
 class GobbleEarthVariant extends WDVariant {
@@ -11,7 +15,7 @@ class GobbleEarthVariant extends WDVariant {
 	public $author     = 'Christian Günther-Hanssen';
 	public $adapter    = 'The same aided by Oliver Auth';
 	public $version    = '1';
-	public $codeVersion= '1.2.2';
+	public $codeVersion= '1.2.3';
 
 	public $countries=array('Austria','England','France','Germany','Italy','Russia','Turkey','China','Japan','Brazil','Argentina','Colombia','Mexico','USA');
 

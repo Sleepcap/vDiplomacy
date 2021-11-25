@@ -21,6 +21,7 @@
 	
 	Changelog:
 	1.0:   initial release based on the Chaos variant 1.7 and the Octopus variant 1.0.1 (by Emmanuele)
+	1.0.2: Fix for panelMembersHome memberslist
 	
 */
 
@@ -35,7 +36,7 @@ class ClassicChaoctopiVariant extends WDVariant {
 	public $author     ='kaner406';
 	public $adapter    ='Emmanuele Ravaioli / Carey Jensen / Oliver Auth';
 	public $version    ='1.0.1';
-	public $codeVersion='1.0.1';
+	public $codeVersion='1.0.2';
 
 	public $countries=array(
 		'Ankara'       , 'Belgium', 'Berlin'  , 'Brest'    , 'Budapest', 'Bulgaria'  , 'Constantinople', 'Denmark', 'Edinburgh',

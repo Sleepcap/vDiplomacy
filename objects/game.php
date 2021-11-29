@@ -178,7 +178,7 @@ class Game
 	// Arrays of aggregate objects
 	/**
 	 * An array of Member(/processMember) objects indexed by countryID
-	 * @var array
+	 * @var object
 	 */
 	public $Members;
 
@@ -630,7 +630,7 @@ class Game
 	 */
 	function gameovertxt($map=FALSE)
 	{
-		assert ('$this->gameOver != "No"');
+		assert ($this->gameOver != "No");
 
 		switch($this->gameOver)
 		{

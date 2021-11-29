@@ -198,7 +198,7 @@ class processMembers extends Members
 		// Eliminate players who've left
 		foreach($this->ByStatus['Playing'] as $Member)
 		{
-			assert('$Member->missedPhases >= 0 and $Member->missedPhases <= 2');
+			assert($Member->missedPhases >= 0 and $Member->missedPhases <= 2);
 
 			if($Member->missedPhases == 2)
 			{

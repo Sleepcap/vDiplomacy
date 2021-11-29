@@ -1247,7 +1247,7 @@ abstract class drawMap
 
         public function addIntermediateLayer() 
         {
-            if (count($this->intermediateLayer))
+            if ( !empty($this->intermediateLayer) )
             {
                 $this->intermediateLayer = $this->loadImage($this->intermediateLayer);
                 $this->setTransparancy($this->intermediateLayer);

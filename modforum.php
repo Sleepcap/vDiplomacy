@@ -16,6 +16,7 @@ $tabs = array(
 	'Resolved' =>array (l_t('Resolved reports'),' AND status = "Resolved"'),
 	'Bugs'     =>array (l_t('Bugs to take care of'),' AND status = "Bugs"'),
 	'Sticky'   =>array (l_t('Internal discussions'),' AND status = "Sticky"'),
+	'Deleted'   =>array (l_t('Deleted reports'),' AND status = "Deleted"'),
 );
 
 $tab = 'Open';
@@ -84,6 +85,7 @@ if( !isset($_REQUEST['page']) && isset($_REQUEST['viewthread']) && $viewthread )
 		case 'Resolved': $tab = 'Resolved'; break;
 		case 'Bugs'    : $tab = 'Bugs'; break;
 		case 'Sticky'  : $tab = 'Sticky'; break;
+		case 'Deleted' : $tab = 'Deleted'; break;
 		default        : $tab = 'Open'; break;	
 	}
 	
@@ -94,12 +96,17 @@ if( !isset($_REQUEST['page']) && isset($_REQUEST['viewthread']) && $viewthread )
 	$forumPager->currentPage = $forumPager->pageCount - floor($position/PagerForum::$defaultPostsPerPage);
 }
 
-if (isset($_REQUEST['toggleStatus']) && $_REQUEST['toggleStatus'] != $tab && $User->type['Moderator'])
+if (isset($_REQUEST['toggleStatus']) && $_REQUEST['toggleStatus'] != $tab && isset($_REQUEST['actiontargetthread']) && $User->type['Moderator'])
 {
-	list($status)=$DB->sql_row("SELECT status FROM wD_ModForumMessages WHERE id = ".$viewthread);
+	$actiontargetthread = $_REQUEST['actiontargetthread'];
+
+	list($status)=$DB->sql_row("SELECT status FROM wD_ModForumMessages WHERE id = ".$actiontargetthread);
 	$newstatus = $_REQUEST['toggleStatus'];
-	$DB->sql_put("UPDATE wD_ModForumMessages SET status='".$newstatus."' WHERE id = ".$viewthread);		
-	$tab = $newstatus;
+	$DB->sql_put("UPDATE wD_ModForumMessages SET status='".$newstatus."' WHERE id = ".$actiontargetthread);		
+	
+	// switch tabs if thread should still be viewed
+	if($actiontargetthread == $viewthread)
+		$tab = $newstatus;
 }
 
 if (isset($_REQUEST['setAssigned']) && $User->type['Moderator'])
@@ -554,7 +561,7 @@ while( $message = $DB->tabl_hash($tabl) )
 	
 	if ($message['status']== "New")
 		print '<div class="message-subject" style="color:#990000;">';
-	elseif ($message['status']== "Resolved")
+	elseif ($message['status']== "Resolved" || $message['status']== "Deleted")
 		print '<div class="message-subject" style="color:#888888;">';
 	else
 		print '<div class="message-subject">';
@@ -584,6 +591,8 @@ while( $message = $DB->tabl_hash($tabl) )
 		print '<strong>'.$message['subject'].' (resolved)</strong>';
 	elseif ($message['status']== "New")
 		print '<strong>'.$message['subject'].' (new)</strong>';
+	elseif ($message['status']== "Deleted" && $User->type['Moderator'])
+		print '<strong>'.$message['subject'].' (deleted)</strong>';
 	else
 		print '<strong>'.$message['subject'].'</strong>';
 
@@ -804,7 +813,7 @@ while( $message = $DB->tabl_hash($tabl) )
 		{
 			print '<div class="postbox">'.
 				( $new['id'] != (-1) ? '' : '<a name="postbox"></a>').
-				'<form class="safeForm" action="./modforum.php?newsendtothread='.$viewthread.'&amp;viewthread='.$viewthread.'#postbox" method="post">
+				'<form class="safeForm" action="./modforum.php?newsendtothread='.$viewthread.'&amp;viewthread='.$viewthread.'&amp;actiontargetthread='.$viewthread.'#postbox" method="post">
 				<input type="hidden" name="page" value="1" />
 				<p>';
 
@@ -837,6 +846,7 @@ while( $message = $DB->tabl_hash($tabl) )
 							<option value="Resolved"'.($message['status'] == 'Resolved' ? 'selected' : '').'>Resolved</option>
 							<option value="Bugs"    '.($message['status'] == 'Bugs'     ? 'selected' : '').'>Bugs</option>
 							<option value="Sticky"  '.($message['status'] == 'Sticky'   ? 'selected' : '').'>Sticky</option>
+							<option value="Deleted"  '.($message['status'] == 'Deleted'   ? 'selected' : '').'>Deleted</option>
 						</select>';
 				
 				if ($User->type['Admin']) 
@@ -915,6 +925,11 @@ while( $message = $DB->tabl_hash($tabl) )
 	{
 		print '<a href="modforum.php?viewthread='.$message['id'].'#'.$message['id'].'" '.
 			'title="Open this thread to view the replies, or post your own reply">Open</a>';
+
+		// thread may be directly moved to trash by a moderator who is either assigned to the thread or who is trying to delete a non-public or non-assigned thread or who is also an admin (no validation on response!)
+		if ($User->type['Moderator'] && $tab != 'Deleted' && ($message['assigned'] == $User->id || $message['assigned'] == 0 || strpos($message['userType'],'Moderator')!==false || $User->type['Admin']))
+			print ' <a href="modforum.php?actiontargetthread='.$message['id'].'&amp;toggleStatus=Deleted" '.
+				'title="Move this thread to trash section">Delete</a>';
 	}
 
 	print "</div>

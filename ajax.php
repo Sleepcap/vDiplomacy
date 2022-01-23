@@ -97,7 +97,7 @@ elseif( isset($_REQUEST['context']) && isset($_REQUEST['contextKey']) && isset($
 
 		$results = $O->getResults();
 
-		if( false && $newReady && !$oldReady )
+		if( $newReady && !$oldReady )
 		{
 			$results['process']='Checked';
 

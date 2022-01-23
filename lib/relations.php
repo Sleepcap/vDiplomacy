@@ -154,7 +154,7 @@ class libRelations {
 		$html = '';
 		$users = self::getallUsers($groupID);
 		
-		if (count($users > 0))
+		if (count($users) > 0)
 		{
 			$html = '<b>Members of this group:</b><TABLE>';
 
@@ -207,7 +207,7 @@ class libRelations {
 		$html = '';
 		
 		$games = self::getCommonGames($groupID,false);
-		if (count($games > 0))
+		if (count($games) > 0)
 		{
 			$html = '
 				<b>Common games (with players <b><u>not</u></b> in this group):</b>

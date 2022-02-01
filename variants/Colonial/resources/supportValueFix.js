@@ -16,9 +16,12 @@ function fixOrders(){
                                         if(order[r] != ordersData[i][r]) {
                                                 order.updateValue(r, ordersData[i][r]); 
                                                 order.reHTML(r);
-                                                order.setSelectsGreen();
                                         }
                                 });
+                        if( order.isChanged ){
+                                order.setSelectsGreen();
+                                order.checkComplete();
+                        }
                 });
 }
 

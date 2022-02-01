@@ -169,8 +169,8 @@ Start a new game; you decide the name, how long it runs, and how much it's worth
 					if (this.value == 'NaN' ) this.value = 24;
 					if (this.value < 1 ) this.value = 1;
 					if (this.value > 200 ) this.value = 200;
-					document.getElementById('phaseMinutes').selectedIndex = 29;
-					document.getElementById('phaseMinutes').options[29].value = this.value * 60;
+					document.getElementById('selectPhaseMinutes').selectedIndex = 29;
+					document.getElementById('selectPhaseMinutes').options[29].value = this.value * 60;
 					document.getElementById('wait').selectedIndex = 17;" > hours.
 			</span>
 			

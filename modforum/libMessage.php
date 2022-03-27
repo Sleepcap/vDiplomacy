@@ -91,7 +91,7 @@ class ModForumMessage
 		if ( $type == 'ThreadReply' && $adminReply=='No')
 		{
 			list($starter) = $DB->sql_row('SELECT fromUserID FROM wD_ModForumMessages WHERE id = '.$toID);
-			if ($starter != $fromUserID)
+			if ( isset($starter) && $starter != $fromUserID)
 				$DB->sql_put("UPDATE wD_Users SET notifications = CONCAT_WS(',',notifications, 'ModForum') WHERE id = ".$starter);
 		}	
 
@@ -117,15 +117,86 @@ class ModForumMessage
 	static function refilterHTML($message)
 	{
 		$patterns = array(
+				'/<style[^>]*>[^<]+<\/style>/i',
 				'/<[^>]+>/i',
 				'/<[^>]+$/i'
 			);
 		$replacements = array(
-				' ',
-				' '
+				'',
+				'',
+				''
 			);
 
 		return preg_replace($patterns, $replacements, $message);
+	}
+
+	static function storeModMail($fromMail, $fromName, $subject, $message, $timeSent)
+	{
+		global $DB;
+
+		$fromMail = $DB->escape($fromMail);
+		$fromName = $DB->escape($fromName);
+		$subject = $DB->escape($subject);
+		$message = self::linkify($DB->msg_escape(self::refilterHTML(html_entity_decode($message))));
+		$timeSent = $DB->escape($timeSent);
+
+		$senderUserID = User::findEmail($fromMail); 
+		if( $senderUserID != 0 ){
+			$senderUser = New User($senderUserID);
+		}
+
+		if( 65000 < strlen($message) )
+		{
+			throw new Exception("Message too long");
+		}
+
+		libCache::wipeDir(libCache::dirName('mod_forum'));
+
+		// check if mail is a reply to an existing mail. If so, attach to thread
+		$tabl = $DB->sql_tabl("SELECT id, subject
+						FROM wD_ModForumMessages
+						WHERE fromMail = '".$fromMail."' and type='ThreadStart'
+						ORDER BY timeSent asc");
+
+		while( list($id, $existingSubject) = $DB->tabl_row(($tabl) )){
+			
+			if( strpos($subject, $existingSubject) != false ){
+				$threadID = $id;
+				break;
+			}
+
+		}
+
+		if( !isset($threadID) ){
+			// no existing thread -> start new one
+			$threadHeadContent = 'There is a new Mail in the mod-team-inbox (<a href="'.Config::$modEMailServerHTTP.'">Webmail</a>)<br /><br />';
+			
+			$threadHeadContent .= 'Subject: '.$subject.'<br />';
+			$threadHeadContent .= 'Sender: '.$fromName.' <'.$fromMail.'>';
+			if(isset($senderUser)) $threadHeadContent .= ' ('.$senderUser->profile_link().')';
+			$threadHeadContent .='<br />';
+			$threadHeadContent .= 'Time sent: '.libTime::text($timeSent);
+
+			$DB->sql_put("INSERT INTO wD_ModForumMessages
+						SET toID = 0, fromMail = '".$fromMail."', timeSent = ".$timeSent.",
+						message = '".$threadHeadContent."', subject = '".$subject."', replies = 0,
+						type = 'ThreadStart', latestReplySent = 0, adminReply = 'No'");
+
+			$threadID = $DB->last_inserted();
+		}
+
+		$DB->sql_put("INSERT INTO wD_ModForumMessages
+						SET toID = ".$threadID.", fromMail = '".$fromMail."', timeSent = ".$timeSent.",
+						message = '".$message."', subject = '', replies = 0,
+						type = 'ThreadReply', latestReplySent = 0, adminReply = 'No'");
+
+		$id = $DB->last_inserted();
+
+		$DB->sql_put("UPDATE wD_Users SET notifications = CONCAT_WS(',',notifications, 'ModForum') WHERE type LIKE '%Moderator%'");
+		
+		$DB->sql_put("UPDATE wD_ModForumMessages SET latestReplySent = ".$id.", replies = replies + 1 WHERE ( id=".$id." OR id=".$threadID." )");
+
+		return $id;
 	}
 }
 

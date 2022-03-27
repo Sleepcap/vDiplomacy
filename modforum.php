@@ -96,17 +96,21 @@ if( !isset($_REQUEST['page']) && isset($_REQUEST['viewthread']) && $viewthread )
 	$forumPager->currentPage = $forumPager->pageCount - floor($position/PagerForum::$defaultPostsPerPage);
 }
 
-if (isset($_REQUEST['toggleStatus']) && $_REQUEST['toggleStatus'] != $tab && isset($_REQUEST['actiontargetthread']) && $User->type['Moderator'])
+if (isset($_REQUEST['toggleStatus']) && isset($_REQUEST['actiontargetthread']) && $User->type['Moderator'])
 {
 	$actiontargetthread = $_REQUEST['actiontargetthread'];
 
 	list($status)=$DB->sql_row("SELECT status FROM wD_ModForumMessages WHERE id = ".$actiontargetthread);
 	$newstatus = $_REQUEST['toggleStatus'];
-	$DB->sql_put("UPDATE wD_ModForumMessages SET status='".$newstatus."' WHERE id = ".$actiontargetthread);		
-	
-	// switch tabs if thread should still be viewed
-	if($actiontargetthread == $viewthread)
-		$tab = $newstatus;
+
+	if ($newstatus != $status)
+	{
+		$DB->sql_put("UPDATE wD_ModForumMessages SET status='".$newstatus."' WHERE id = ".$actiontargetthread);		
+
+		// switch tabs if thread should still be viewed
+		if($actiontargetthread == $viewthread)
+			$tab = $_SESSION['modForumTab'] = $newstatus;
+	}
 }
 
 if (isset($_REQUEST['setAssigned']) && $User->type['Moderator'])
@@ -549,19 +553,27 @@ while( $message = $DB->tabl_hash($tabl) )
 		print $messageAnchor;
 	}
 
+	// Check for mutes first, before continuing
+	$deleteLink='';
+	if ($User->type['Moderator'] && $tab != 'Deleted' && ($message['assigned'] == $User->id || $message['assigned'] == 0 || strpos($message['userType'],'Moderator')!==false || $User->type['Admin']))
+	{
+		$deleteURL = 'modforum.php?actiontargetthread='.$message['id'].'&amp;toggleStatus=Deleted';
+		$deleteLink = ' <br /><a title="Move this thread to trash section" class="light likeMessageToggleLink" href="'.$deleteURL.'">Delete thread</a>';
+	}
+
 	print '<div class="leftRule message-head threadalternate'.$switch.'">
 
 		<a href="profile.php?userID='.$message['fromUserID'].'">'.$message['fromusername'].
 			' '.libHTML::loggedOn($message['fromUserID']).
 				' ('.$message['points'].' '.libHTML::points().User::typeIcon($message['userType']).')</a>'.
 			'<br />
-			<strong><em>'.libTime::text($message['timeSent']).'</em></strong><br />
+			<strong><em>'.libTime::text($message['timeSent']).'</em></strong>'.$deleteLink.'<br />
 		</div>';
 	
 	
 	if ($message['status']== "New")
 		print '<div class="message-subject" style="color:#990000;">';
-	elseif ($message['status']== "Resolved" || $message['status']== "Deleted")
+	elseif ($message['status']== "Resolved" || ($message['status']== "Deleted" && $User->type['Moderator'] /* Hide deletion state to requester */))
 		print '<div class="message-subject" style="color:#888888;">';
 	else
 		print '<div class="message-subject">';
@@ -925,11 +937,6 @@ while( $message = $DB->tabl_hash($tabl) )
 	{
 		print '<a href="modforum.php?viewthread='.$message['id'].'#'.$message['id'].'" '.
 			'title="Open this thread to view the replies, or post your own reply">Open</a>';
-
-		// thread may be directly moved to trash by a moderator who is either assigned to the thread or who is trying to delete a non-public or non-assigned thread or who is also an admin (no validation on response!)
-		if ($User->type['Moderator'] && $tab != 'Deleted' && ($message['assigned'] == $User->id || $message['assigned'] == 0 || strpos($message['userType'],'Moderator')!==false || $User->type['Admin']))
-			print ' <a href="modforum.php?actiontargetthread='.$message['id'].'&amp;toggleStatus=Deleted" '.
-				'title="Move this thread to trash section">Delete</a>';
 	}
 
 	print "</div>

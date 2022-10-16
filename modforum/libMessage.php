@@ -155,12 +155,12 @@ class ModForumMessage
 		// check if mail is a reply to an existing mail. If so, attach to thread
 		$tabl = $DB->sql_tabl("SELECT id, subject
 						FROM wD_ModForumMessages
-						WHERE fromMail = '".$fromMail."' and type='ThreadStart'
+						WHERE fromMail = '".$fromMail."' and type='ThreadStart' and subject <> ''
 						ORDER BY timeSent asc");
 
 		while( list($id, $existingSubject) = $DB->tabl_row(($tabl) )){
-			
-			if( strpos($subject, $existingSubject) != false ){
+
+			if( strpos($subject, $existingSubject) !== false ){
 				$threadID = $id;
 				break;
 			}

@@ -39,7 +39,7 @@ if ($headers != false)
 	$lastDate = $Misc->vDipLastMail;
 	foreach ($sortedMails as $mail)
 	{
-		$subject = quoted_printable_decode($mail->header->subject);
+		$subject = property_exists($mail->header, 'subject') && $mail->header->subject != '' ? mb_decode_mimeheader($mail->header->subject) :  "[No subject]";
 		$fromName	= quoted_printable_decode($mail->header->fromaddress);
 		$fromMail 	= quoted_printable_decode($mail->header->from[0]->mailbox.'@'.$mail->header->from[0]->host);
 		$date    = quoted_printable_decode($mail->header->udate);

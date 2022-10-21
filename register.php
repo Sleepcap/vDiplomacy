@@ -89,9 +89,7 @@ if ( isset($_COOKIE['imageToken']) && isset($_REQUEST['imageText']) && isset($_R
 
 		// Prelim checks look okay, lets send the e-mail
 		$Mailer->Send(array($email=>$email), l_t('Your new vDiplomacy account'),
-			l_t("Hello and welcome!")."<br><br>
-
-			".l_t("Thanks for validating your e-mail address; just use this link to create your new vDiplomacy account:")."<br>
+			l_t("Thanks for validating your e-mail address; just use this link to create your new vDiplomacy account:")."<br>
 			".libAuth::email_validateURL($email)."<br><br>
 
 			".l_t("There are two main rules to keep in mind:")."<br>

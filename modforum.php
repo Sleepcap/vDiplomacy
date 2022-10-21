@@ -218,9 +218,9 @@ AND ($_REQUEST['newmessage'] != "") ) {
 		{
 			// To a thread
 			$threadDetails = $DB->sql_hash(
-				"SELECT f.id, f.latestReplySent, f.assigned, u.type as userType
+				"SELECT f.id, f.latestReplySent, f.assigned, u.type as userType, f.subject, f.fromMail
 				FROM wD_ModForumMessages f 
-				INNER JOIN wD_Users u ON ( f.fromUserID = u.id )
+				LEFT JOIN wD_Users u ON ( f.fromUserID = u.id )
 				WHERE f.id=".$new['sendtothread']."
 					AND f.type='ThreadStart'");
 
@@ -234,9 +234,10 @@ AND ($_REQUEST['newmessage'] != "") ) {
 					$new['id'] = ModForumMessage::send( $new['sendtothread'],
 						$fromUserID,
 						$new['message'],
-							'',
+							'RE: '.$threadDetails['subject'],
 							'ThreadReply',
-							(isset($_REQUEST['ReplyAdmin']) ? 'Yes' : 'No')
+							(isset($_REQUEST['ReplyAdmin']) ? 'Yes' : 'No'),
+							$threadDetails['fromMail']
 							);
 
 					$_SESSION['lastPostText']=$new['message'];
@@ -943,7 +944,14 @@ while( $message = $DB->tabl_hash($tabl) )
 			{
 				print '<input type="submit" ';
 				if (strpos($message['userType'],'Moderator')===false && $User->type['Moderator'])
-					print 'onclick="return confirm(\'Are you sure you want post this reply visible for the thread-starter too?\');"';
+				{
+					if( isset($message['fromMail']) ) 
+					{
+						print 'onclick="return confirm(\'Are you sure you want send this reply visible as email to \\\''.$message['fromMail'].'\\\'?\');"';
+					} else {
+						print 'onclick="return confirm(\'Are you sure you want post this reply visible for the thread-starter too?\');"';
+					}
+				}
 				print 'class="form-submit" value="Post reply" name="Reply">';
 				
 				if (strpos($message['userType'],'Moderator')===false && $User->type['Moderator'])

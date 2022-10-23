@@ -218,9 +218,9 @@ AND ($_REQUEST['newmessage'] != "") ) {
 		{
 			// To a thread
 			$threadDetails = $DB->sql_hash(
-				"SELECT f.id, f.latestReplySent, f.assigned, u.type as userType
+				"SELECT f.id, f.latestReplySent, f.assigned, u.type as userType, f.subject, f.fromMail
 				FROM wD_ModForumMessages f 
-				INNER JOIN wD_Users u ON ( f.fromUserID = u.id )
+				LEFT JOIN wD_Users u ON ( f.fromUserID = u.id )
 				WHERE f.id=".$new['sendtothread']."
 					AND f.type='ThreadStart'");
 
@@ -234,9 +234,10 @@ AND ($_REQUEST['newmessage'] != "") ) {
 					$new['id'] = ModForumMessage::send( $new['sendtothread'],
 						$fromUserID,
 						$new['message'],
-							'',
+							'RE: '.$threadDetails['subject'],
 							'ThreadReply',
-							(isset($_REQUEST['ReplyAdmin']) ? 'Yes' : 'No')
+							(isset($_REQUEST['ReplyAdmin']) ? 'Yes' : 'No'),
+							$threadDetails['fromMail']
 							);
 
 					$_SESSION['lastPostText']=$new['message'];
@@ -504,12 +505,12 @@ if( file_exists($cacheHTML) )
 	print $cacheHTML;
 
 $tabl = $DB->sql_tabl("SELECT
-	f.id, f.fromUserID, f.timeSent, f.message, f.subject, f.replies,
+	f.id, u.id as fromUserID, f.timeSent, f.message, f.subject, f.replies, f.fromMail,
 		u.username as fromusername, u.points as points, f.latestReplySent, IF(s.userID IS NULL,0,1) as online, u.type as userType, 
 		f.status as status,
 		f.assigned, u2.username as modname
 	FROM wD_ModForumMessages f
-	INNER JOIN wD_Users u ON ( f.fromUserID = u.id )
+	LEFT JOIN wD_Users u ON ( f.fromUserID = u.id OR (f.fromUserID IS NULL AND f.fromMail = u.email) )
 	LEFT JOIN wD_Users u2 ON ( f.assigned = u2.id )
 	LEFT JOIN wD_Sessions s ON ( u.id = s.userID )
 	WHERE f.type = 'ThreadStart'
@@ -533,13 +534,14 @@ while( $message = $DB->tabl_hash($tabl) )
 		list($message['latestReplySent']) = $DB->sql_row("SELECT id FROM wD_ModForumMessages WHERE (toID=".$message['id']." OR id=".$message['id'].") AND adminReply='No' ORDER BY id DESC LIMIT 1");
 	}
 	
-	print '<div class="hr userID'.$message['fromUserID'].' threadID'.$message['id'].'"></div>'; // Add the userID and threadID so muted users/threads dont create lines where their threads were
+	print '<div class="hr'.(isset($message['fromUserID'])?' userID'.$message['fromUserID']:'').' threadID'.$message['id'].'"></div>'; // Add the userID and threadID so muted users/threads dont create lines where their threads were
+
 
 	$switch = 3-$switch; // 1,2,1,2,1,2...
 
 	$messageAnchor = '<a name="'.($new['id'] == $message['id'] ? 'postbox' : $message['id']).'"></a>';
 
-	print '<div class="thread threadID'.$message['id'].' threadborder'.$switch.' threadalternate'.$switch.' userID'.$message['fromUserID'].'">';
+	print '<div class="thread threadID'.$message['id'].' threadborder'.$switch.' threadalternate'.$switch.(isset($message['fromUserID'])?' userID'.$message['fromUserID']:'').'">';
 
 	// New or archived posts anchor to the start of the thread
 	if ( $User->timeLastSessionEnded < $message['timeSent'] )
@@ -555,19 +557,36 @@ while( $message = $DB->tabl_hash($tabl) )
 
 	// Check for mutes first, before continuing
 	$deleteLink='';
-	if ($User->type['Moderator'] && $tab != 'Deleted' && ($message['assigned'] == $User->id || $message['assigned'] == 0 || strpos($message['userType'],'Moderator')!==false || $User->type['Admin']))
+	if ($User->type['Moderator'] && $tab != 'Deleted' && ($message['assigned'] == $User->id || $message['assigned'] == 0 || (isset($message['userType']) && strpos($message['userType'],'Moderator')!==false) || $User->type['Admin']))
 	{
 		$deleteURL = 'modforum.php?actiontargetthread='.$message['id'].'&amp;toggleStatus=Deleted';
 		$deleteLink = ' <br /><a title="Move this thread to trash section" class="light likeMessageToggleLink" href="'.$deleteURL.'">Delete thread</a>';
 	}
 
-	print '<div class="leftRule message-head threadalternate'.$switch.'">
+	print '<div class="leftRule message-head threadalternate'.$switch.'">';
 
-		<a href="profile.php?userID='.$message['fromUserID'].'">'.$message['fromusername'].
-			' '.libHTML::loggedOn($message['fromUserID']).
-				' ('.$message['points'].' '.libHTML::points().User::typeIcon($message['userType']).')</a>'.
-			'<br />
-			<strong><em>'.libTime::text($message['timeSent']).'</em></strong>'.$deleteLink.'<br />
+	if( isset($message['fromMail']) )
+	{
+		print $message['fromMail'];
+
+		if( isset($message['fromUserID']) )
+		{
+			print '<br /><a href="profile.php?userID='.$message['fromUserID'].'">'.$message['fromusername'].
+				' '.libHTML::loggedOn($message['fromUserID']).
+					' ('.$message['points'].' '.libHTML::points().User::typeIcon($message['userType']).')</a>';	
+		}
+		else
+		{
+			print ' <em>(external)</em>';
+		}
+	}
+	else
+	{
+		print '<a href="profile.php?userID='.$message['fromUserID'].'">'.$message['fromusername'].
+				' '.libHTML::loggedOn($message['fromUserID']).
+					' ('.$message['points'].' '.libHTML::points().User::typeIcon($message['userType']).')</a>';
+	}
+	print '<br /><strong><em>'.libTime::text($message['timeSent']).'</em></strong>'.$deleteLink.'<br />
 		</div>';
 	
 	
@@ -634,13 +653,13 @@ while( $message = $DB->tabl_hash($tabl) )
 		}
 		// We are viewing the thread; print replies
 		$replytabl = $DB->sql_tabl(
-			"SELECT f.id, fromUserID, f.timeSent, f.message, u.points as points, IF(s.userID IS NULL,0,1) as online,
+			"SELECT f.id, u.id as fromUserID, f.timeSent, f.message, u.points as points, IF(s.userID IS NULL,0,1) as online, f.fromMail,
 					u.username as fromusername, f.toID, u.type as userType, 
 					f.adminReply as adminReply,
 					r.forceReply
 				FROM wD_ModForumMessages f
 				LEFT JOIN wD_ForceReply r ON ( f.id = r.id )
-				INNER JOIN wD_Users u ON ( f.fromUserID = u.id )
+				LEFT JOIN wD_Users u ON ( f.fromUserID = u.id OR (f.fromUserID IS NULL AND f.fromMail = u.email) )
 				LEFT JOIN wD_Sessions s ON ( u.id = s.userID )
 				WHERE f.toID=".$message['id']." AND f.type='ThreadReply'
 				GROUP BY f.id
@@ -662,7 +681,7 @@ while( $message = $DB->tabl_hash($tabl) )
 			$replyswitch = 3-$replyswitch;//1,2,1,2,1...
 			
 			print '<div class="reply replyborder'.$replyswitch.' replyalternate'.$replyswitch.'
-				'.($replyNumber ? '' : 'reply-top').' userID'.$reply['fromUserID'].'"
+				'.($replyNumber ? '' : 'reply-top').( isset($reply['fromUserID']) ? ' userID'.$reply['fromUserID']: '').'"
 				'.($reply['adminReply']=='Yes' ? 'style="background-color:#ffffff;"' : '').'
 				>';
 			$replyNumber++;
@@ -688,14 +707,34 @@ while( $message = $DB->tabl_hash($tabl) )
 			print '<div class="message-head replyalternate'.$replyswitch.' leftRule"
 					'.($reply['adminReply']=='Yes' ? 'style="background-color:#ffffff;"' : '').'>';
 
-			if ($User->type['Moderator'] || $reply['fromUserID'] == $User->id || $reply['fromUserID'] == 5)
+			if( isset($reply['fromMail']) )
+			{
+				if( $User->type['Moderator'] )
+				{
+					print $reply['fromMail'];
+
+					if( isset($reply['fromUserID']) )
+					{
+						print '<br /><a href="profile.php?userID='.$reply['fromUserID'].'">'.$reply['fromusername'].
+							' '.libHTML::loggedOn($reply['fromUserID']).
+								' ('.$reply['points'].' '.libHTML::points().User::typeIcon($reply['userType']).')</a>';	
+					}
+					else
+					{
+						print ' <em>(external)</em>';
+					}
+				}
+			}
+			elseif ($User->type['Moderator'] || ( isset($reply['fromUserID']) && ( $reply['fromUserID'] == $User->id || $reply['fromUserID'] == 5 )))
+			{
 				print '<strong><a href="profile.php?userID='.$reply['fromUserID'].'">'.$reply['fromusername'].' '.
 					libHTML::loggedOn($reply['fromUserID']).
-						' ('.$reply['points'].' '.libHTML::points().User::typeIcon($reply['userType']).')';
+						' ('.$reply['points'].' '.libHTML::points().User::typeIcon($reply['userType']).')</a></strong>';
+			}
 			else
-				print '<strong><a href="modforum.php">Mod-Team';
+				print '<strong><a href="modforum.php">Mod-Team</a></strong>';
 			
-			print '</a></strong><br />';
+			print '<br />';
 
 			print libHTML::forumMessage($message['id'],$reply['id']);
 
@@ -745,7 +784,7 @@ while( $message = $DB->tabl_hash($tabl) )
 			
 			print '<div class="message-body replyalternate'.$replyswitch.'" '
 					.($reply['adminReply']=='Yes' ? 'style="background-color:#ffffff;"' : '').'>
-					<div class="message-contents" fromUserID="'.$reply['fromUserID'].'">'.$reply['message'].'</div>
+					<div class="message-contents" '.( isset($reply['fromUserID']) ? 'fromUserID="'.$reply['fromUserID'] : '').'">'.$reply['message'].'</div>
 				</div>
 
 				<div style="clear:both"></div>';
@@ -901,11 +940,18 @@ while( $message = $DB->tabl_hash($tabl) )
 
 			print '<br>';
 			
-			if ($message['modname'] == '' || $message['modname'] == $User->username || $message['fromUserID'] == $User->id || ($User->id == 5 && $tab=='Bugs'))
+			if ($message['modname'] == '' || $message['modname'] == $User->username || ( isset($message['fromUserID']) && $message['fromUserID'] == $User->id ) || ($User->id == 5 && $tab=='Bugs'))
 			{
 				print '<input type="submit" ';
 				if (strpos($message['userType'],'Moderator')===false && $User->type['Moderator'])
-					print 'onclick="return confirm(\'Are you sure you want post this reply visible for the thread-starter too?\');"';
+				{
+					if( isset($message['fromMail']) ) 
+					{
+						print 'onclick="return confirm(\'Are you sure you want send this reply visible as email to \\\''.$message['fromMail'].'\\\'?\');"';
+					} else {
+						print 'onclick="return confirm(\'Are you sure you want post this reply visible for the thread-starter too?\');"';
+					}
+				}
 				print 'class="form-submit" value="Post reply" name="Reply">';
 				
 				if (strpos($message['userType'],'Moderator')===false && $User->type['Moderator'])

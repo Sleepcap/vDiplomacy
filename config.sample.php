@@ -138,6 +138,14 @@ class Config
 	public static $modEMailServerHTTP='https://webmail.your-server.de'; // URL-Link to the server
 	public static $modEMailLogin='';
 	public static $modEMailPassword='';
+	public static $modEMailName='vDiplomacy Moderator Team';
+
+	/**
+	 * Site name to be shown at various places on the application and inside mails.
+	 * 
+	 * @var string
+	 */
+	public static $siteName='vDiplomacy';
    
 	/**
 	 * If you use the piwik-webanalyser define his path here. If not comment this out.

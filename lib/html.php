@@ -141,9 +141,9 @@ class libHTML
 	 * The points icon
 	 * @return string
 	 */
-	static function points()
+	static function points($path = '')
 	{
-		return ' <img src="'.l_s('images/icons/points.png').'" alt="D" title="'.l_t('webDiplomacy points').'" />';
+		return ' <img src="'.$path.l_s('images/icons/points.png').'" alt="D" title="'.l_t('webDiplomacy points').'" />';
 	}
 	
 	static function forumMessage($threadID, $messageID)

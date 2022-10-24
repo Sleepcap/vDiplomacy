@@ -90,7 +90,7 @@ if ($variantID != 0)
 	$variantbase = "variants/" . Config::$variants[$variantID];
 
 	$edit = false;
-	if ($User->id == 5) $edit=true;
+	if ($User->type['DevAdmin']) $edit=true;
 	if (isset(Config::$devs))
 		if (array_key_exists($User->username, Config::$devs)) 
 		 if (in_array(Config::$variants[$variantID], Config::$devs[$User->username]))
@@ -186,7 +186,7 @@ if ($variantID != 0)
 			exit;
 		}
 
-		if ($action == 'verify' && ($User->id == 5)) {
+		if ($action == 'verify' && ($User->type['DevAdmin'])) {
 			if (file_exists ($variantbase.$basedir.$file))
 			{
 				$newfile = substr($file, 0, -18);
@@ -251,7 +251,7 @@ if ($variantID != 0)
 			}
 			
 			// Superuser can verify files:
-			if (($User->id == 5) && substr($file, -7) == "verify)")
+			if (($User->type['DevAdmin']) && substr($file, -7) == "verify)")
 				print('<td><a href="' . $_SERVER['SCRIPT_NAME'].'?tab=Files&variantID='.$variantID.'&action=verify&file='.$file.'&basedir='.$dirname.'">Verify</a></td>');
 				
 			print("</tr>\n");

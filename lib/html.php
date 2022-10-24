@@ -1021,7 +1021,7 @@ class libHTML
 
 		// Make the devTools top-menue visible to developers
 		if (is_object($User))
-			if ($User->id == 5 || isset(Config::$devs))
+			if ($User->type['DevAdmin'] || isset(Config::$devs))
 				if ($User->type['Admin'] || array_key_exists($User->username, Config::$devs))
 					$links['dev.php']=array('name'=>'DevTools', 'inmenu'=>TRUE);
 
@@ -1163,7 +1163,7 @@ class libHTML
 					 
 					// Make the devTools top-menue visible to developers
 					if (is_object($User))
-						if ( ($User->id == 5 || isset(Config::$devs)) && ($User->type['Admin'] || array_key_exists($User->username, Config::$devs)) )
+						if ( ($User->type['DevAdmin'] || isset(Config::$devs)) && ($User->type['Admin'] || array_key_exists($User->username, Config::$devs)) )
 						{
 							$variantID = ( isset($_REQUEST['variantID']) && (isset(Config::$variants[intval($_REQUEST['variantID'])])) ) 
 								? intval($_REQUEST['variantID']) 

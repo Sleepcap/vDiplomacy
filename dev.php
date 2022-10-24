@@ -27,7 +27,7 @@ if(!$User->type['User'])
 $variantID = ( isset($_REQUEST['variantID']) && (isset(Config::$variants[intval($_REQUEST['variantID'])])) ) ? intval($_REQUEST['variantID']) : '0'; 
 
 // Admins can edit maps, and users with developer-access can edit their own variants.
-$edit = ( ($User->id == 5) ? true : false);
+$edit = ( ($User->type['DevAdmin']) ? true : false);
 if (isset(Config::$devs) && $variantID != 0)
 	if (array_key_exists($User->username, Config::$devs)) 
 	 if (in_array(Config::$variants[$variantID], Config::$devs[$User->username]))

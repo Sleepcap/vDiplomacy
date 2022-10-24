@@ -46,7 +46,7 @@ foreach ( $errorlogs as $errorlog )
 		</tr>';
 print '</TABLE>';
 
-if ($User->id == 5)
+if ($User->type['DevAdmin'])
 {
 	if (isset($_REQUEST['newVariantName']))
 	{
@@ -93,7 +93,7 @@ if ($User->id == 5)
 }
 print '<div class="hr"></div>';
 
-if ($User->id == 5)
+if ($User->type['DevAdmin'])
 {
 	if ( isset($_REQUEST['gameID']) && isset($_REQUEST['fillGame']) )
 	{

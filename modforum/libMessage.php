@@ -98,7 +98,12 @@ class ModForumMessage
 		{
 			require_once(l_r('objects/mailer.php'));
 			$Mailer = new Mailer();
-			$Mailer->Send(array($sendMailTo=>$sendMailTo), $subject, self::linkifyWithAbsPaths($message), 'mod');
+			$Mailer->Send(array($sendMailTo=>$sendMailTo), $subject, stripslashes(self::linkifyWithAbsPaths($message)), 'mod');
+			/* Note on stripslashes:
+			 * By design / architecture $DB->msg_escape is called much earlier in execution and results in the message being also excaped with respect to quotes.
+			 * We decide to revert the quote escapes here for sending out the mail instead of passing an unescaped message down since changing the current
+			 * behavior in this one case just seems to dangerous. Unescaped strings could too easily end up in the DB and mess things up there.
+			 */
 		}
 
 		if( $type === 'ThreadReply' )

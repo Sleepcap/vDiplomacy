@@ -939,6 +939,8 @@ while( $message = $DB->tabl_hash($tabl) )
 			}
 
 			print '<br>';
+
+			$showInternalReplyButton = (strpos($message['userType'],'Moderator')===false || isset($message['fromMail']))&& $User->type['Moderator'];
 			
 			if ($message['modname'] == '' || $message['modname'] == $User->username || ( isset($message['fromUserID']) && $message['fromUserID'] == $User->id ) || ($User->id == 5 && $tab=='Bugs'))
 			{
@@ -954,11 +956,11 @@ while( $message = $DB->tabl_hash($tabl) )
 				}
 				print 'class="form-submit" value="Post reply" name="Reply">';
 				
-				if (strpos($message['userType'],'Moderator')===false && $User->type['Moderator'])
+				if ($showInternalReplyButton)
 					print ' - ';
 			}
 			
-			if (strpos($message['userType'],'Moderator')===false && $User->type['Moderator'])
+			if ($showInternalReplyButton)
 				print '<input type="submit" class="form-submit" value="Only for admins" name="ReplyAdmin">';			
 									
 			print '</p></form></div>

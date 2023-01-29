@@ -49,7 +49,6 @@ $tabl=$DB->sql_tabl('SELECT type, text, linkName, linkID, timeSent FROM wD_Notic
 	WHERE toUserID = "'.$userID.'" AND substring(linkName,1,3) <> "To:"
 	ORDER BY timeSent DESC LIMIT 50');
 	
-$index = 0;
 while(list($type, $text, $linkName, $linkID, $timeSent) = $DB->tabl_row($tabl))
 {
 	if ($type == 'Game')
@@ -64,11 +63,10 @@ while(list($type, $text, $linkName, $linkID, $timeSent) = $DB->tabl_row($tabl))
 	$rssfeed .= "    <item>\n";
 	$rssfeed .= "      <title>".$linkName."</title>\n";
 	$rssfeed .= "      <description>".$text."</description>\n";
-	$rssfeed .= "      <guid>".$link."time".$timeSent."index".$index."</guid>\n";
+	$rssfeed .= "      <guid>".$link."time".$timeSent."</guid>\n";
 	$rssfeed .= "      <link>".$link."</link>\n";
 	$rssfeed .= "      <pubDate>".date("D, d M Y H:i:s O", $timeSent)."</pubDate>\n";
 	$rssfeed .= "    </item>\n";
-	$index++;
 }
  
 $rssfeed .= "  </channel>\n";

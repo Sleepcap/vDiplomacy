@@ -63,7 +63,8 @@ while(list($type, $text, $linkName, $linkID, $timeSent) = $DB->tabl_row($tabl))
 	$rssfeed .= "    <item>\n";
 	$rssfeed .= "      <title>".$linkName."</title>\n";
 	$rssfeed .= "      <description>".$text."</description>\n";
-	$rssfeed .= "      <guid>".$link."time".$timeSent."</guid>\n";
+	// remove guid entry as it is not unique (timeSent can be duplicate)
+	// $rssfeed .= "      <guid>".$link."time".$timeSent."</guid>\n";
 	$rssfeed .= "      <link>".$link."</link>\n";
 	$rssfeed .= "      <pubDate>".date("D, d M Y H:i:s O", $timeSent)."</pubDate>\n";
 	$rssfeed .= "    </item>\n";

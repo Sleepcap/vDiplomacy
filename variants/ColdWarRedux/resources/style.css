@@ -1,0 +1,12 @@
+@CHARSET "ISO-8859-1";
+
+.variantColdWarRedux .country0 { color: #CE7800 ! important; } /* Neutral */
+.variantColdWarRedux .country1 { color: #BE0707 ! important; } /* USSR */
+.variantColdWarRedux .country2 { color: #3CBCD8 ! important; } /* NATO */
+.variantColdWarRedux .country3 { color: #7B5EFF ! important; } /* USA */
+.variantColdWarRedux .country4 { color: #FF6A00 ! important; } /* PRC */
+
+.variantColdWarRedux .occupationBar1 { background-color: #BE0707; } /* USSR */
+.variantColdWarRedux .occupationBar2 { background-color: #3CBCD8; } /* NATO */
+.variantColdWarRedux .occupationBar3 { background-color: #7B5EFF; } /* USA */
+.variantColdWarRedux .occupationBar4 { background-color: #FF6A00; } /* PRC */

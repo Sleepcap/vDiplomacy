@@ -199,7 +199,7 @@ if ($variantID != 0)
 		}
 		print'</table><br>';
 
-		$strXML['Drawn']       = "<graph caption='Draws by Country'          xAxisName='Country' yAxisName='Draws'       decimalPrecision='0' formatNumberScale='0'>";
+		/* $strXML['Drawn']       = "<graph caption='Draws by Country'          xAxisName='Country' yAxisName='Draws'       decimalPrecision='0' formatNumberScale='0'>";
 		$strXML['Solo']        = "<graph caption='Solo Victories by Country' xAxisName='Country' yAxisName='Solos'       decimalPrecision='0' formatNumberScale='0'>";
 		$strXML['Performance'] = "<graph caption='Performance by Country'    xAxisName='Country' yAxisName='Performance' decimalPrecision='0' formatNumberScale='0'>";
 		$strXML['Result']      = "<graph caption='Result Types by Map'       xAxisName='Result'  yAxisName='Count'       decimalPrecision='0' formatNumberScale='0'>";
@@ -224,7 +224,7 @@ if ($variantID != 0)
 			echo renderChart("contrib/FusionChartsFree/FCF_Column3D.swf", "", $strXML['Solo'] , "Solo", 700, 300);
 		if ($g_info['Drawn'] > 0)
 			echo renderChart("contrib/FusionChartsFree/FCF_Column3D.swf", "", $strXML['Drawn'], "Drawn", 700, 300);
-		echo renderChart("contrib/FusionChartsFree/FCF_Column3D.swf", "", $strXML['Result'], "Result", 700, 300);
+		echo renderChart("contrib/FusionChartsFree/FCF_Column3D.swf", "", $strXML['Result'], "Result", 700, 300); */
 	
 	}
 }

@@ -664,8 +664,9 @@ class processMembers extends Members
 					SET userID = ".$User->id.", status='Playing', orderStatus=REPLACE(orderStatus,'Ready',''),
 						timeLoggedIn = ".time()."
 						, votes=''
-					WHERE id = ".$CD->id);
-			$DB->sql_put('DELETE FROM wD_WatchedGames WHERE userID='.$User->id. ' AND gameID='.$this->Game->id);		
+						, excusedMissedTurns=".$this->Game->excusedMissedTurns
+					." WHERE id = ".$CD->id);
+			$DB->sql_put('DELETE FROM wD_WatchedGames WHERE userID='.$User->id. ' AND gameID='.$this->Game->id);
 
 			unset($this->ByUserID[$CD->userID]);
 			unset($this->ByStatus['Left'][$CD->id]);

@@ -1,0 +1,32 @@
+@CHARSET "ISO-8859-1";
+
+.variantEastIndies .country0 { color: #000000 ! important; } /* Neutral */
+.variantEastIndies .country1 { color: #DD51BD ! important; } /* Bahmana */
+.variantEastIndies .country2 { color: #4F5154 ! important; } /* Brunei */
+.variantEastIndies .country3 { color: #007BA5 ! important; } /* Delhi */
+.variantEastIndies .country4 { color: #259901 ! important; } /* Gondwana */
+.variantEastIndies .country5 { color: #3A368A ! important; } /* Majapahit */
+.variantEastIndies .country6 { color: #30972E ! important; } /* Malacca */
+.variantEastIndies .country7 { color: #8B481A ! important; } /* Mughalistan */
+.variantEastIndies .country8 { color: #C48F85 ! important; } /* Persia */
+.variantEastIndies .country9 { color: #B8AD00 ! important; } /* Rajputana */
+.variantEastIndies .country10 { color: #D30300 ! important; } /* Ayutthaya */
+.variantEastIndies .country11 { color: #AC65AB ! important; } /* Ternate */
+.variantEastIndies .country12 { color: #917214 ! important; } /* Tondo */
+.variantEastIndies .country13 { color: #A5A500 ! important; } /* Dai Viet */
+.variantEastIndies .country14 { color: #CE7100 ! important; } /* Vijayanagar */
+
+.variantEastIndies .occupationBar1 { background-color: #EFC4E4; } /* Bahmana */
+.variantEastIndies .occupationBar2 { background-color: #C2C5CE; } /* Brunei */
+.variantEastIndies .occupationBar3 { background-color: #79AFC6; } /* Delhi */
+.variantEastIndies .occupationBar4 { background-color: #A4C499; } /* Gondwana */
+.variantEastIndies .occupationBar5 { background-color: #6C6AC1; } /* Majapahit */
+.variantEastIndies .occupationBar6 { background-color: #439E3F; } /* Malacca */
+.variantEastIndies .occupationBar7 { background-color: #A08A75; } /* Mughalistan */
+.variantEastIndies .occupationBar8 { background-color: #C48F85; } /* Persia */
+.variantEastIndies .occupationBar9 { background-color: #EAEAAF; } /* Rajputana */
+.variantEastIndies .occupationBar10 { background-color: #F94B48; } /* Ayutthaya */
+.variantEastIndies .occupationBar11 { background-color: #AA63AA; } /* Ternate */
+.variantEastIndies .occupationBar12 { background-color: #B29337; } /* Tondo */
+.variantEastIndies .occupationBar13 { background-color: #DBDB4A; } /* Dai Viet */
+.variantEastIndies .occupationBar14 { background-color: #FFAB51; } /* Vijayanagar */

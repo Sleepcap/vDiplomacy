@@ -15,7 +15,9 @@
  * CustomMap rule enables you to add a custom map to your variant. 
  * 
  * In your variant provide the following files
- * 	classes/adjudicatorPreGame.php
+ * 	classes/
+ * 		adjudicatorPreGame.php -> custom starting positions
+ * 		drawMap.php -> custom country colors
  * 	resources/
  * 		smallmap.png
  * 		smallmapNames.png

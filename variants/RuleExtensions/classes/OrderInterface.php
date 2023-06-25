@@ -15,6 +15,7 @@ class RuleExtensionsVariant_OrderInterface_base extends OrderInterface
 	}
 }
 
+require_once('1_CustomIcons/OrderInterface.php');
 require_once('3_BuildAnywhere/OrderInterface.php');
 
 class RuleExtensionsVariant_OrderInterface extends BuildAnywhere_OrderInterface {}

@@ -2,7 +2,7 @@
 
 defined('IN_CODE') or die('This script can not be run by itself.');
 
-class BuildAnywhere_OrderInterface extends RuleExtensionsVariant_OrderInterface_base {
+class BuildAnywhere_OrderInterface extends CustomIcons_OrderInterface {
 
 	protected function jsLoadBoard() {
 

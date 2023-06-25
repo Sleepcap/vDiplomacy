@@ -7,6 +7,8 @@
  * $this->rules[<rule_string_constant>] = true;
  * 
  * And make sure that your variant class and all its class extensions extend the respective RuleExtensionClasses (e.g. 'YourVariant extends RuleExtensionsVariant').
+ * 
+ * If RuleExtensionsVariant should also control interactive map behavior, make sure to add class in interactiveMap/interactiveMap.php that extends the respective class in RuleExtensions variant.
  */
 
 /**

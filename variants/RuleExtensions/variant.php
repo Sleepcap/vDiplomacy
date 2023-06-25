@@ -41,19 +41,19 @@ const RULE_CUSTOM_ICONS = 'CustomIcons';
 /**
  * CustomIconsPerCountry enables you to define country specific unit icons.
  * 
- * In your variant provide the following icon files per country in the numeric order you defined them in your variant class.
+ * In your variant provide the following icon files per country in your variant class.
  * 	resources/
- * 		smallarmy_0.png
- * 		smallarmy_1.png
+ * 		smallarmy<countryName1>.png
+ * 		smallarmy<countryName2>.png
  * 		...
- * 		smallfleet_0.png
- * 		smallfleet_1.png
+ * 		smallfleet<countryName1>.png
+ * 		smallfleet<countryName2>.png
  * 		...
- * 		army_0.png
- * 		army_1.png
+ * 		army<countryName1>.png
+ * 		army<countryName2>.png
  * 		...
- * 		fleet_0.png
- * 		fleet_1.png
+ * 		fleet<countryName1>.png
+ * 		fleet<countryName2>.png
  * 
  * CustomIconsPerCountry and CustomIcons can not be activated in parallel.
  */
@@ -105,6 +105,13 @@ abstract class RuleExtensionsVariant extends ClassicVariant {
 			// Load variant specific icons
 			$this->variantClasses['drawMap'] = self::$ruleExtensionVariantName;
 			// Adjust variant specific icons in board interface
+			$this->variantClasses['OrderInterface'] = self::$ruleExtensionVariantName;
+		}
+
+		if($this->rules[RULE_CUSTOM_ICONS_PER_COUNTRY]) {
+			// Load variant and country specific icons
+			$this->variantClasses['drawMap'] = self::$ruleExtensionVariantName;
+			// Adjust variant and country specific icons in board interface
 			$this->variantClasses['OrderInterface'] = self::$ruleExtensionVariantName;
 		}
 

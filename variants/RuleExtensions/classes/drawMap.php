@@ -17,7 +17,8 @@ class RuleExtensionsVariant_drawMap_base extends ClassicVariant_drawMap
 
 require_once('0_CustomMap/drawMap.php');
 require_once('1_CustomIcons/drawMap.php');
+require_once('2_CustomIconsPerCountry/drawMap.php');
 
-class RuleExtensionsVariant_drawMap  extends CustomIcons_drawMap {}
+class RuleExtensionsVariant_drawMap  extends CustomIconsPerCountry_drawMap {}
 
 ?>

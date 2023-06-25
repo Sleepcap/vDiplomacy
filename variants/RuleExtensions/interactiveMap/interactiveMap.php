@@ -21,5 +21,6 @@ class RuleExtensionsVariant_IAmap_base extends IAmap
 }
 
 require_once('1_CustomIcons/interactiveMap.php');
+// todo: implement custom build icons per country
 
 class RuleExtensionsVariant_IAmap extends CustomIcons_IAmap {}

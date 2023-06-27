@@ -56,7 +56,7 @@ class CustomIconsPerCountry_drawMap extends CustomIcons_drawMap {
 	public function addUnit($terrID, $unitType)
 	{
 		if(!$this->Variant->rules[RULE_CUSTOM_ICONS_PER_COUNTRY]){
-			return parent::countryFlag($terrID, $unitType);
+			return parent::addUnit($terrID, $unitType);
 		}
 
 		$this->army  = $this->army_c[$this->unit_c[$terrID]];

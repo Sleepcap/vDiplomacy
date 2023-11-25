@@ -26,7 +26,11 @@ class CustomIcons_IAmap extends RuleExtensionsVariant_IAmap_base
 		return $resources;
     }
 
-    protected function setTransparancies() {}
+    protected function setTransparancies() {
+        if(!$this->Variant->rules[RULE_CUSTOM_ICONS]){
+			return parent::setTransparancies();
+		}
+    }
 
     protected function jsFooterScript() {
         if(!$this->Variant->rules[RULE_CUSTOM_ICONS]){

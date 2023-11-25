@@ -61,7 +61,13 @@ const RULE_CUSTOM_ICONS_PER_COUNTRY = 'CustomIconsPerCountry';
 /**
  * BuildAnywhere lets players build on every open SC they own.
  */
-const RULE_BUILD_ANYHWERE = 'BuildAnywhere';
+const RULE_BUILD_ANYHWERE = 'BuildAnywhere'; // legacy typo kept for compatibility
+const RULE_BUILD_ANYWHERE = 'BuildAnywhere';
+/**
+ * Tranform lets players transform armies to fleets and vice versa as additional order 
+ * on empty  supply centers. Transformation succeeds when units are not attacked.
+ */
+const RULE_TRANSFORM = 'Transform';
 
 // by default we extend the classic variant for loading resources and map and turn numbers
 abstract class RuleExtensionsVariant extends ClassicVariant {
@@ -76,6 +82,7 @@ abstract class RuleExtensionsVariant extends ClassicVariant {
 		RULE_CUSTOM_ICONS => false,
 		RULE_CUSTOM_ICONS_PER_COUNTRY => false,
 		RULE_BUILD_ANYHWERE => false,
+		RULE_TRANSFORM => false
 	);
 
 	/**
@@ -122,7 +129,19 @@ abstract class RuleExtensionsVariant extends ClassicVariant {
 			$this->variantClasses['processOrderBuilds'] = self::$ruleExtensionVariantName;
 			// Order interface/generation code, changed to add javascript in resources which makes non-home SCs an option
 			$this->variantClasses['OrderInterface'] = self::$ruleExtensionVariantName;
+		}
 
+		if($this->rules[RULE_TRANSFORM]) {
+			// Add code for drawing the transform command
+			$this->variantClasses['drawMap'] = self::$ruleExtensionVariantName;
+			// Add code for displaying the transform command in the order archive
+			$this->variantClasses['OrderArchiv'] = self::$ruleExtensionVariantName;
+			// Order interface/generation code, changed to add javascript in resources to support transform command in front-end controls
+			$this->variantClasses['OrderInterface'] = self::$ruleExtensionVariantName;
+			// Add code for correctly transforming units on successfull transform commands
+			$this->variantClasses['processOrderDiplomacy'] = self::$ruleExtensionVariantName;
+			// Order validation code, changed to correctly handle encoded transform commands
+			$this->variantClasses['userOrderDiplomacy'] = self::$ruleExtensionVariantName;
 		}
 
 		// Store all the classes pointing to ruleExtensions to inject $Variant arg needed in those extensions.

@@ -74,6 +74,8 @@ abstract class RuleExtensionsVariant extends ClassicVariant {
 
 	private static $ruleExtensionVariantName = 'RuleExtensions';
 
+	public $ruleExtensionVersion = '0.9.1';
+
 	/**
 	 * Array of the potential rules to be activated. Will be adjusted by the variant specific constructor of the variant utilizing RuleExtensions.
 	 */
@@ -95,6 +97,8 @@ abstract class RuleExtensionsVariant extends ClassicVariant {
 		// rule validation
 		if($this->rules[RULE_CUSTOM_ICONS] && $this->rules[RULE_CUSTOM_ICONS_PER_COUNTRY])
 			throw new Exception('RuleExtensions: CustomIcons and CustomIconsPerCountry cannot be run together');
+
+		$this->concatRuleExtensionVersionToCodeVersion();
 
 		parent::__construct();
 
@@ -168,6 +172,17 @@ abstract class RuleExtensionsVariant extends ClassicVariant {
 		$cachedProps[] = 'rules';
 
 		return $cachedProps;
+	}
+
+	public function __wakeup() {
+		$this->concatRuleExtensionVersionToCodeVersion();
+
+		parent::__wakeup();
+	}
+
+	// For auto-update of variants on rule extension updates, concatenate the rule extension version to the code version
+	private function concatRuleExtensionVersionToCodeVersion() {
+		$this->codeVersion .= '.'.$this->ruleExtensionVersion;
 	}
 }
 

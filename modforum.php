@@ -504,19 +504,23 @@ $cacheHTML=libCache::dirName('mod_forum').'/page_'.$forumPager->currentPage.'.ht
 if( file_exists($cacheHTML) )
 	print $cacheHTML;
 
-$tabl = $DB->sql_tabl("SELECT
+$tabl = $DB->sql_tabl("
+	SELECT
 	f.id, u.id as fromUserID, f.timeSent, f.message, f.subject, f.replies, f.fromMail,
 		u.username as fromusername, u.points as points, f.latestReplySent, IF(s.userID IS NULL,0,1) as online, u.type as userType, 
 		f.status as status,
 		f.assigned, u2.username as modname
-	FROM wD_ModForumMessages f
+	FROM (
+		SELECT *
+		FROM wD_ModForumMessages f
+		WHERE f.type = 'ThreadStart'
+		".($User->type['Moderator'] ? $tabs[$tab][1] : " AND f.fromUserID = '".$User->id."'")."
+		ORDER BY f.latestReplySent DESC
+		".$forumPager->SQLLimit()."
+	) as f # pre-filter relevant messages for efficient expensive user join
 	LEFT JOIN wD_Users u ON ( f.fromUserID = u.id OR (f.fromUserID IS NULL AND f.fromMail = u.email) )
 	LEFT JOIN wD_Users u2 ON ( f.assigned = u2.id )
-	LEFT JOIN wD_Sessions s ON ( u.id = s.userID )
-	WHERE f.type = 'ThreadStart'
-	".($User->type['Moderator'] ? $tabs[$tab][1] : " AND fromUserID = '".$User->id."'")."
-	ORDER BY f.latestReplySent DESC
-	".$forumPager->SQLLimit());
+	LEFT JOIN wD_Sessions s ON ( u.id = s.userID )");
 
 /*
  * If it's a new post, jump to it

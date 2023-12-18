@@ -463,7 +463,6 @@ $bordersRawData=array(
 	array('Pajajaran','Javadvipa (North Coast)','Yes','No'),
 	array('Pajajaran','Javadvipa (South Coast)','Yes','No'),
 	array('Pajajaran','Java Sea','Yes','No'),
-	array('Pajajaran','Southern Ocean','Yes','No'),
 	array('Pajajaran','Mentawai Sea','Yes','No'),
 	array('Javadvipa','Trowulan','No','Yes'),
 	array('Javadvipa','Lumajang','No','Yes'),

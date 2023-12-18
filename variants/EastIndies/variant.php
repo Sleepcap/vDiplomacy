@@ -34,7 +34,7 @@ class EastIndiesVariant extends WDVariant {
 	public $author      ='David E. Cohen';
 	public $adapter     ='Tobias Florin, Enriador & Oliver Auth';
 	public $version     ='1.0';
-	public $codeVersion ='1.0';
+	public $codeVersion ='1.1';
 	public $homepage    ='http://diplomiscellany.tripod.com/id23.html';
 
 	public $countries=array('Bahmana','Brunei','Delhi','Gondwana','Majapahit','Malacca','Mughalistan','Persia','Rajputana','Ayutthaya','Ternate','Tondo','Dai Viet','Vijayanagar');

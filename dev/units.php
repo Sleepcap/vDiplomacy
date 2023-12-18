@@ -94,32 +94,28 @@ print '<b>Variant: '.$selectVariantForm.'</b>
         <style type="text/css"> td { padding:2px; font-weight: bold; white-space: nowrap;} </style>';
 
 if ($variantID != 0)
-{
-	// Fake to copy the protected countryUnits in a public startingUnits variable...
-	class adjudicatorPreGame
-	{
-		public $startingUnits = array();
-		function __construct()
-		{
-			if (isset($this->countryUnits))
-				$this->startingUnits = $this->countryUnits;
-		}
-	}
-	
+{	
+	require_once('gamemaster/adjudicator/pregame.php');
 	$pregame = $Variant->adjudicatorPreGame();
+
+	// make countryUnits property accessible
+	$reflection = new ReflectionClass($pregame);
+	$countryUnitsProperty = $reflection->getProperty('countryUnits');
+	$countryUnitsProperty->setAccessible(true);
+	$countryUnits = $countryUnitsProperty->getValue($pregame);
 
 	$usedTerrIDs = array();
 	foreach ($Variant->countries as $countryID => $name)
-        if (isset($pregame->startingUnits[$name]))
-            foreach ($pregame->startingUnits[$name] as $StartingUnitsName => $unitType)
-                $usedTerrIDs[] = $terrIDByName[$StartingUnitsName];
+        if (isset($countryUnits[$name]))
+            foreach ($countryUnits[$name] as $countryUnitsName => $unitType)
+                $usedTerrIDs[] = $terrIDByName[$countryUnitsName];
 	
 	foreach ($Variant->countries as $countryID => $name)
 	{
 		$oldUnits = "";
-        if (isset($pregame->startingUnits[$name]))
-            foreach ($pregame->startingUnits[$name] as $StartingUnitsName => $unitType)
-                $oldUnits .= '<input type="hidden" name="oldUnits['.$terrIDByName[$StartingUnitsName].']" value="'.$unitType.'">';
+        if (isset($countryUnits[$name]))
+            foreach ($countryUnits[$name] as $countryUnitsName => $unitType)
+                $oldUnits .= '<input type="hidden" name="oldUnits['.$terrIDByName[$countryUnitsName].']" value="'.$unitType.'">';
 
 		$addUnitSelect='<option value="0" selected>Add a starting unit:</option>';
 		foreach ($terrIDByName as $TerrNameChoice => $id)
@@ -143,8 +139,8 @@ if ($variantID != 0)
 					<td style=" width: 100%;"></td>
 				</tr>';
 	
-        if (isset($pregame->startingUnits[$name]))
-            foreach ($pregame->startingUnits[$name] as $TerrNameChoice => $unitType)
+        if (isset($countryUnits[$name]))
+            foreach ($countryUnits[$name] as $TerrNameChoice => $unitType)
                 print '
                     <tr>
                         <td></td>

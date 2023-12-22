@@ -26,6 +26,7 @@
 	0.1: Initial version
 	0.1.1: Updated dates
 	0.2: RuleExtensions variant pilot integration
+	1.0: Release
 */
 
 defined('IN_CODE') or die('This script can not be run by itself.');
@@ -39,7 +40,7 @@ class SouthSaharaVariant extends RuleExtensionsVariant {
 	public $author      ='David E. Cohen';
 	public $adapter     ='Tobias Florin & Enriador';
 	public $version     ='1.0';
-	public $codeVersion ='0.1.9';
+	public $codeVersion ='1.0';
 	public $homepage    ='https://davidecohen.wixsite.com/diplomiscellany/southofsahara';
 
 	public $countries=array('Benin','Bonoman','Bornu','Jolof','Mali');

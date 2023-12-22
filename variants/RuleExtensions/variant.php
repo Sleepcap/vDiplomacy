@@ -74,7 +74,7 @@ abstract class RuleExtensionsVariant extends ClassicVariant {
 
 	private static $ruleExtensionVariantName = 'RuleExtensions';
 
-	public $ruleExtensionVersion = '0.9.1';
+	public $ruleExtensionVersion = '1.0';
 
 	/**
 	 * Array of the potential rules to be activated. Will be adjusted by the variant specific constructor of the variant utilizing RuleExtensions.
@@ -182,7 +182,7 @@ abstract class RuleExtensionsVariant extends ClassicVariant {
 
 	// For auto-update of variants on rule extension updates, concatenate the rule extension version to the code version
 	private function concatRuleExtensionVersionToCodeVersion() {
-		$this->codeVersion .= '.'.$this->ruleExtensionVersion;
+		$this->codeVersion .= '.r'.$this->ruleExtensionVersion;
 	}
 }
 

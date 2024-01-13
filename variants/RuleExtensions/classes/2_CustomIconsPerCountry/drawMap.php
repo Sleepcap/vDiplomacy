@@ -16,8 +16,12 @@ class CustomIconsPerCountry_drawMap extends CustomIcons_drawMap {
 			return parent::loadImages();
 		}
 
-		//$this->army_c[0]  = $this->loadImage('variants/'.$this->Variant->name.'/resources/'.($this->smallmap ? 'small' : '').'armyNeutral.png');
-		//$this->fleet_c[0] = $this->loadImage('variants/'.$this->Variant->name.'/resources/'.($this->smallmap ? 'small' : '').'fleetNeutral.png');
+		$resources = $this->resources();
+
+		$armyNeutralFile = 'variants/'.$this->Variant->name.'/resources/'.($this->smallmap ? 'small' : '').'armyNeutral.png';
+		$fleetNeutralFile = 'variants/'.$this->Variant->name.'/resources/'.($this->smallmap ? 'small' : '').'fleetNeutral.png';
+		$this->army_c[0]  = file_exists($armyNeutralFile) ? $this->loadImage($armyNeutralFile) : $this->loadImage($resources['army']); // fall back to standard army icon if no neutral icon is provided / required (will be used for map dev view)
+		$this->fleet_c[0] = file_exists($fleetNeutralFile) ? $this->loadImage($fleetNeutralFile) : $this->loadImage($resources['fleet']);
 		
 		for ($i=1; $i<=count($this->Variant->countries); $i++) {
 			$this->army_c[$i]  = $this->loadImage('variants/'.$this->Variant->name.'/resources/'.($this->smallmap ? 'small' : '').'army'.$this->Variant->countries[$i-1].'.png');

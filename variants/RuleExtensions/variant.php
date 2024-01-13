@@ -74,7 +74,7 @@ abstract class RuleExtensionsVariant extends ClassicVariant {
 
 	private static $ruleExtensionVariantName = 'RuleExtensions';
 
-	public $ruleExtensionVersion = '1.0';
+	public $ruleExtensionVersion = '1.0.1';
 
 	/**
 	 * Array of the potential rules to be activated. Will be adjusted by the variant specific constructor of the variant utilizing RuleExtensions.

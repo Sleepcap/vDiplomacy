@@ -21,6 +21,7 @@
     1.1 - Territory links and map fixes
     1.2 - Interactive map added
     1.3 - Large map added and small map fix
+	1.3.1 Border issue fixed
  */
 
 defined('IN_CODE') or die('This script can not be run by itself.');
@@ -37,7 +38,7 @@ class SpeedEuropaVariant extends WDVariant {
 	public $author='John Walko';
         public $adapter='"Triskelli" and Yuriy Hryniv aka Flame';
 	public $version    ='1';
-	public $codeVersion='1.3';
+	public $codeVersion='1.3.1';
 	public $homepage   ='http://www.dipwiki.com/index.php?title=Speed_Europa';
 
 	public $countries=array('England', 'France', 'Italy', 'Germany', 'Austria', 'Turkey', 'Russia');

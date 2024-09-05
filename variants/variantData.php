@@ -71,7 +71,7 @@ class VariantData
 		
 		$arr = array();
 		foreach($params as $k=>$v)
-			$arr[] = $k.'='.$v;
+			$arr[] = '`'.$k.'`='.$v;
 		
 		return implode(' AND ', $arr);
 	}

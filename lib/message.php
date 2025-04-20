@@ -159,21 +159,43 @@ class Message
 	{
 		global $DB;
 
-		list($toID, $type, $fromUserID, $message, $subject) = $DB->sql_row("SELECT toID, type, fromUserID, message, subject FROM wD_ForumMessages WHERE id = ".$postID);
+		$postToDelete = self::getPost($postID);
 
 		$DB->sql_put("DELETE FROM wD_ForumMessages
 						WHERE id = ".$postID." OR toID = ".$postID);
 
-		if( $type == 'ThreadReply' )
+		if( $postToDelete['type'] == 'ThreadReply' )
 		{
-		 	list($lastReplyID) = $DB->sql_row("SELECT id FROM wD_ForumMessages WHERE toID = ".$toID." OR id = ".$toID." ORDER BY timeSent DESC LIMIT 1");
+		 	list($lastReplyID) = $DB->sql_row("SELECT id FROM wD_ForumMessages WHERE toID = ".$postToDelete['toID']." OR id = ".$postToDelete['toID']." ORDER BY timeSent DESC LIMIT 1");
 			$DB->sql_put("UPDATE wD_ForumMessages ".
-				"SET latestReplySent = ".$lastReplyID.", replies = replies - 1 WHERE ( id=".$toID." )");
+				"SET latestReplySent = ".$lastReplyID.", replies = replies - 1 WHERE ( id=".$postToDelete['toID']." )");
 		}
 
-		self::updateForumCache($fromUserID);
+		self::updateForumCache($postToDelete['fromUserID']);
 
-		return array('type'=>$type, 'message'=>$message, 'subject'=>$subject);
+		return $postToDelete;
+	}
+
+	static public function getPost($postID)
+	{
+		global $DB;
+
+		return $DB->sql_hash("SELECT toID, type, fromUserID, message, subject FROM wD_ForumMessages WHERE id = ".$postID);
+
+	}
+
+	static public function getUserThreads($userID)
+	{
+		global $DB;
+		
+		$userThreads = array();
+
+		$res = $DB->sql_tabl("SELECT id, subject FROM wD_ForumMessages WHERE fromUserID = ".$userID." and type = 'ThreadStart'");
+		while( $row = $DB->tabl_hash($res) ){
+			$userThreads[] = $row;
+		}  
+
+		return $userThreads;
 	}
 
 	static private function updateForumCache($fromUserID) 

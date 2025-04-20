@@ -65,8 +65,8 @@ class adminActionsForum extends adminActionsVDip
 			),
 			'deletePost' => array(
 				'name' => 'Deletes a thread/post',
-				'description' => 'Deletes a thread/post. Careful: This action cannot be undone.',
-				'params' => array('postID'=>'Post ID')
+				'description' => 'Deletes a thread/post. If a User ID is provided, all threads started by the user are deleted. Careful: This action cannot be undone.',
+				'params' => array('postID'=>'Post ID', 'userID'=>'User ID') 
 			)
 
 		);
@@ -322,13 +322,56 @@ class adminActionsForum extends adminActionsVDip
 	{
 		require_once(l_r('lib/message.php'));
 
-		$deletedMessage = Message::delete($params['postID']);
-		
-		if( $deletedMessage['type'] == 'ThreadStart' )
-			return l_t('Thread deleted:').' <br/>'.$deletedMessage['subject'];
-		else
-			return l_t('Post deleted:').' <br/>'.$deletedMessage['message'];
+		if( $params['userID'] <> null ){
+
+			$userThreads = Message::getUserThreads($params['userID'] );
+
+			$deletedSubjects = array();
+			foreach( $userThreads as $userThread ){
+				Message::delete($userThread['id']);
+				$deletedSubjects[] = $userThread['subject'];
+			}
+
+			return l_t('Threads deleted:').' <br/>'.implode('<br/>', $deletedSubjects);
+		}
+		elseif( $params['postID'] <> null )
+		{
+			$deletedMessage = Message::delete($params['postID']);
+			
+			if( $deletedMessage['type'] == 'ThreadStart' )
+				return l_t('Thread deleted:').' <br/>'.$deletedMessage['subject'];
+			else
+				return l_t('Post deleted:').' <br/>'.$deletedMessage['message'];
+		}
 	}
+
+	public function deletePostConfirm(array $params)
+	{
+		require_once(l_r('lib/message.php'));
+
+		if( $params['userID'] <> null ){
+
+			$userThreads = Message::getUserThreads($params['userID'] );
+
+			$toBeDeletedSubjects = array();
+			foreach( $userThreads as $userThread ){
+				$toBeDeletedSubjects[] = $userThread['subject'];
+			}
+
+			return l_t('Are you sure you want to delete the following threads?').' <br/>'.implode('<br/>', $toBeDeletedSubjects);
+		}
+		elseif( $params['postID'] <> null )
+		{
+			$toBeDeletedMessage = Message::getPost($params['postID']);
+			
+			if( $toBeDeletedMessage['type'] == 'ThreadStart' )
+				return l_t('Are you sure you want to delete the following thread?').' <br/>'.$toBeDeletedMessage['subject'];
+			else
+				return l_t('Are you sure you want to delete the following message?').' <br/>'.$toBeDeletedMessage['message'];
+		}
+	}
+
+
 }
 
 ?>

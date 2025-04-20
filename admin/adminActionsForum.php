@@ -62,7 +62,13 @@ class adminActionsForum extends adminActionsVDip
 				'name' => 'Sync forum likes',
 				'description' => 'Synchronizes the cached forum post like counts with the user-tracked like records, in case they somehow get out of sync.',
 				'params' => array(),
+			),
+			'deletePost' => array(
+				'name' => 'Deletes a thread/post',
+				'description' => 'Deletes a thread/post. Careful: This action cannot be undone.',
+				'params' => array('postID'=>'Post ID')
 			)
+
 		);
 
 		adminActions::$actions = array_merge(adminActions::$actions, $forumActions);
@@ -310,6 +316,18 @@ class adminActionsForum extends adminActionsVDip
 			SET fm.likeCount = l.likeCount");
 		
 		return l_t("All forum like counts have been synced, %s posts affected.", $DB->last_affected());
+	}
+
+	public function deletePost(array $params)
+	{
+		require_once(l_r('lib/message.php'));
+
+		$deletedMessage = Message::delete($params['postID']);
+		
+		if( $deletedMessage['type'] == 'ThreadStart' )
+			return l_t('Thread deleted:').' <br/>'.$deletedMessage['subject'];
+		else
+			return l_t('Post deleted:').' <br/>'.$deletedMessage['message'];
 	}
 }
 

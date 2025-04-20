@@ -136,8 +136,6 @@ class Message
 			throw new Exception(l_t("Message too long"));
 		}
 
-		libCache::wipeDir(libCache::dirName('forum'));
-
 		$DB->sql_put("INSERT INTO wD_ForumMessages
 						SET toID = ".$toID.", fromUserID = ".$fromUserID.", timeSent = ".$sentTime.",
 						message = '".$message."', subject = '".$subject."', replies = 0,
@@ -152,6 +150,37 @@ class Message
 		else
 			$DB->sql_put("UPDATE wD_ForumMessages SET latestReplySent = id WHERE id = ".$id);
 
+		self::updateForumCache($fromUserID);
+
+		return $id;
+	}
+
+	static public function delete($postID) 
+	{
+		global $DB;
+
+		list($toID, $type, $fromUserID, $message, $subject) = $DB->sql_row("SELECT toID, type, fromUserID, message, subject FROM wD_ForumMessages WHERE id = ".$postID);
+
+		$DB->sql_put("DELETE FROM wD_ForumMessages
+						WHERE id = ".$postID." OR toID = ".$postID);
+
+		if( $type == 'ThreadReply' )
+		{
+		 	list($lastReplyID) = $DB->sql_row("SELECT id FROM wD_ForumMessages WHERE toID = ".$toID." OR id = ".$toID." ORDER BY timeSent DESC LIMIT 1");
+			$DB->sql_put("UPDATE wD_ForumMessages ".
+				"SET latestReplySent = ".$lastReplyID.", replies = replies - 1 WHERE ( id=".$toID." )");
+		}
+
+		self::updateForumCache($fromUserID);
+
+		return array('type'=>$type, 'message'=>$message, 'subject'=>$subject);
+	}
+
+	static private function updateForumCache($fromUserID) 
+	{
+		global $DB;
+
+		libCache::wipeDir(libCache::dirName('forum'));
 
 		$tabl=$DB->sql_tabl("SELECT t.id FROM wD_ForumMessages t LEFT JOIN wD_ForumMessages r ON ( r.toID=t.id AND r.fromUserID=".$fromUserID." AND r.type='ThreadReply' ) WHERE t.type='ThreadStart' AND ( t.fromUserID=".$fromUserID." OR r.id IS NOT NULL ) GROUP BY t.id");
 		$participatedThreadIDs=array();
@@ -162,8 +191,6 @@ class Message
 		$cacheUserParticipatedThreadIDsFilename = libCache::dirID('users',$fromUserID).'/readThreads.js';
 
 		file_put_contents($cacheUserParticipatedThreadIDsFilename, 'participatedThreadIDs = $A(['.implode(',',$participatedThreadIDs).']);');
-
-		return $id;
 	}
 
 	/**

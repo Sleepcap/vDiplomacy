@@ -446,6 +446,12 @@ while( $message = $DB->tabl_hash($tabl) )
 			$muteLink .= '</span>';
 		}
 	}
+
+	$deleteLink = '';
+	if( $User->type['Admin'] || $User->type['ForumModerator'] ) {
+		$deleteLink .= ' <br /><a title="'.l_t('Delete this thread permanently').'" class="light likeMessageToggleLink" href="admincp.php?tab=Control%20Panel&amp;postID='.$message['id'].'#deletePost">'.l_t('Delete thread').'</a>';
+	}
+
 	
 	print '<div class="hr userID'.$message['fromUserID'].' threadID'.$message['id'].'"></div>'; // Add the userID and threadID so muted users/threads dont create lines where their threads were
 
@@ -473,7 +479,7 @@ while( $message = $DB->tabl_hash($tabl) )
 			' '.
 				' ('.$message['points'].' '.libHTML::vpoints().User::typeIcon($message['userType']).')</a>'.
 			'<br />
-			<strong><em>'.libTime::text($message['timeSent']).'</em></strong>'.$muteLink.'<br />
+			<strong><em>'.libTime::text($message['timeSent']).'</em></strong>'.$muteLink.$deleteLink.'<br />
 			'.$User->likeMessageToggleLink($message['id'],$message['fromUserID']).libHTML::likeCount($message['likeCount']).
 		'</div>';
 
@@ -620,7 +626,8 @@ while( $message = $DB->tabl_hash($tabl) )
 					print '<a class="light likeMessageToggleLink" href="admincp.php?tab=Control%20Panel&amp;silenceID='.$silence->id.'#disableSilence">'.l_t('Disable silence').'</a>';
 				else
 					print '<a class="light likeMessageToggleLink" href="admincp.php?tab=Control%20Panel&amp;postID='.$reply['id'].'&amp;userID='.$reply['fromUserID'].'#createUserThreadSilence">'.l_t('Silence user').'</a>';
-				
+
+				print '<br /><a title="'.l_t('Delete this post permanently').'" class="light likeMessageToggleLink" href="admincp.php?tab=Control%20Panel&amp;postID='.$reply['id'].'#deletePost">'.l_t('Delete post').'</a>';
 			}
 					
 			print '</div>';

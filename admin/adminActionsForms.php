@@ -191,13 +191,13 @@ class adminActionsForms
 					print '<p>'.l_t('Game link').': <a href="board.php?gameID='.$Game->id.'">'.$Game->name.'</a></p>';
 				}
 
-				if( isset($paramValues['userID']) )
+				if( isset($paramValues['userID']) && $paramValues['userID'] <> null )
 				{
 					$User = new User((int)$paramValues['userID']);
 					print '<p>'.l_t('User link').': '.$User->profile_link().'</p>';
 				}
 
-				if( isset($paramValues['postID']) )
+				if( isset($paramValues['postID']) && $paramValues['postID'] <> null )
 				{
 					print '<p>'.l_t('Post link').': '.libHTML::threadLink($paramValues['postID']).'</p>';
 				}

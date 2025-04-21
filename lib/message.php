@@ -136,8 +136,6 @@ class Message
 			throw new Exception(l_t("Message too long"));
 		}
 
-		libCache::wipeDir(libCache::dirName('forum'));
-
 		$DB->sql_put("INSERT INTO wD_ForumMessages
 						SET toID = ".$toID.", fromUserID = ".$fromUserID.", timeSent = ".$sentTime.",
 						message = '".$message."', subject = '".$subject."', replies = 0,
@@ -152,6 +150,59 @@ class Message
 		else
 			$DB->sql_put("UPDATE wD_ForumMessages SET latestReplySent = id WHERE id = ".$id);
 
+		self::updateForumCache($fromUserID);
+
+		return $id;
+	}
+
+	static public function delete($postID) 
+	{
+		global $DB;
+
+		$postToDelete = self::getPost($postID);
+
+		$DB->sql_put("DELETE FROM wD_ForumMessages
+						WHERE id = ".$postID." OR toID = ".$postID);
+
+		if( $postToDelete['type'] == 'ThreadReply' )
+		{
+		 	list($lastReplyID) = $DB->sql_row("SELECT id FROM wD_ForumMessages WHERE toID = ".$postToDelete['toID']." OR id = ".$postToDelete['toID']." ORDER BY timeSent DESC LIMIT 1");
+			$DB->sql_put("UPDATE wD_ForumMessages ".
+				"SET latestReplySent = ".$lastReplyID.", replies = replies - 1 WHERE ( id=".$postToDelete['toID']." )");
+		}
+
+		self::updateForumCache($postToDelete['fromUserID']);
+
+		return $postToDelete;
+	}
+
+	static public function getPost($postID)
+	{
+		global $DB;
+
+		return $DB->sql_hash("SELECT toID, type, fromUserID, message, subject FROM wD_ForumMessages WHERE id = ".$postID);
+
+	}
+
+	static public function getUserThreads($userID)
+	{
+		global $DB;
+		
+		$userThreads = array();
+
+		$res = $DB->sql_tabl("SELECT id, subject FROM wD_ForumMessages WHERE fromUserID = ".$userID." and type = 'ThreadStart'");
+		while( $row = $DB->tabl_hash($res) ){
+			$userThreads[] = $row;
+		}  
+
+		return $userThreads;
+	}
+
+	static private function updateForumCache($fromUserID) 
+	{
+		global $DB;
+
+		libCache::wipeDir(libCache::dirName('forum'));
 
 		$tabl=$DB->sql_tabl("SELECT t.id FROM wD_ForumMessages t LEFT JOIN wD_ForumMessages r ON ( r.toID=t.id AND r.fromUserID=".$fromUserID." AND r.type='ThreadReply' ) WHERE t.type='ThreadStart' AND ( t.fromUserID=".$fromUserID." OR r.id IS NOT NULL ) GROUP BY t.id");
 		$participatedThreadIDs=array();
@@ -162,8 +213,6 @@ class Message
 		$cacheUserParticipatedThreadIDsFilename = libCache::dirID('users',$fromUserID).'/readThreads.js';
 
 		file_put_contents($cacheUserParticipatedThreadIDsFilename, 'participatedThreadIDs = $A(['.implode(',',$participatedThreadIDs).']);');
-
-		return $id;
 	}
 
 	/**

@@ -1,0 +1,109 @@
+<?php
+
+class MapName_IAmap extends IAmap 
+{
+		protected $sourceMapName = "map.png";
+	
+        public function __construct($variant) {
+                parent::__construct($variant, 'IA_map.png');
+        }
+}
+
+class CustomIcons_IAmap extends MapName_IAmap {
+        
+        public function __construct($variant, $mapName = 'IA_smallmap.png') {
+                parent::__construct($variant, $mapName);
+                
+                $this->buildButtonAutogeneration = true;
+        }
+      
+        protected function generateBuildIcons() {
+                parent::generateBuildIcons();
+                
+                $this->generateBuildIcon("Army_1");
+                $this->generateBuildIcon("Army_2");
+                $this->generateBuildIcon("Army_3");
+                $this->generateBuildIcon("Army_4");
+                $this->generateBuildIcon("Army_5");
+                $this->generateBuildIcon("Army_6");
+                $this->generateBuildIcon("Army_7");
+                $this->generateBuildIcon("Army_8");
+                $this->generateBuildIcon("Army_9");
+                $this->generateBuildIcon("Army_10");
+                
+                $this->generateBuildIcon("Fleet_1");
+                $this->generateBuildIcon("Fleet_2");
+                $this->generateBuildIcon("Fleet_3");
+                $this->generateBuildIcon("Fleet_4");
+                $this->generateBuildIcon("Fleet_5");
+                $this->generateBuildIcon("Fleet_6");
+                $this->generateBuildIcon("Fleet_7");
+                $this->generateBuildIcon("Fleet_8");
+                $this->generateBuildIcon("Fleet_9");
+                $this->generateBuildIcon("Fleet_10");
+        }
+        
+        public function addUnit($terrName, $unitType) {
+                $tempArmy = $this->army;
+                $tempFleet = $this->fleet;
+                
+                if(strlen($unitType)>5){
+                        $numberPos = strpos($unitType, "_")+1;
+                        
+                        if($numberPos==5){      //Army
+                                $this->army = $this->loadImage("variants/".$this->Variant->name."/resources/army_".substr($unitType, $numberPos).".png");
+                                $unitType = "Army";
+                        }else{                  //Fleet
+                                $this->fleet = $this->loadImage("variants/".$this->Variant->name."/resources/fleet_".substr($unitType, $numberPos).".png");
+                                $unitType = "Fleet";
+                        }
+                }
+                
+                parent::addUnit($terrName, $unitType);
+                
+                $this->army = $tempArmy;
+                $this->fleet = $tempFleet;
+                
+                $this->army['height'] = 18;
+                $this->army['width']  = 18;
+        }
+        
+        //Resize build-icons for larger unit-images
+        protected function generateBuildIcon($unitType) {
+                $this->territoryPositions['0'] = array(16,20);//position of unit on button
+                
+                //The image which stores the generated Build-Button
+                $this->map = array(     'image' => imagecreatetruecolor(32, 32),
+                                'width' => 32,
+                                'height'=> 32
+                );
+                imagefill($this->map['image'], 0, 0, imagecolorallocate($this->map['image'], 255, 255, 255));
+                $this->setTransparancy($this->map);
+        
+                $this->drawCreatedUnit(0, $unitType);
+                
+                $tempImage = $this->map['image'];
+                
+                $this->map['image'] = imagecreatetruecolor(15, 15);
+                imagefill($this->map['image'], 0, 0, imagecolorallocate($this->map['image'], 255, 255, 255));
+                $this->setTransparancy($this->map);
+                        
+                imagecopyresized($this->map['image'], $tempImage, 0, 0, 0, 0, 15, 15, 32, 32);
+                imagedestroy($tempImage);
+                
+                $this->write('variants/'.$this->Variant->name.'/interactiveMap/IA_BuildIcon_'.$unitType.'.png');   
+        
+                imagedestroy($this->map['image']);
+        }
+        
+        protected function jsFooterScript() {
+                libHTML::$footerScript[] = "    interactiveMap.parameters.imgBuildArmy = 'interactiveMap/php/IAgetBuildIcon.php?unitType=Army_'+context.countryID+'&variantID=".$this->Variant->id."';
+                                        interactiveMap.parameters.imgBuildFleet = 'interactiveMap/php/IAgetBuildIcon.php?unitType=Fleet_'+context.countryID+'&variantID=".$this->Variant->id."';";
+        
+                parent::jsFooterScript();
+        }
+}
+
+class WesternWorld_901Variant_IAmap extends CustomIcons_IAmap {}
+
+?>

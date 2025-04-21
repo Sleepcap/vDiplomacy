@@ -35,6 +35,7 @@
 	1.7:     more border errors fixed
 	1.7.1:   up the memory limit for the largemap
 	1.7.2:   borderfix
+	1.7.5:   Naming issues fixed.
 */
 
 defined('IN_CODE') or die('This script can not be run by itself.');
@@ -48,7 +49,7 @@ class Empire4Variant extends WDVariant {
 	public $author     = 'Vincent Mous';
 	public $adapter    = 'Carey Jensen / Oliver Auth';
 	public $version    = '1.7';
-	public $codeVersion= '1.7.3';
+	public $codeVersion= '1.7.6';
 	public $homepage   = 'http://www.variantbank.org/results/rules/e/empire4.htm';
 
 	public $countries=array('British-Columbia', 'California', 'Florida', 'Heartland', 'Mexico', 'New-York', 'Peru', 'Quebec', 'Texas', 'Cuba');

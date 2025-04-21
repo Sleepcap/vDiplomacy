@@ -82,6 +82,7 @@ class libGameMaster
 			{
 				$DB->sql_put("UPDATE wD_Users
 					SET timeLastSessionEnded = ".time().", lastMessageIDViewed = (SELECT MAX(f.id) FROM wD_ForumMessages f), webPushrSID=".((!$webPushrSID) ? 0 : $webPushrSID)."
+					, lastModMessageIDViewed = (SELECT MAX(fm.id) FROM wD_ModForumMessages fm)
 					WHERE id IN (".$userIDs.")");
 			}
 			else

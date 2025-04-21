@@ -173,11 +173,11 @@ function loadOrdersPhase() {
 			
 			OrderObj.updateTypeChoices = function () {
 				this.typeChoices = {
-					'Hold': l_t('hold'), 'Move': l_t('move'), 'Support hold': l_t('support hold'), 'Support move': l_t('support move')
+					'Hold': 'hold', 'Move': 'move', 'Support hold': 'support hold', 'Support move': 'support move'
 				};
 				
-				if( this.Unit.type == 'Fleet' && this.Unit.Territory.type == 'Sea' )
-					this.typeChoices['Convoy']=l_t('convoy');
+				if( this.Unit.type == 'Fleet' && (this.Unit.Territory.type == 'Sea' || this.Unit.Territory.type == 'Strait') )
+					this.typeChoices['Convoy']='convoy';
 				
 				return this.typeChoices;
 			};
@@ -187,16 +187,16 @@ function loadOrdersPhase() {
 					case 'Move': 
 						this.toTerrChoices = this.Unit.getMoveChoices();
 						
-						if( this.Unit.type=='Army' && this.Unit.Territory.type=='Coast' )
+						if( this.Unit.type=='Army' && (this.Unit.Territory.type=='Coast' || this.Unit.Territory.type=='Strait') )
 						{
 							var ttac = new Hash();
 							var armylocalchoices = this.Unit.getMovableTerritories().pluck('id');
 							this.toTerrChoices.map(
 									function(c) {
 										if( armylocalchoices.member(c) )
-											ttac.set(c, l_t(Territories.get(c).name));
+											ttac.set(c, Territories.get(c).name);
 										else
-											ttac.set(c, l_t(Territories.get(c).name)+' '+l_t('(via convoy)'));
+											ttac.set(c, Territories.get(c).name+' (via convoy)');
 									}
 								);
 							this.toTerrChoices = ttac;
@@ -238,17 +238,21 @@ function loadOrdersPhase() {
 				if( this.type!='Move' || this.toTerrID=='' )
 					this.viaConvoyChoices=undefined;
 				else if( this.Unit.type!='Army' || !this.Unit.convoyLink || !this.Unit.ConvoyGroup.Coasts.member(this.ToTerritory) )
-					this.viaConvoyChoices=new Hash({'No': l_t('via land')});
+					this.viaConvoyChoices=new Hash({'No': 'via land'});
 				else if( this.Unit.getMovableTerritories().member(this.ToTerritory) )
-					this.viaConvoyChoices=new Hash({'Yes': l_t('via convoy'), 'No': l_t('via land')});
+				{
+					this.viaConvoyChoices=new Hash({'Yes': 'convoy', 'No': 'land'});
+					if (this.viaConvoy == '')
+						this.viaConvoy = 'No';
+				}
 				else
-					this.viaConvoyChoices=new Hash({'Yes': l_t('via convoy')});
-			    	if (this.viaConvoy == '') this.viaConvoy = 'No';
+					this.viaConvoyChoices=new Hash({'Yes': 'via convoy'});
+				
 				return this.viaConvoyChoices;
 			};
 			
 			OrderObj.beginHTML = function () {
-				return l_t('The %s at %s',l_t(this.Unit.type.toLowerCase()),l_t(this.Unit.Territory.name))+' ';
+				return 'The '+this.Unit.type.toLowerCase()+' at '+this.Unit.Territory.name+' ';
 			};
 			OrderObj.typeHTML = function () {
 				return this.formDropDown('type',this.typeChoices,this.type);
@@ -265,11 +269,11 @@ function loadOrdersPhase() {
 					ToUnitType = this.ToTerritory.Unit.type.toLowerCase();
 					
 				switch(this.type) {
-					// toTerrID is retrieved from the list of choices, so is already translated
-					case 'Move': return l_t(' to %s ',toTerrID);
-					case 'Support hold': return l_t(' the %s in %s ',l_t(ToUnitType),toTerrID);
-					case 'Support move': return l_t(' to %s ',toTerrID);
-					case 'Convoy': return l_t(' an army to %s ',toTerrID);
+					
+					case 'Move': return ' to '+toTerrID;
+					case 'Support hold': return ' the '+ToUnitType+' in '+toTerrID;
+					case 'Support move': return ' to '+toTerrID;
+					case 'Convoy': return ' an army to '+toTerrID;
 					default: return '';
 				}
 			};
@@ -279,8 +283,8 @@ function loadOrdersPhase() {
 				var fromTerrID=this.formDropDown('fromTerrID',this.fromTerrChoices,this.fromTerrID);
 					
 				switch(this.type) {
-					case 'Support move': return l_t(' from %s ',fromTerrID);
-					case 'Convoy': return l_t(' from %s ',fromTerrID);
+					case 'Support move': return ' from '+fromTerrID;
+					case 'Convoy': return ' from '+fromTerrID;
 					default: return '';
 				}
 			};
@@ -290,7 +294,7 @@ function loadOrdersPhase() {
 				else if ( this.viaConvoyChoices.values().length==1 )
 					return '<input type="hidden" name="orderForm['+this.id+'][viaConvoy]" value="'+this.viaConvoyChoices.values()[0]+'" />';
 				else
-					return this.formDropDown('viaConvoy',this.viaConvoyChoices,this.viaConvoy);
+					return ' via ' + this.formDropDown('viaConvoy',this.viaConvoyChoices,this.viaConvoy);
 			};
 			
 			OrderObj.load();

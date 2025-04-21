@@ -107,7 +107,7 @@ function error_handler($errno, $errstr, $errfile=false, $errline=false, $errcont
 
 		return $tracetxt;
 	}
-
+	
 	$error .= ($errcontext ? 'Variable dump: '.recursiveprint($errcontext, 1)."\n\n" : '');
 
 	$bt = debug_backtrace();
@@ -146,10 +146,17 @@ function error_handler($errno, $errstr, $errfile=false, $errline=false, $errcont
 
 	// Check error log directory
 	$errorlogDirectory = Config::errorlogDirectory();
-
+	
 	if ( ! is_dir($errorlogDirectory) )
 	{
 		mkdir($errorlogDirectory) or libHTML::error('Error creating errorlog directory');
+	}
+	
+	if( strpos($_SERVER['REQUEST_URI'],'/dev') !== false )
+	{
+		$errorlogDirectory .= '/dev';
+		if ( ! is_dir($errorlogDirectory) )
+			mkdir($errorlogDirectory) or libHTML::error('Error creating devtool errorlog directory');
 	}
 
 	if ( ! is_file($errorlogDirectory.'/index.html') )
@@ -292,4 +299,77 @@ class libError
 	}
 }
 
+class libDevError
+{
+	public static function isLoggingEnabled()
+	{
+		return !( false === Config::errorlogDirectory() );
+	}
+
+	public static function directory()
+	{
+		static $dir;
+
+		if ( isset($dir) ) return $dir;
+
+		if ( !libError::isLoggingEnabled() )
+			return false;
+
+		$dir = Config::errorlogDirectory()."/dev";
+
+		if ( ! is_dir($dir) )
+			mkdir($dir);
+
+		if ( ! is_file($dir.'/index.html') )
+			touch($dir.'/index.html');
+
+		if ( ! is_writable($dir) )
+			libHTML::error("Error log directory not ready; does not exist, or no protective index file");
+
+		return $dir;
+	}
+
+	public static function errorTimes()
+	{
+		if ( !libError::isLoggingEnabled() )
+			return array();
+
+		static $errorTimes;
+		if ( isset($errorTimes) ) return $errorTimes;
+
+		$dir = self::directory();
+
+		if ( ! ( $handle = @opendir($dir) ) )
+			libHTML::error("Could not open error log directory");
+
+		$errorTimes = array();
+		while ( false !== ( $file = readdir($handle) ) )
+		{
+			list($timestamp) = explode('.', $file);
+
+			if ( intval($timestamp) < 1000 ) continue;
+			else $errorTimes[] = intval($timestamp);
+
+		}
+		closedir($handle);
+
+		sort($errorTimes, SORT_NUMERIC);
+		$errorTimes = array_reverse($errorTimes);
+
+		return $errorTimes;
+	}
+
+	public static function clear()
+	{
+		if ( !libError::isLoggingEnabled() )
+			return false;
+
+		$dir = self::directory();
+
+		$times = self::errorTimes();
+
+		foreach($times as $time)
+			unlink($dir.'/'.$time.'.txt');
+	}
+}
 ?>

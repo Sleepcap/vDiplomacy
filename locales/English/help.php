@@ -95,7 +95,7 @@ print libHTML::pageTitle('Information and Links','Links to pages with more infor
         </p>
     </div>
 
-<p>Didn't find the help or information you were looking for? Post a message in the <a href="contrib/phpBB3/" class="light">forum</a>, or contact the moderators in the <a href="modforum.php">moderator forum</a>.</p>
+<p>Didn't find the help or information you were looking for? Post a message in the <a href="forum.php" class="light">forum</a>, or or contact the moderators in the <a href="modforum.php">moderator forum</a>.</p>
 
 </div>
 

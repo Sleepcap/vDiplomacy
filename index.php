@@ -137,7 +137,7 @@ else
 			is to entering orders prior to deadlines. Whether you decide to be a casual Diplomacy player or a very dedicated player,
 			it is important to enter orders prior to the deadlines so that the game is fair and balanced for everyone, and so that
 			games are not delayed while players are replaced. Some games require a minimum reliability rating, so it is important to
-			keep it high! You can read more about reliability rating <a href="userprofile.php?userID='.$User->id.'" 
+			keep it high! You can read more about reliability rating <a href="profile.php?userID='.$User->id.'" 
 			target="_blank">here</a>. 
 			<br><br>
 			You are currently on the home screen. This is the landing page that you will see when you log into the site. While you can

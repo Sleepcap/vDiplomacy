@@ -51,13 +51,19 @@ class Game
 
 	public static function mapFilename($gameID, $turn, $mapType=false)
 	{
+		global $Game;
+		
 		if( $mapType==false ) $mapType = self::mapType();
 
 		if( defined('DATC') )
 			$folder='datc/maps';
 		else
 			$folder=self::gameFolder($gameID);
-
+		
+		
+		if( defined('DATC') && $Game->variantID != 1)
+			$turn = ($Game->variantID*1000)+$turn;
+			
 		$filename=$turn.'-'.$mapType.'.map';
 
 		return $folder.'/'.$filename;
@@ -263,12 +269,95 @@ class Game
 	public $relationshipRestrictions;
 
 	public $civilDisorderInfo;
+	/**
+	 * Any value > 0 ends the game after the given turn. Winner is the one with the most SC at this time.
+	 * @var int
+	 */
+	 public $maxTurns;
+	 
+	/**
+	 * Any value > 0 ends the game after a player reaches the given SC count. Winner is the one with the most SC at this time.
+	 * @var int
+	 */
+	 public $targetSCs;
+	 
+	/**
+	 * Some special settings to restrict acces to players based on their phases played
+	 * @var int
+	 */
+	 public $minPhases;
 
 	/**
 	 * The number of allowed NMRs per player before they are set in Civil Disorder.
 	 */
 	public $excusedMissedTurns;
+	
+	/**
+	 * The number of consecutive turns without a miss needed to regain an excuse.
+	 */
+	public $regainExcusesDuration;
 
+	/**
+	 * Some settings to force a CD on early NMRs
+	 */
+	 public $delayDeadlineMaxTurn;
+	 
+	/**
+	 * How to handle RL-friends (None, Strict, Only)
+	 */
+	 public $rlPolicy;
+	 
+	/**
+	 * ChessTimer (Countdown timer)
+	 */
+	public $chessTime;
+	 
+	/**
+	 * adminLock, Yes or No (Admins can lock a game for interaction for bugfixing)
+	 *
+	 * @var string
+	 */
+	public $adminLock;
+	
+	/**
+	 * directorUserID, The userID of the Director for this game or "0" if there is none.
+	 *
+	 * @var string
+	 */
+	public $directorUserID;
+	
+	/**
+	 * chooseYourCountry (Yes or No), do the players get to choose their starting countries or is it random.
+	 *
+	 * @var string
+	 */
+	public $chooseYourCountry;
+	
+	/**
+	 * Description of the game and special rules...
+	 */
+	public $description;
+	
+	/**
+	 * Set of weekdays not to process the game (0=Sunday, 6=Saturday)
+	 */
+	public $noProcess;
+	
+	/**
+	 * Set some votes to be blocked for the game.
+	 */
+	public $blockVotes;
+	
+	/**
+	 * Should the game wait for the full pregame duration to start? (Yes/No)
+	 */
+	public $fixStart;
+	
+	/**
+	 * Admins may set a modifier to allow a smaller effect on point-distribution for disrupted games 
+	 */
+	public $potModifier;
+	
 	/**
 	 * Is the game made of up members only, 1 member and bot(s), or mixed.
 	 */
@@ -280,12 +369,6 @@ class Game
 	 * @var int
 	 */
 	public $startTime;
-
-	/**
-	 * User id of the game director or null if no director
-	 * @var int|null
-	 */
-	public $directorUserID;
 
 	/**
 	 * User id of the tournament director or null if no director
@@ -422,47 +505,55 @@ class Game
 	}
 
 	public function getAlternatives(){
-		$alternatives = array();
-		$alternatives[] = $this->Variant->link();
-
-		$pressTypeMap = [
-			'NoPress' => 'No messaging',
-			'RulebookPress' => 'Rulebook press',
-			'PublicPressOnly' => 'Public messaging only',
-		];
 		
-		if ( $pressType = $pressTypeMap[$this->pressType] ?? false ){
-			$alternatives[] = l_t( $pressType );
-		}
+		global $User;
+		
+		$alternatives=array();
+		$alternatives[]=$this->Variant->link();
 
-		$playerTypeMap = [
-			'Mixed' => 'Fill with Bots',
-			'MemberVsBots' => 'Bot Game',
-		];
+		if ( $this->pressType=='NoPress')
+			$alternatives[]=l_t('No messaging');
+		elseif( $this->pressType=='RulebookPress')
+			$alternatives[]='<a href="press.php#rulebook">'.l_t('Rulebook press').'</a>';
+		elseif( $this->pressType=='PublicPressOnly' )
+			$alternatives[]='<a href="press.php#publicPress">'.l_t('Public messaging only').'</a>';
+		
+		if($this->playerTypes=='Mixed')
+			$alternatives[]=l_t('Fill with Bots');
 
-		if( $playerType = $playerTypeMap[$this->playerTypes] ?? false ){
-			$alternatives[] = l_t( $playerType );
-		}
+		if($this->playerTypes=='MemberVsBots')
+			$alternatives[]=l_t('Bot Game');
+		
+		if( $this->anon=='Yes' )
+			$alternatives[]=l_t('Anon');
 
-		if( $this->anon == 'Yes' ){
-			$alternatives[] = l_t( 'Anonymous players' );
-		}
+		$alternatives[]=$this->Scoring->abbr();
 
-		$alternatives[] = $this->Scoring->longName();
+		if( $this->drawType=='draw-votes-hidden')
+			$alternatives[]=l_t('Hidden draw votes');
 
-		if( $this->drawType == 'draw-votes-hidden' ){
-			$alternatives[] = l_t( 'Hidden draw votes' );
-		}
+		if( $this->missingPlayerPolicy=='Wait' )
+			$alternatives[]=l_t('Wait for orders');
 
-		if( $this->missingPlayerPolicy == 'Wait' ){
-			$alternatives[] = l_t( 'Wait for orders' );
-		}
 
 		if( !is_null($this->sandboxCreatedByUserID) ){
 			$alternatives[] = l_t( 'Sandbox game' );
 		}
 
-		return $alternatives;
+		//	Show the end of the game in the options if set.
+		if(( $this->targetSCs > 0) && ($this->maxTurns > 0))
+			$alternatives[]='EoG: '.$this->targetSCs.' SCs or "'.$this->Variant->turnAsDate($this->maxTurns -1).'"';
+		elseif( $this->maxTurns > 0)
+			$alternatives[]='EoG: "'.$this->Variant->turnAsDate($this->maxTurns -1).'"';
+		elseif( $this->targetSCs > 0)
+			$alternatives[]='EoG: '.$this->targetSCs.' SCs';
+		if( $this->chooseYourCountry=='Yes' )
+			$alternatives[]=l_t('ChooseYourCountry');
+			
+		if( $this->noProcess != '')
+			$alternatives[]=l_t('noProcess:'.str_replace(array('1', '2', '3', '4', '5', '6', '0'), 
+					array(l_t('Mon'), l_t('Tue'), l_t('Wed'), l_t('Thu'), l_t('Fri'), l_t('Sat'), l_t('Sun')), $this->noProcess));
+
 	}
 
 	/**
@@ -587,7 +678,23 @@ class Game
 			g.directorUserID,
 			g.sandboxCreatedByUserID,
 			t.directorID tournamentDirectorUserID,
-			t.coDirectorID tournamentCodirectorUserID
+			t.coDirectorID tournamentCodirectorUserID,
+			g.maxTurns,
+			g.targetSCs,
+			g.minPhases,
+			g.regainExcusesDuration,
+			g.delayDeadlineMaxTurn,
+			g.rlPolicy,
+			g.chessTime,
+			g.adminLock,
+			g.chooseYourCountry,
+			g.description,
+			g.noProcess,
+			g.fixStart,
+			g.blockVotes,
+			g.potModifier,
+			g.missingPlayerPolicy,
+			g.playerTypes
 			FROM wD_Games g
 			LEFT JOIN wD_TournamentGames tg ON g.id = tg.gameID
 			LEFT JOIN wD_Tournaments t ON t.id = tg.tournamentID
@@ -656,7 +763,7 @@ class Game
 	 */
 	function gameovertxt($map=FALSE)
 	{
-		assert ('$this->gameOver != "No"');
+		assert ($this->gameOver != "No");
 
 		switch($this->gameOver)
 		{
@@ -701,6 +808,7 @@ class Game
 	 **/
 	function isLiveGame()
 	{
+		if ($this->fixStart == 'Yes') return true;
 		return $this->phaseMinutes < 60;
 	}
 
@@ -791,7 +899,7 @@ class Game
 	 */
 	function needsProcess()
 	{
-		global $Misc;
+		global $Misc, $DB;
 
 		/*
 		 * - Games are processing as normal
@@ -813,7 +921,7 @@ class Game
 			)
 			return true;
 		else
-			return false;
+			return false;			
 	}
     /**
      * Game name

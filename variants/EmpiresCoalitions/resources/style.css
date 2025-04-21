@@ -1,0 +1,22 @@
+@CHARSET "ISO-8859-1";
+
+.variantEmpiresCoalitions .country0 { color: #000000 ! important; } /* Neutral */
+.variantEmpiresCoalitions .country1 { color: #606060 ! important; } /* Austria */
+.variantEmpiresCoalitions .country2 { color: #CE0000 ! important; } /* Britain */
+.variantEmpiresCoalitions .country3 { color: #7A3D58 ! important; } /* Denmark */
+.variantEmpiresCoalitions .country4 { color: #6772B5 ! important; } /* France */
+.variantEmpiresCoalitions .country5 { color: #685E34 ! important; } /* Ottoman Empire */
+.variantEmpiresCoalitions .country6 { color: #005089 ! important; } /* Prussia */
+.variantEmpiresCoalitions .country7 { color: #57AF62 ! important; } /* Russia */
+.variantEmpiresCoalitions .country8 { color: #AD0096 ! important; } /* Sicily */
+.variantEmpiresCoalitions .country9 { color: #8E7700 ! important; } /* Spain */
+
+.variantEmpiresCoalitions .occupationBar1 { background-color: #C6C6C6; } /* Austria */
+.variantEmpiresCoalitions .occupationBar2 { background-color: #FF0000; } /* Britain */
+.variantEmpiresCoalitions .occupationBar3 { background-color: #994C6E; } /* Denmark */
+.variantEmpiresCoalitions .occupationBar4 { background-color: #91A1FF; } /* France */
+.variantEmpiresCoalitions .occupationBar5 { background-color: #7F743F; } /* Ottoman Empire */
+.variantEmpiresCoalitions .occupationBar6 { background-color: #006FBF; } /* Prussia */
+.variantEmpiresCoalitions .occupationBar7 { background-color: #7FFF8E; } /* Russia */
+.variantEmpiresCoalitions .occupationBar8 { background-color: #FF00DC; } /* Sicily */
+.variantEmpiresCoalitions .occupationBar9 { background-color: #FFD800; } /* Spain */

@@ -500,7 +500,7 @@ function loadModel() {
 				ns.routeSetStart(
 					StartTerr, 
 					function(EndNode) { return ( EndNode.id == EndTerr.id ); },
-					function(AllNode) { return ( AllNode.type=='Sea' ); },
+					function(AllNode) { return ( AllNode.type=='Sea' || AllNode.type=='Strait' ); },
 					function(AnyNode) { return true; }
 				);
 				return ns.Path;
@@ -510,7 +510,7 @@ function loadModel() {
 				ns.routeSetStart(
 					StartTerr, 
 					function(EndNode) { return ( EndNode.id == EndTerr.id ); },
-					function(AllNode) { return ( AllNode.type == 'Sea' && AllNode.id != WithoutFleetTerr.id ); },
+					function(AllNode) { return ( (AllNode.type == 'Sea' || AllNode.type=='Strait') && AllNode.id != WithoutFleetTerr.id ); },
 					function(AnyNode) { return true; }
 				);
 				return ns.Path;
@@ -520,7 +520,7 @@ function loadModel() {
 				ns.routeSetStart(
 					StartTerr, 
 					function(EndNode) { return ( EndNode.id == EndTerr.id ); },
-					function(AllNode) { return ( AllNode.type == 'Sea' ); },
+					function(AllNode) { return ( AllNode.type == 'Sea' || AllNode.type=='Strait' ); },
 					function(AnyNode) { return ( AnyNode.id == WithFleetTerr.id ); }
 				);
 				return ns.Path;
@@ -542,14 +542,14 @@ function loadModel() {
 			// First load fleets, then load coasts & armies
 			loadFleet : function(Fleet) {
 				if( Fleet.convoyLink ) return false;
-				if( Fleet.Territory.type != 'Sea' ) return false;
+				if( Fleet.Territory.type != 'Sea' && Fleet.Territory.type != 'Strait' ) return false;
 				
 				Fleet.convoyLink = true;
 				Fleet.ConvoyGroup = this;
 				this.Fleets.set(Fleet.Territory.id, Fleet);
 				
 				Fleet.Territory.getBorderTerritories().map(function(t) {
-						if ( t.type == 'Sea' && !Object.isUndefined(t.Unit) )
+						if ( (t.type == 'Sea' || t.type == 'Strait') && !Object.isUndefined(t.Unit) )
 							this.loadFleet(t.Unit);
 					},this);
 			},
@@ -561,7 +561,7 @@ function loadModel() {
 						sea.getBorderTerritories().map(
 							function(c)
 							{
-								if( c.type != 'Coast' ) return;
+								if( c.type != 'Coast' && c.type != 'Strait' ) return;
 								c = c.coastParent;
 								
 								if( !Object.isUndefined(this.Coasts.get(c.id)) ) return;

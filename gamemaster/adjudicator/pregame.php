@@ -132,7 +132,7 @@ class adjudicatorPreGame
 		}
 
 		for($countryID=1; $countryID<=count($Game->Variant->countries); $countryID++)
-			assert('$Game->Members->ByCountryID[$countryID]->countryID==$countryID');
+			assert($Game->Members->ByCountryID[$countryID]->countryID == $countryID);
 	}
 
 	protected function assignTerritories() 
@@ -221,6 +221,35 @@ class adjudicatorPreGame
 	}
 
 	/**
+	 * Give each member the same time-limit on his chessTimer
+	 */
+	protected function assignTime()
+	{
+		global $DB, $Game;
+
+		$DB->sql_put(
+			"UPDATE wD_Members
+			SET chessTime='".$Game->chessTime."'
+			WHERE gameID = ".$Game->id
+		);
+	}
+	
+	function checkForRelations()
+	{
+		require_once "lib/relations.php";
+		global $DB, $Game;
+
+		$sql = "SELECT u.rlGroup FROM wD_Users u
+					LEFT JOIN wD_Members m ON ( u.id = m.userID )
+					WHERE m.gameID=".$Game->id." AND rlGroup != 0
+					GROUP BY rlGroup
+					HAVING count(u.rlGroup) > 1";
+		$tabl= $DB->sql_tabl($sql);
+		while (list ($groupID) = $DB->tabl_row($tabl))
+			libRelations::sendGameMessage($groupID);
+	}
+
+	/**
 	 * Initialize the game (more of a phase change than adjudication). Will throw an exception
 	 * if the game doesn't have enough players, which will be caught in gamemaster.php and result
 	 * in the game's deletion
@@ -258,8 +287,13 @@ class adjudicatorPreGame
 		if ( empty($Game->Members->ByCountryID) || ( is_array($Game->Members->ByCountryID) && count($Game->Members->ByCountryID) == 0))
 		{
 			$userCountries = $this->userCountries();// $userCountries[$userID]=$countryID
-			assert('count($userCountries) == count($Game->Variant->countries) && count($userCountries) == count($Game->Members->ByID)');
+			assert(count($userCountries) == count($Game->Variant->countries) && count($userCountries) == count($Game->Members->ByID));
 			$this->assignCountries($userCountries);
+		}
+		else
+		{
+			require_once "lib/gamemessage.php";
+			libGameMessage::send(0, 'Info', 'This is a choose your country game.', $Game->id);		
 		}
 		
 		// Create starting board conditions, typically based on $countryUnits

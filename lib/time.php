@@ -111,25 +111,31 @@ class libTime
                 $minutes = floor(( $secondsRemaining % (60*60) )/60);
                 $hours = floor( $secondsRemaining % (24*60*60)/(60*60) );
                 $days = floor( $secondsRemaining /(24*60*60) );
+                $month = floor( $secondsRemaining /(24*60*60*30) );
 
-                if ( $days > 0 )
+                if ( $month > 0 )
                 {
-					$day_word = "days";
-					if ( $days == 1 ){
-						$day_word = "day";		
-					}						
-					
-                        // D, H
-                        $minutes += round($seconds/60); // Add a minute if the seconds almost give a minute
-                        $seconds = 0;
+                    $days -= $month*30;
+                    if ( $days > 0 )
+                        return $month.' month'.($month>1?'s':'').', '.$days.' day'.($days>1?'s':'');
+                    else
+                        return $month.' month'.($month>1?'s':'');
+                }
+                elseif ( $days > 0 )
+				{
+					$day_word = "day". ($days>1 ? 's' : '');
+				
+					// D, H
+					$minutes += round($seconds/60); // Add a minute if the seconds almost give a minute
+					$seconds = 0;
 
-                        $hours += round($minutes/60); // Add an hour if the minutes almost gives an hour
-                        $minutes = 0;
+					$hours += round($minutes/60); // Add an hour if the minutes almost gives an hour
+					$minutes = 0;
 
-                        if ( $hours > 0 )
-                                return l_t('%s '.$day_word.', %s hours',$days,$hours);
-                        else
-                                return l_t('%s '.$day_word, $days);
+					if ( $hours > 0 )
+						return l_t('%s '.$day_word.', %s hours',$days,$hours);
+					else
+						return l_t('%s '.$day_word, $days);
                 }
                 elseif ( $hours > 0 )
                 {
@@ -138,17 +144,17 @@ class libTime
                         $seconds = 0;
 
                         if ( $minutes > 0 )
-                            return l_t('%s hours, %s minutes',$hours,$minutes);
-                        else 
-                            return l_t('%s hours',$hours);
+                        	return l_t('%s hour'.($hours>1?'s':'').', %s minute'.($minutes>1?'s':''),$hours,$minutes);
+						else 
+							return l_t('%s hour'.($hours>1?'s':''),$hours);
                 }
                 else
                 {
                         // M, S
                         if ( $seconds > 0 )
-                            return l_t('%s minutes, %s seconds',$minutes,$seconds);
-                        else
-                            return l_t('%s minutes',$minutes);
+							return l_t('%s minute'.($minutes>1?'s':'').', %s second'.($seconds>1?'s':''),$minutes,$seconds);
+						else
+							return l_t('%s minute'.($minutes>1?'s':''),$minutes);
                 }
         }
 

@@ -29,14 +29,14 @@ defined('IN_CODE') or die('This script can not be run by itself.');
  */
 abstract class drawMap
 {
-	private function addBorder(array $image) {
+	public function addBorder(array $image) {
 		$black=$this->color(array(0,0,0),$image['image']);
-		self::imagelinethick($image['image'],0,0,$image['width'],0,$black,2);
-		self::imagelinethick($image['image'],$image['width'],0,$image['width'],$image['height'],$black,2);
-		self::imagelinethick($image['image'],$image['width'],$image['height'],0,$image['height'],$black,2);
-		self::imagelinethick($image['image'],0,$image['height'],0,0,$black,2);
+		self::imagelinethick($image['image'],0,0,$image['width'],0,$black,1);
+		self::imagelinethick($image['image'],$image['width']-1,0,$image['width']-1,$image['height'],$black,1);
+		self::imagelinethick($image['image'],$image['width'],$image['height']-1,0,$image['height']-1,$black,1);
+		self::imagelinethick($image['image'],0,$image['height'],0,0,$black,1);
 	}
-
+	
 	public function saveThumbnail($location) {
 		$thumbnail = array('width'=>300,'height'=>300);
 		$thumbnailRatio = ($thumbnail['width']/$thumbnail['height']);
@@ -195,6 +195,13 @@ abstract class drawMap
 	 * @var array
 	 */
 	protected $mapNames=array();
+        /**
+	 * An array containing the intermediate layer overlay image resource,
+	 * and its width and height.
+	 * $image['image'],['width'],['height']
+	 * @var array
+	 */
+	protected $intermediateLayer=array();
 	/**
 	 * An array containing the standoff icon image resource, and its width and height.
 	 * $image['image'],['width'],['height']
@@ -347,15 +354,18 @@ abstract class drawMap
 		{
 			foreach($orderArrow as $name => &$param)
 			{
-				if ( $name == 'headAngle' ) $param = M_PI/$param;
+				if ($name == 'headAngle') $param = M_PI / $param;
 
-				if ( ! is_array($param) ) continue;
+				if (!is_array($param)) continue;
 
-				if ( count($param) == 3 )
+				if (count($param) == 3)
+				{
 					$param = $this->color($param);
-
-				else if ( count($param) == 2 )
-					$param = $param[ $this->smallmap ? 0 : 1 ];
+				}
+				else if (count($param) == 2)
+				{
+					$param = $param[$this->smallmap ? 0 : 1];
+				}
 			}
 		}
 	}
@@ -398,6 +408,11 @@ abstract class drawMap
 		 * selected from the map, and imagecolorset() is used to change the
 		 * territory's unique color to the desired color
 		 */
+		 
+		// Somehow sometimes there is an unassigned countryID to color caused by the fogmap code.
+		//	I have no clue why this is, but this case just return and don't throw an error.
+		if (!(isset($this->countryColors[$countryID])))return;
+
 		list($x, $y) = $this->territoryPositions[$terrID];
 
 		$territoryColor = imagecolorat($this->map['image'], $x, $y);
@@ -452,7 +467,7 @@ abstract class drawMap
 	protected function putImage(array $image, $x, $y)
 	{
 		imagecopymerge($this->map['image'], $image['image'],
-			$x, $y, 0, 0, $image['width'], $image['height'], 100);
+			$x, $y, 0, 0, $image['width'], $image['height'], 99);
 	}
 
 	/**
@@ -535,7 +550,7 @@ abstract class drawMap
 	 * @param int $y The y position to center it at
 	 * @param bool[optional] $large If true the text will be large, default is false
 	 */
-	protected function drawText($text, $x, $y, $large=false, $topRight=false)
+	protected function drawText($text, $x, $y, $large=false, $topRight=false, $drawBox=false)
 	{
 		$text = html_entity_decode($text);
 		$size = ( $large ? 'largeSize' : 'size' );
@@ -543,7 +558,7 @@ abstract class drawMap
 		$boundingBox = imageftbbox($this->font[$size],
 									0, $this->font['file'], $text);
 
-		$width = $boundingBox[4];
+		$width  = $boundingBox[4];
 		$height = $boundingBox[5];
 
 		if( $topRight )
@@ -553,9 +568,25 @@ abstract class drawMap
 		}
 		else
 			list($x, $y) = $this->absolutePosition($x, $y, $width, $height);
-
-		imagefttext($this->map['image'], $this->font[$size],
+		
+		$box = array();
+		$box = imagefttext($this->map['image'], $this->font[$size],
 					0.0, $x, $y, $this->font['color'], $this->font['file'], $text);
+					
+		if ($drawBox)
+		{
+			$borderBlack = $this->color(array(  0,   0,   0));
+			$borderWhite = $this->color(array(254, 254, 254));
+
+			imagefilledrectangle($this->map['image'], $box[6] - 1, $box[7] - 2, $box[2] + 2, $box[3] + 1, $borderBlack);
+			imagefilledrectangle($this->map['image'], $box[6]    , $box[7] - 1, $box[2] + 1, $box[3]    , $borderWhite);
+			
+			imagefttext($this->map['image'], $this->font[$size],
+					0.0, $x, $y, $this->font['color'], $this->font['file'], $text);
+			
+		}
+
+					
 	}
 
 	/**
@@ -874,11 +905,11 @@ abstract class drawMap
 	public function write($filename)
 	{
 		imagepng($this->map['image'], $filename);
-    	}
+    }
 
-    	/**
-     	* Write the finished image to the browser. Used to prevent preview from being cached.
-     	*/
+	/**
+	* Write the finished image to the browser. Used to prevent preview from being cached.
+	*/
 	public function writeToBrowser() 
 	{
 		header('Content-Type: image/png');
@@ -1196,7 +1227,7 @@ abstract class drawMap
 	}
 
 	/**
-	 * Write a caption; a large piece of text centered in the map
+	 * Write a captioncaptioncaptioncaptioncaptioncaptioncaptioncaptioncaptioncaptioncaptioncaptioncaption; a large piece of text centered in the map
 	 *
 	 * @param string $text
 	 */
@@ -1205,6 +1236,17 @@ abstract class drawMap
 		$this->drawText($text, 0, 0, $this->font['largeSize'], true);
 	}
 
+        public function addIntermediateLayer() 
+        {
+            if ( !empty($this->intermediateLayer) )
+            {
+                $this->intermediateLayer = $this->loadImage($this->intermediateLayer);
+                $this->setTransparancy($this->intermediateLayer);
+                $this->putImage($this->intermediateLayer, 0, 0);
+                imagedestroy($this->intermediateLayer['image']);
+            }
+        }
+        
 	/**
 	 * Add the territory names, either with GD FreeType or with the small-map overlay
 	 */
@@ -1213,6 +1255,7 @@ abstract class drawMap
 		{
 			$this->mapNames = $this->loadImage($this->mapNames);
 			$this->setTransparancy($this->mapNames);
+			$this->addBorder($this->mapNames);
 			$this->putImage($this->mapNames, 0, 0);
 			imagedestroy($this->mapNames['image']);
 		}
@@ -1246,6 +1289,105 @@ abstract class drawMap
 	public function getNamesURL() {
 		return $this->resources()['names'];
 	}
-}
 
-?>
+ 	public function addCountryName($terrID, $ownerCountryID, $unitCountryID=0, $unitName='')
+	{
+		global $Variant;
+		$ownerCountryName = (array_key_exists(($ownerCountryID - 1), $Variant->countries) ? $Variant->countries[$ownerCountryID - 1] : '');
+		$unitCountryName  = (array_key_exists(($unitCountryID  - 1), $Variant->countries) ? $Variant->countries[$unitCountryID  - 1] : '');
+		
+		if ($this->smallmap)
+		{
+			$ownerCountryName = substr($ownerCountryName,0,3);
+			$unitCountryName  = substr($unitCountryName, 0,3);
+		}
+		
+		if ($ownerCountryName != $unitCountryName && $unitCountryName != '' && $ownerCountryName != '')
+			$text = 'T:'.$ownerCountryName.' / U:'.$unitCountryName;
+		elseif ($ownerCountryName == $unitCountryName)
+			$text = $unitName. ($unitName==''?'':':') .$unitCountryName;
+		else
+			$text = ($unitCountryName == '' ? $ownerCountryName : $unitName.':'.$unitCountryName);
+		
+		if ($text != '')
+		{
+			list($x, $y) = $this->territoryPositions[$terrID];
+			if (!$this->smallmap)
+				$y += 3;
+			$this->drawText($text, $x, $y, false, false, true);
+		}
+	}
+
+	/**
+	 * Add a black border around the picture. I really don't like maps without borders... :-)
+	 */
+ //	public function addBorder()
+//	{
+//		self::imagelinethick($this->map['image'], 0, 0, 20, 20, array(0,0,0), 1);
+//	}
+	
+	public function colorEnhance($type)
+	{
+		// Color Vision Deficiency
+		$CVDMatrix = array( 
+			"Protanope" => array( // reds are greatly reduced (1% men)
+				0.0, 2.02344, -2.52581,
+				0.0, 1.0    ,  0.0    ,
+				0.0, 0.0    ,  1.0    ),
+			"Deuteranope"=> array( // greens are greatly reduced (1% men)
+				1.0     , 0.0, 0.0    ,
+				0.494207, 0.0, 1.24827,
+				0.0     , 0.0, 1.0    ),
+			"Tritanope" => array(        // blues are greatly reduced (0.003% population)
+				 1.0     , 0.0     , 0.0,
+				 0.0     , 1.0     , 0.0,
+				-0.395913, 0.801109, 0.0)
+			);
+			
+		// Apply Daltonization
+		$cvd_a = $CVDMatrix[$type][0]; $cvd_b = $CVDMatrix[$type][1]; $cvd_c = $CVDMatrix[$type][2];
+		$cvd_d = $CVDMatrix[$type][3]; $cvd_e = $CVDMatrix[$type][4]; $cvd_f = $CVDMatrix[$type][5];
+		$cvd_g = $CVDMatrix[$type][6]; $cvd_h = $CVDMatrix[$type][7]; $cvd_i = $CVDMatrix[$type][8];
+
+		for($n=0; $n<ImageColorsTotal($this->map['image']); ++$n)
+		{
+			$rgb = ImageColorsForIndex($this->map['image'], $n);
+			$r = $rgb['red'];
+			$g = $rgb['green'];
+			$b = $rgb['blue'];
+		
+			// RGB to LMS matrix conversion
+			$L = (17.8824    * $r) + (43.5161   * $g) + (4.11935 * $b);
+			$M = ( 3.45565   * $r) + (27.1554   * $g) + (3.86714 * $b);
+			$S = ( 0.0299566 * $r) + ( 0.184309 * $g) + (1.46709 * $b);
+			// Simulate color blindness
+			$l = ($cvd_a * $L) + ($cvd_b * $M) + ($cvd_c * $S);
+			$m = ($cvd_d * $L) + ($cvd_e * $M) + ($cvd_f * $S);
+			$s = ($cvd_g * $L) + ($cvd_h * $M) + ($cvd_i * $S);
+			// LMS to RGB matrix conversion
+			$R = ( 0.0809444479   * $l) + (-0.130504409   * $m) + ( 0.116721066 * $s);
+			$G = (-0.0102485335   * $l) + ( 0.0540193266  * $m) + (-0.113614708 * $s);
+			$B = (-0.000365296938 * $l) + (-0.00412161469 * $m) + ( 0.693511405 * $s);
+			// Isolate invisible colors to color vision deficiency (calculate e$RRor matrix)
+			$R = $r - $R;
+			$G = $g - $G;
+			$B = $b - $B;
+			// Shift colors towards visible spectrum (apply e$RRor modification$S)
+			$RR = (0.0 * $R) + (0.0 * $G) + (0.0 * $B);
+			$GG = (0.7 * $R) + (1.0 * $G) + (0.0 * $B);
+			$BB = (0.7 * $R) + (0.0 * $G) + (1.0 * $B);
+			// Add compensation to original values
+			$R = $RR + $r;
+			$G = $GG + $g;
+			$B = $BB + $b;
+			// Clamp values
+			if($R < 0) $R = 0; if($R > 255) $R = 255;
+			if($G < 0) $G = 0; if($G > 255) $G = 255;
+			if($B < 0) $B = 0; if($B > 255) $B = 255;
+			
+			imagecolorset($this->map['image'], $n, $R, $G, $B);
+
+		}
+	}
+	
+}

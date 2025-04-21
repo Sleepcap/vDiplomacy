@@ -230,4 +230,6 @@ if (($gameID != 0) && (count($countryID1) > 0) && (count($countryID2) > 0))
     }
     else { print '<br>No sent messages to display.'; }
 }
+
+include "adminChatAnalyserVDip.php";
 ?>

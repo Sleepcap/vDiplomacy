@@ -370,9 +370,10 @@ if( file_exists($cacheHTML) )
 
 $tabl = $DB->sql_tabl("SELECT
 	f.id, f.fromUserID, f.timeSent, f.message, f.subject, f.replies,
-		u.username as fromusername, u.points as points, f.latestReplySent, 0 as online, u.type as userType, 
+		u.username as fromusername, u.vpoints as points, f.latestReplySent, 0 as online, u.type as userType, 
 		f.likeCount as likeCount, 
 		f.silenceID,
+		f.anon,
 		silence.userID as silenceUserID,
 		silence.postID as silencePostID,
 		silence.moderatorUserID as silenceModeratorUserID,
@@ -398,6 +399,20 @@ while( $message = $DB->tabl_hash($tabl) )
 		$silence = new Silence($message);
 	else
 		unset($silence);
+		
+	// Check for Anon posting:
+	if ($message['anon'] == 'Yes')
+	{
+		if (!$User->type['Moderator'] && $message['fromUserID'] != $User->id)
+		{
+			$message['fromusername'] = 'Anon';
+			$message['fromUserID'] = 0;
+			$message['points'] = '??';
+			$message['userType'] = 'User';
+		}
+		else
+			$message['fromusername'] = $message['fromusername'].' (Anon)';
+	}
 	
 	// Check for mutes first, before continuing
 	$muteLink='';
@@ -407,7 +422,7 @@ while( $message = $DB->tabl_hash($tabl) )
 			$User->toggleThreadMute($message['id']);
 			$isThreadMuted = !$isThreadMuted;
 		}
-		
+				
 		if( $isThreadMuted ) continue;
 		
 		$toggleMuteURL = 'forum.php?toggleMuteThreadID='.$message['id'].'&rand='.rand(1,99999).'#'.$message['id'];
@@ -430,6 +445,12 @@ while( $message = $DB->tabl_hash($tabl) )
 			$muteLink .= '</span>';
 		}
 	}
+
+	$deleteLink = '';
+	if( $User->type['Admin'] || $User->type['ForumModerator'] ) {
+		$deleteLink .= ' <br /><a title="'.l_t('Delete this thread permanently').'" class="light likeMessageToggleLink" href="admincp.php?tab=Control%20Panel&amp;postID='.$message['id'].'#deletePost">'.l_t('Delete thread').'</a>';
+	}
+
 	
 	print '<div class="hr userID'.$message['fromUserID'].' threadID'.$message['id'].'"></div>'; // Add the userID and threadID so muted users/threads dont create lines where their threads were
 
@@ -451,13 +472,13 @@ while( $message = $DB->tabl_hash($tabl) )
 		print $messageAnchor;
 	}
 
-	print '<div class="leftRule message-head threadalternate'.$switch.'">
-
-		<a href="profile.php?userID='.$message['fromUserID'].'">'.$message['fromusername'].
+	print '<div class="leftRule message-head threadalternate'.$switch.'">'.
+		(($message['points'] == '??') ? '<a href="features.php#2_7">' : '<a href="profile.php?userID='.$message['fromUserID'].'">').
+			$message['fromusername'].
 			' '.
-				' ('.$message['points'].' '.libHTML::points().User::typeIcon($message['userType']).')</a>'.
+				' ('.$message['points'].' '.libHTML::vpoints().User::typeIcon($message['userType']).')</a>'.
 			'<br />
-			<strong><em>'.libTime::text($message['timeSent']).'</em></strong>'.$muteLink.'<br />
+			<strong><em>'.libTime::text($message['timeSent']).'</em></strong>'.$muteLink.$deleteLink.'<br />
 			'.$User->likeMessageToggleLink($message['id'],$message['fromUserID']).libHTML::likeCount($message['likeCount']).
 		'</div>';
 
@@ -512,10 +533,11 @@ while( $message = $DB->tabl_hash($tabl) )
 		}
 		// We are viewing the thread; print replies
 		$replytabl = $DB->sql_tabl(
-			"SELECT f.id, fromUserID, f.timeSent, f.message, u.points as points, 0 as online,
+			"SELECT f.id, fromUserID, f.timeSent, f.message, u.vpoints as points, 0 as online,
 					u.username as fromusername, f.toID, u.type as userType, 
 					f.likeCount, 
 					f.silenceID,
+					f.anon,
 					silence.userID as silenceUserID,
 					silence.postID as silencePostID,
 					silence.moderatorUserID as silenceModeratorUserID,
@@ -534,6 +556,20 @@ while( $message = $DB->tabl_hash($tabl) )
 		list($maxReplyID) = $DB->sql_row("SELECT MAX(id) FROM wD_ForumMessages WHERE toID=".$message['id']." AND type='ThreadReply'");
 		while($reply = $DB->tabl_hash($replytabl) )
 		{
+			// Check for Anon posting:
+			if ($reply['anon'] == 'Yes')
+			{
+				if (!$User->type['Moderator'] && $reply['fromUserID'] != $User->id)
+				{
+					$reply['fromusername'] = 'Anon';
+					$reply['fromUserID'] = 0;
+					$reply['points'] = '??';
+					$reply['userType'] = 'User';
+				}
+				else
+					$reply['fromusername'] = $reply['fromusername'].' (Anon)';
+			}
+		
 			$replyToID = $reply['toID'];
 			$replyID = $reply['id'];
 
@@ -565,7 +601,7 @@ while( $message = $DB->tabl_hash($tabl) )
 
 			print '<strong><a href="profile.php?userID='.$reply['fromUserID'].'">'.$reply['fromusername'].' '.
 			
-					' ('.$reply['points'].' '.libHTML::points().User::typeIcon($reply['userType']).')</a>'.
+					' ('.$reply['points'].' '.libHTML::vpoints().User::typeIcon($reply['userType']).')</a>'.
 				'</strong><br />';
 
 			print libHTML::forumMessage($message['id'],$reply['id']);
@@ -588,7 +624,8 @@ while( $message = $DB->tabl_hash($tabl) )
 					print '<a class="light likeMessageToggleLink" href="admincp.php?tab=Control%20Panel&amp;silenceID='.$silence->id.'#disableSilence">'.l_t('Disable silence').'</a>';
 				else
 					print '<a class="light likeMessageToggleLink" href="admincp.php?tab=Control%20Panel&amp;postID='.$reply['id'].'&amp;userID='.$reply['fromUserID'].'#createUserThreadSilence">'.l_t('Silence user').'</a>';
-				
+
+				print '<br /><a title="'.l_t('Delete this post permanently').'" class="light likeMessageToggleLink" href="admincp.php?tab=Control%20Panel&amp;postID='.$reply['id'].'#deletePost">'.l_t('Delete post').'</a>';
 			}
 					
 			print '</div>';

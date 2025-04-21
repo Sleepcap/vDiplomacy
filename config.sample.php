@@ -1,6 +1,6 @@
 <?php
 /*
-    Copyright (C) 2004-2010 Kestas J. Kuliukas
+    Copyright (C) 2004-2009 Kestas J. Kuliukas
 
 	This file is part of webDiplomacy.
 
@@ -21,13 +21,15 @@
 defined('IN_CODE') or die('This script can not be run by itself.');
 
 /**
- * The configuration object. This is the only file that will require modification by
+ * The configuration object. This is the only file that will require_once modification by
  * end users.
  *
  * @package Base
  */
+ 
 class Config
 {
+
 	/**
 	 * This is the MySQL socket. It could be a network socket or a UNIX socket.
 	 *
@@ -48,21 +50,21 @@ class Config
 	 *
 	 * @var string
 	 */
-	public static $database_username='webdiplomacy';
+	public static $database_username='root';
 
 	/**
 	 * The password of the above user
 	 *
 	 * @var string
 	 */
-	public static $database_password='mypassword123';
+	public static $database_password='';
 
 	/**
 	 * The database name
 	 *
 	 * @var string
 	 */
-	public static $database_name='webdiplomacy';
+	public static $database_name='vDip';
 
 	/**
 	 * This is used to salt hashes for passwords, if it gets out it's not the end of the world.
@@ -102,6 +104,20 @@ class Config
 	 */
 	public static $jsonSecret='';
 
+	/*
+	 * Impresum: 
+	 * A default impresum needed for german websites or sites hosted in germany-
+	 * Enter your contact information here.
+	 */
+	public static $impresum=array(
+		'name'    => '',
+		'street'  => '',
+		'city'    => '',
+		'country' => '',
+		'email'   => ''		
+	);
+
+
 	/**
 	 * The administrators e-mail; if a user experiences a problem they will be invited to contact this
 	 * e-mail address. It's unlikely bots will experience the sort of problem resulting in your e-mail
@@ -109,35 +125,185 @@ class Config
 	 *
 	 * @var string
 	 */
-	public static $adminEMail='webmaster@yourdiplomacyserver.com';
-
-	/**
+	public static $adminEMail='admin@vDiplomacy.com';
+	
+ 	/**
 	 * The moderators e-mail; if users have been banned etc they will be directed to contact this e-mail 
 	 * to contest it.
 	 * 
 	 * @var string
 	 */
 	public static $modEMail='moderators@yourdiplomacyserver.com';
+	public static $modEMailServerIMAP='{mail.your-server.de:143}INBOX'; // Link to the server in PHP-imap_open - format
+	public static $modEMailServerHTTP='https://webmail.your-server.de'; // URL-Link to the server
+	public static $modEMailLogin='';
+	public static $modEMailPassword='';
+	public static $modEMailName='vDiplomacy Moderator Team';
 
 	/**
-	 * Memcached hostname
-	 *
+	 * Site name to be shown at various places on the application and inside mails.
+	 * 
 	 * @var string
 	 */
-	public static $memcachedHost='webdiplomacy-memcached';
-
+	public static $siteName='vDiplomacy';
+   
 	/**
-	 * Memcached port number
-	 *
-	 * @var int
-	 */
-	public static $memcachedPort=11211;
+	 * If you use the piwik-webanalyser define his path here. If not comment this out.
+	 */		
+	// public static $piwik='piwik/';
+	// public static $piwik_auth = '';
 
 	/**
 	 * An array of variants available on the server (for future releases, not yet enabled)
 	 * @var array
 	 */
-	public static $variants=array(1=>'Classic',2=>'World',9=>'AncMed',15=>'ClassicFvA',17=>'ClassicChaos',19=>'Modern2',20=>'Empire4',23=>'ClassicGvI',91=>'ColdWar');
+	public static $variants=array(
+		 1=>'Classic',
+//		 2=>'World',
+//		 3=>'FleetRome',
+//		 4=>'CustomStart',
+//		 5=>'BuildAnywhere',
+//		 6=>'SouthAmerica5',
+//		 7=>'SouthAmerica4',
+//		 8=>'Hundred',
+//		 9=>'AncMed',
+//		10=>'ClassicMilan',
+//		11=>'Pure',
+//		12=>'Colonial',
+//		13=>'Imperium',
+//		14=>'ClassicCrowded',
+//		15=>'ClassicFvA',
+//		16=>'SailHo2',
+//		17=>'ClassicChaos',
+//		18=>'ClassicSevenIslands',
+//		19=>'Modern2',
+//		20=>'Empire4',
+//		21=>'Migraine',
+//		22=>'Duo',
+//		23=>'ClassicGvI',
+//		24=>'SouthAmerica8',
+//		25=>'ClassicGvR',
+//		26=>'ClassicFGRT',
+//		27=>'Sengoku5',
+//		28=>'Classic1897',
+//		29=>'Rinascimento',
+//		30=>'ClassicFog',
+//		31=>'Alacavre',
+//		32=>'DutchRevolt',
+//		33=>'Empire1on1',
+//		34=>'Classic1880',
+//		35=>'GreekDip',
+//		36=>'Germany1648',
+//		37=>'MateAgainstMate',
+//		38=>'ClassicNoNeutrals',
+//		39=>'Fubar',
+//		40=>'ClassicOctopus',
+//		41=>'Lepanto',
+//		42=>'ClassicVS',
+//		43=>'WhoControlsAmerica',
+//		44=>'FantasyWorld',
+//		45=>'Karibik',
+//		46=>'BalkanWarsVI',
+//		47=>'Hussite',
+//		48=>'ClassicFGA',
+//		49=>'ClassicIER',
+//		50=>'ClassicGreyPress',
+//		51=>'Haven',
+//		52=>'WWIV',
+//		53=>'ClassicEconomic',
+//		54=>'ClassicChaoctopi',
+//		55=>'TenSixtySix',
+//		56=>'USofA',
+//		57=>'KnownWorld_901',
+//		58=>'TreatyOfVerdun',
+//		59=>'YoungstownRedux',
+//		60=>'ClassicPilot',
+//		61=>'War2020',
+//		62=>'ClassicEvT',
+//		63=>'Viking',
+//		64=>'ClassicTouchy',
+//		65=>'RatWars',
+//		66=>'Pirates',
+//		67=>'Abstraction3',
+//		68=>'Habelya',
+//		69=>'AmericanConflict',
+//		70=>'Zeus5',
+//		71=>'Colonial1885',
+//		72=>'Europe1939',
+//		73=>'NorthSeaWars',
+//		74=>'Maharajah',
+//		75=>'CelticBritain',
+//		76=>'Enlightenment',
+//		77=>'GreatLakes',
+//		78=>'AgeOfPericles',
+//		79=>'AnarchyInTheUK',
+//		80=>'Mars',
+//		81=>'Imperial2',
+//		82=>'DarkAges',
+//		83=>'Africa',
+//		84=>'ClassicCataclysm',
+//		85=>'TenSixtySix_V2',
+//		86=>'ClassicLayered',
+//		87=>'WWII',
+//		88=>'AberrationV',
+//		89=>'HeptarchyIV',
+//		90=>'ClassicAnkaraCrescent',
+//		91=>'ColdWar',
+//		92=>'YoungstownWWII',
+//		93=>'Chromatic',
+//		94=>'TenSixtySix_V3',
+//		95=>'WWIVsealanes',
+//		96=>'GobbleEarth',
+//		97=>'Europe1600',
+//		98=>'FirstCrusade',
+//		99=>'AtlanticColonies',
+//		100=>'Sengoku6',
+//		101=>'Napoleonic',
+//		102=>'WWIV_V6',
+//		103=>'Balkans1860',
+//		104=>'Iberian',
+//		105=>'Divided_States',
+//		106=>'Classic1913',
+//		107=>'Renaissance1453',
+//		108=>'Canton',
+//		109=>'Machiavelli',
+//		110=>'Edwardian',
+//		111=>'VersaillesRedux',
+//		112=>'ManifestDestiny',
+//		113=>'EmpiresCoalitions',
+//		114=>'Crusades1201',
+//		115=>'MachiavelliTTR',
+//		116=>'SpiceIslands',
+//		117=>'AustrianSuccession',
+//		118=>'Caucasia',
+//		119=>'ClassicCroatia',
+//		120=>'ClassicEgypt',
+//		121=>'ClassicFlorence',
+//		122=>'ClassicBritain',
+//		123=>'ClassicBrazilian',
+//		124=>'AfricaScramble',
+//		125=>'Europe1908',
+//		126=>'NorthAmerica1862',
+//		127=>'WesternWorld_901',
+//		128=>'ColdWarRedux',
+//		129=>'World10',
+//		130=>'Edwardian3',
+//		131=>'EastIndies',
+//		132=>'Chesspolitik',
+//		133=>'Classic1898',
+//		134=>'Classic1898Fog',
+//		135=>'Hexagon',
+//		136=>'A_Modern_Europe',
+//		137=>'TiglathPileser',
+//		138=>'MongolianEmpire',
+//		141=>'Scottish_Clan_Wars',
+//		145=>'WesternEurope1300',
+//		155=>'Europa_Renovatio',
+//		171=>'WorldAtWar1937',
+//		171=>'WorldAtWar1937',
+//		208=>'PunicWars',
+//		1900=>'Baron1900',
+		);
 
 	/**
 	 * A boolean controlling whether automatic gr calculations are enabled. Set to true for auto-GR calculation and false to require manual calculations via the modtool. Note that $grCategories must exist to work.
@@ -238,20 +404,36 @@ class Config
 	 *
 	 * @var array
 	 */
-	public static $apiConfig = array(
-		/* Whether the API is enabled or not */
-		"enabled" => true,
-
-		/* Only replace players in CD if they are in a NoPress game */
-		"noPressOnly" => true,
-
-		/* If the API should only be enabled for some game ids, set the list of game ids here */
-		"restrictToGameIDs" => array(),
-
-		/* List of variant IDs supported */
-		/* 1 = Classic, 15 = ClassicFvA, 23 = ClassicGvI */
-		"variantIDs" => array(1, 15, 23)
-	);
+//	public static $blockedVariants=array(
+//		22, // 
+//	);
+	
+	/**
+	 * An array of variants that are blocked for guests on the server.
+	 * If you browse the gamelist or variantpage as a guest you can't see the variants listed here.
+	 * This is for adding variants that you do not want to be found by web-bots or random guests.
+	 *
+	 * @var array
+	 */
+//	public static $hiddenVariants=array(
+//		62, // TenSixtySix
+//	);
+	
+	/*
+	 * Limit the maximum bet-size based on how many players can join
+	 */
+//	public static $limitBet = array (
+//		2=>'1', 3=>'5', 4=>'10', 5=>'20', 6=>'30'
+//	);
+	
+	
+	// To give certain users without an admin-account the tools to edit variants on the server
+//	public static $devs=array(
+//		'dummy1' => array(
+//			'Classic',
+//			'AncMed'
+//		)
+//	);
 
 	/**
 	 * Messages to display when different flags are set via the admin control panel.
@@ -261,10 +443,11 @@ class Config
 	 * @var array
 	 */
 	public static $serverMessages=array(
-			'Notice'=>'Default server-wide notice message.',
-			'Panic'=>'Game processing has been paused and user registration has been disabled while a problem is resolved.',
-			'Maintenance'=>"Server is in maintenance mode; only admins can fully interact with the server.",
-			'ServerOffline'=>''
+			'Notice'=>'Update done. Every game got 12 hours added. Thanks for your patience.',
+ 			'Panic'=>'Game processing has been paused and user registration has been disabled while a problem is resolved.',
+			'Maintenance'=>"30 minutes downtime. Have a large update to do (and my internet connection is really slow)",
+			'ServerOffline'=>'',
+			'Notice'=>"",
 		);
 
 	/**
@@ -297,8 +480,8 @@ class Config
 	 */
 	public static function errorlogDirectory()
 	{
-		return false;
-		return '../errorlogs';
+//		return false;
+		return ('logfiles');
 	}
 
 	/**
@@ -337,14 +520,14 @@ class Config
 	 *
 	 * @var string
 	 */
-	public static $pointsLogFile=false;//'../pointslog.txt';
+	public static $pointsLogFile=false; //'../pointslog.txt';
 
 	/**
 	 * Where to log bot requests, for troubleshooting the bot API
 	 *
 	 * @var string
 	 */
-	public static $botsLogFile=false;//'botslog.txt';
+	public static $botsLogFile=false;//'botslog.txt'; 
 
 	/**
 	 * An array of e-mail settings, to validate e-mails etc.
@@ -352,21 +535,21 @@ class Config
 	 * @var array
 	 */
 	public static $mailerConfig = array(
-			"From"=> "webmaster@yourdiplomacyserver.com",
+			"From"=> "admin@vDiplomacy.com",
 			/* The e-mail which mail is sent from. This should be a valid e-mail,
 			or it may trip spam filters. */
-			"FromName"=> "webDiplomacy gamemaster",
+			"FromName"=> "vDiplomacy",
 			/* The name being mailed from. */
 			"UseMail"=>false,
 			/* Use the php mail() function. Either UseMail, UseSendmail or UseSMTP has to be TRUE,
 				if you're using e-mail. */
-			"UseSendmail"=>false,
+			"UseSendmail"=>true,
 			/* Use the sendmail binary, if this is false the variable below is ignored */
 			"SendmailSettings"=> array(
 					"Location"=>"/usr/sbin/sendmail"
 					/* Location of the sendmail binary */
 				),
-			"UseSMTP"=> true,
+			"UseSMTP"=> false,
 			/* Use SMTP, if this is FALSE the variable below is ignored. */
 			"SMTPSettings"=> array(
 					"Host"=>"mailhog",
@@ -375,8 +558,6 @@ class Config
 					/* If this is FALSE the two variables below are ignored */
 					"Username"=>"webmaster",
 					"Password"=>"password123"
-					/* Uncomment the line below to use SSL to connect (e.g. for gmail) */
-					// , 'SMTPSecure'=>'ssl'
 				),
 			"UseDebug" => false // If this is set to true mail will be output to the browser instead of sent, useful for debugging
 		);
@@ -408,7 +589,6 @@ class Config
 	public static function customFooter()
 	{
 		return '';
-		return 'Default custom server message / google analytics code.';
 	}
 
 	/**
@@ -476,17 +656,43 @@ class Config
 	public static $debug=true;
 
 	/**
-	 * The locale for this site.
+	 * The default locale for guest users.
 	 *
 	 * @var string
 	 */
 	public static $locale = 'English';
 
 	/**
+	 * Array of available locales
+	 *
+	 * @var string[]
+	 */
+	public static $availablelocales = array(
+			'English' => 'English'
+			);
+
+	/**
+	 * Different names given to the same locales, to allow automatic
+	 * recognition of which locale to use.
+	 *
+	 * @var string[][]
+	 */
+	public static $localealiases = array(
+		'English' => array('eng',
+			'en_us',
+			'en_US',
+			'English',
+			'en_US.ISO8859-1',
+			'en_US.ISO8859-15',
+			'en_US.US-ASCII',
+			'en_US.UTF-8')
+		);
+
+	/**
 	 * The number of minutes that gamemaster.php will detect that it hasn't been run for before it will
 	 * mark itself in downtime mode.
 	 */
-	public static $downtimeTriggerMinutes=12;
+	public static $downtimeTriggerMinutes=60000;
 
 
 	// ---

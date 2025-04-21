@@ -1,6 +1,6 @@
 <?php
 /*
-	Copyright (C) 2010 Oliver Auth
+	Copyright (C) 2010 Oliver Auth / 2014 Tobias Florin
 
 	This file is part of the Colonial variant for webDiplomacy
 
@@ -34,7 +34,9 @@ class ColonialVariant_adjudicatorPreGame extends adjudicatorPreGame {
 		'Holland' => array('Sumatra' =>'Fleet', 'Java'          =>'Fleet', 'Borneo'    =>'Army'   ),
 		'Japan'   => array('Otaru'   =>'Fleet', 'Tokyo'         =>'Fleet', 'Kyoto'     =>'Army'    ,
 		                   'Kyushu'  =>'Fleet'                                                    ),
-		'Turkey'  => array('Angora'  =>'Army' , 'Constantinople'=>'Fleet', 'Baghdad'    =>'Fleet' ) 
+		'Turkey'  => array('Angora'  =>'Army' , 'Constantinople'=>'Fleet', 'Baghdad'    =>'Fleet' ) ,
+                
+                'Neutral Suez' => array('Suez Canal'=>'Fleet')
 	);
 
 }

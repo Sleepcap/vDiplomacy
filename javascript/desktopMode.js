@@ -74,6 +74,8 @@ function changeCSS(toggle, dark) {
         newlinkGamePanel.setAttribute("href", cssDirectory + "/" + dark + "/desktopOnly/gamepanel.css?var=" + cssVersion);
         document.getElementsByTagName("head").item(0).appendChild(newlinkGamePanel);
 
+        document.getElementsByTagName("head").item(0).appendChild(document.getElementById("vdipColors-css"));
+ 
         newlinkGlobal.onload = function(){
            oldlinkGlobal.remove();
         };
@@ -128,5 +130,8 @@ function changeCSS(toggle, dark) {
                 oldlinkGamePanel.remove();
             };
         }
+		
+        document.getElementsByTagName("head").item(0).appendChild(document.getElementById("vdipColors-css"));
+		
     }
 }

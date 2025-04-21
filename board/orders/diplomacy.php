@@ -53,6 +53,9 @@ class userOrderDiplomacy extends userOrder
 		}
 	}
 
+    /**
+     * @return bool
+     */
 	protected function typeCheck()
 	{
 		switch($this->type) {
@@ -62,7 +65,8 @@ class userOrderDiplomacy extends userOrder
 			case 'Support move':
 				return true;
 			case 'Convoy':
-				if ( $this->Unit->type == 'Fleet' and $this->Unit->Territory->type == 'Sea' )
+				if ( $this->Unit->type == 'Fleet' and 
+                                    ( $this->Unit->Territory->type == 'Sea' or $this->Unit->Territory->type == 'Strait' ))
 					return true;
 			default:
 				return false;
@@ -214,15 +218,15 @@ class userOrderDiplomacy extends userOrder
 				ON ( fleet.gameID=".$this->gameID." AND fleet.terrID = b.toTerrID AND fleet.type='Fleet' )
 			WHERE
 				b.mapID=".MAPID." AND ".$borderLinks."
-				AND b.armysPass='No' AND b.fleetsPass='Yes'
+				AND b.fleetsPass='Yes'
 
 			UNION SELECT b.toTerrID
 			FROM wD_Borders b INNER JOIN wD_Territories t ON (t.id=b.toTerrID)
 			WHERE
 				b.mapID=".MAPID." AND t.mapID=".MAPID."
-				AND t.type='Coast'
+				AND ( t.type='Coast' OR t.type='Strait' )
 				AND b.fromTerrID=".$endFleetTerrID." AND b.toTerrID=".$endCoastTerrID."
-				AND b.armysPass='No' AND b.fleetsPass='Yes'");
+				AND b.fleetsPass='Yes'");
 
 		// Check the number of returned links, if it is the correct length the chain must be valid.
 		$i=0;

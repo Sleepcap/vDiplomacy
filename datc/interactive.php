@@ -90,7 +90,7 @@ if ( isset($_REQUEST['testID']) )
 elseif ( !isset($testID) or !$testID )
 {
 	$DB->sql_put("BEGIN");
-	list($gameID) = $DB->sql_row("SELECT id FROM wD_Games WHERE name='DATC-Adjudicator-Test'");
+	list($gameID) = $DB->sql_row("SELECT id FROM wD_Games WHERE name='DATC-Adjudicator-Test' or name LIKE 'DATC-Adjudicator-%-Test'");
 	if($gameID)
 		processGame::eraseGame($gameID);
 	$DB->sql_put("COMMIT");

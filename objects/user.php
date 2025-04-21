@@ -24,6 +24,7 @@ require_once(l_r('objects/notice.php'));
 require_once(l_r('objects/useroptions.php'));
 require_once(l_r('objects/basic/set.php'));
 require_once(l_r('objects/groupUserToUserLinks.php'));
+require_once('lib/reliability.php');
 
 /**
  * Holds information on a user for display, or to manage certain user related functions such as logging
@@ -129,8 +130,8 @@ class User {
 	 * @var array
 	 */
 	public $type;
-
-	/**
+	
+ 	/**
 	 * Notification flags; an array of notification flags, each set to true if notification should be done.
 	 * @var setUserNotifications
 	 */
@@ -205,8 +206,51 @@ class User {
 	 */
 	public $points;
 
-	public $lastMessageIDViewed;
+	/**
+	 * Number of vPoints
+	 * @var int
+	 */
+	public $vpoints;
 
+	public $lastMessageIDViewed;
+	public $lastModMessageIDViewed;
+
+	// Tag if he knows other people on this site in RL...
+	public $rlGroup;
+	
+	/*
+	 * Does the player want to display the country names in the global chatbox or on the map ('Yes' or 'No') 
+	 * usefull for colorblind people
+	 */
+	public $showCountryNames;	
+	public $showCountryNamesMap;	
+	
+	/*
+	 * Enhance the map-colors for colorblind people...
+	 */
+	public $colorCorrect;
+	
+	/*
+	 * How to sort the units in the javascript
+	 */
+	public $unitOrder;
+	public $sortOrder;
+	
+	/*
+	 * OptIn for the point'nClick Map-code
+	 */
+	public $pointNClick;
+	public $terrGrey;
+	public $greyOut;
+	public $scrollbars;
+	public $buttonWidth;
+	
+	/*
+	 * User has the right to create directed games, even if he does not met the criteria, 
+	 * or is blocked from creating these games even if he does met the criteria.
+	 */
+	public $directorLicense;
+	
 	/**
 	 * 'No' if the player can submit mod reports, 'Yes' if they are muted
 	 * @var string
@@ -228,6 +272,28 @@ class User {
 	 * @var int
 	 */
 	public $identityScore;
+	
+	/**
+	 * integrityBalance
+	 * Changeable by a mod to improve a players integrety rating, so he can join more games...
+	 * @var int
+	 */
+	public $integrityBalance;
+	
+	/**
+	 * integrityRating
+	 * The difference between unexcused NMRs and take-overs within the last year
+	 * @var int
+	 */
+	public $integrityRating;
+	
+	/**
+	 * cssStyle
+	 * Display the site in webdip or vDip style...
+	 * @var 'vDip' or 'webDip'
+	 */
+	public $cssStyle;
+	
 	/**
 	 * darkMode
 	 * Choose css style theme
@@ -425,7 +491,19 @@ class User {
 		$SQLVars = array();
 
 		$available = array('username'=>'', 'password'=>'', 'passwordcheck'=>'', 'email'=>'',
-					'homepage'=>'','comment'=>'', 'darkMode'=>'');
+					'showCountryNames'=>'',
+					'showCountryNamesMap'=>'',
+					'colorCorrect'=>'',
+					'sortOrder'=>'',
+					'unitOrder'=>'',
+					'pointNClick'=>'',
+					'terrGrey'=>'',
+					'greyOut'=>'',
+					'cssStyle'=>'',
+					'forceDesktop'=>'',
+					'scrollbars'=>'',
+					'buttonWidth'=>'',
+				'hideEmail'=>'','showEmail'=>'', 'homepage'=>'','comment'=>'', 'darkMode'=>'');
 
 		$userForm = array();
 
@@ -481,6 +559,236 @@ class User {
 
 			$SQLVars['comment'] = $userForm['comment'];
 		}
+		
+		if( isset($userForm['showCountryNames']) )
+		{
+			if ( $userForm['showCountryNames'] == "Yes" )
+				$SQLVars['showCountryNames'] = "Yes";
+			else
+				$SQLVars['showCountryNames'] = "No";
+		}
+		
+		if( isset($userForm['showCountryNamesMap']) )
+		{
+			if ( $userForm['showCountryNamesMap'] == "Yes" )
+				$SQLVars['showCountryNamesMap'] = "Yes";
+			else
+				$SQLVars['showCountryNamesMap'] = "No";
+		}
+			
+		if( isset($userForm['colorCorrect']) )
+		{
+			if ( $userForm['colorCorrect'] == "Protanope" )
+				$SQLVars['colorCorrect'] = "Protanope";
+			elseif ( $userForm['colorCorrect'] == "Deuteranope" )
+				$SQLVars['colorCorrect'] = "Deuteranope";
+			elseif ( $userForm['colorCorrect'] == "Tritanope" )
+				$SQLVars['colorCorrect'] = "Tritanope";
+			else
+				$SQLVars['colorCorrect'] = "Off";
+		}
+		
+		if( isset($userForm['sortOrder']) )
+		{
+			if ( $userForm['sortOrder'] == "TerrName" )
+				$SQLVars['sortOrder'] = "TerrName";
+			elseif ( $userForm['sortOrder'] == "NorthSouth" )
+				$SQLVars['sortOrder'] = "NorthSouth";
+			elseif ( $userForm['sortOrder'] == "EastWest" )
+				$SQLVars['sortOrder'] = "EastWest";
+			else
+				$SQLVars['sortOrder'] = "BuildOrder";
+		}
+		
+		if( isset($userForm['unitOrder']) )
+		{
+			if ( $userForm['unitOrder'] == "FA" )
+				$SQLVars['unitOrder'] = "FA";
+			elseif ( $userForm['unitOrder'] == "AF" )
+				$SQLVars['unitOrder'] = "AF";
+			else
+				$SQLVars['unitOrder'] = "Mixed";
+		}
+		
+		if( isset($userForm['pointNClick']) )
+		{
+			if ( $userForm['pointNClick'] == "Yes" )
+				$SQLVars['pointNClick'] = "Yes";
+			else
+				$SQLVars['pointNClick'] = "No";
+		}
+		
+		if( isset($userForm['terrGrey']) )
+		{
+			if ( $userForm['terrGrey'] == "all" )
+				$SQLVars['terrGrey'] = "all";
+			elseif ( $userForm['terrGrey'] == "selected" )
+				$SQLVars['terrGrey'] = "selected";
+			else
+				$SQLVars['terrGrey'] = "off";
+		}
+		
+		if( isset($userForm['greyOut']) )
+		{
+			$SQLVars['greyOut'] = (int)($userForm['greyOut']);
+			if ($SQLVars['greyOut'] < 10)
+				$SQLVars['greyOut'] = 10;
+			if ($SQLVars['greyOut'] > 90)
+				$SQLVars['greyOut'] = 90;			
+		}
+	
+		if( isset($userForm['scrollbars']) )
+		{
+			if ( $userForm['scrollbars'] == "Yes" )
+				$SQLVars['scrollbars'] = "Yes";
+			else
+				$SQLVars['scrollbars'] = "No";
+		}
+		
+		if( isset($userForm['buttonWidth']) )
+		{
+			if ( $userForm['buttonWidth'] == "auto" )
+				$SQLVars['buttonWidth'] = "auto";
+			else if ( $userForm['buttonWidth'] == "large" )
+				$SQLVars['buttonWidth'] = "large";
+			else
+				$SQLVars['buttonWidth'] = "small";
+		}
+		
+		if( isset($userForm['cssStyle']) )
+		{
+			if ( $userForm['cssStyle'] == "webDip" )
+				$SQLVars['cssStyle'] = "webDip";
+			else
+				$SQLVars['cssStyle'] = "vDip";
+		}
+
+		if( isset($userForm['locale']) )
+		{
+			if( !in_array($userForm['locale'], Config::$availablelocales) )
+			{
+				$errors[] = "Specified locale not available";
+			}
+			else
+			{
+				$SQLVars['locale'] = $userForm['locale'];
+			}
+		}
+		
+		if( isset($userForm['showCountryNames']) )
+		{
+			if ( $userForm['showCountryNames'] == "Yes" )
+				$SQLVars['showCountryNames'] = "Yes";
+			else
+				$SQLVars['showCountryNames'] = "No";
+		}
+		
+		if( isset($userForm['showCountryNamesMap']) )
+		{
+			if ( $userForm['showCountryNamesMap'] == "Yes" )
+				$SQLVars['showCountryNamesMap'] = "Yes";
+			else
+				$SQLVars['showCountryNamesMap'] = "No";
+		}
+			
+		if( isset($userForm['colorCorrect']) )
+		{
+			if ( $userForm['colorCorrect'] == "Protanope" )
+				$SQLVars['colorCorrect'] = "Protanope";
+			elseif ( $userForm['colorCorrect'] == "Deuteranope" )
+				$SQLVars['colorCorrect'] = "Deuteranope";
+			elseif ( $userForm['colorCorrect'] == "Tritanope" )
+				$SQLVars['colorCorrect'] = "Tritanope";
+			else
+				$SQLVars['colorCorrect'] = "Off";
+		}
+		
+		if( isset($userForm['sortOrder']) )
+		{
+			if ( $userForm['sortOrder'] == "TerrName" )
+				$SQLVars['sortOrder'] = "TerrName";
+			elseif ( $userForm['sortOrder'] == "NorthSouth" )
+				$SQLVars['sortOrder'] = "NorthSouth";
+			elseif ( $userForm['sortOrder'] == "EastWest" )
+				$SQLVars['sortOrder'] = "EastWest";
+			else
+				$SQLVars['sortOrder'] = "BuildOrder";
+		}
+		
+		if( isset($userForm['unitOrder']) )
+		{
+			if ( $userForm['unitOrder'] == "FA" )
+				$SQLVars['unitOrder'] = "FA";
+			elseif ( $userForm['unitOrder'] == "AF" )
+				$SQLVars['unitOrder'] = "AF";
+			else
+				$SQLVars['unitOrder'] = "Mixed";
+		}
+		
+		if( isset($userForm['pointNClick']) )
+		{
+			if ( $userForm['pointNClick'] == "Yes" )
+				$SQLVars['pointNClick'] = "Yes";
+			else
+				$SQLVars['pointNClick'] = "No";
+		}
+		
+		if( isset($userForm['terrGrey']) )
+		{
+			if ( $userForm['terrGrey'] == "all" )
+				$SQLVars['terrGrey'] = "all";
+			elseif ( $userForm['terrGrey'] == "selected" )
+				$SQLVars['terrGrey'] = "selected";
+			else
+				$SQLVars['terrGrey'] = "off";
+		}
+		
+		if( isset($userForm['greyOut']) )
+		{
+			$SQLVars['greyOut'] = (int)($userForm['greyOut']);
+			if ($SQLVars['greyOut'] < 10)
+				$SQLVars['greyOut'] = 10;
+			if ($SQLVars['greyOut'] > 90)
+				$SQLVars['greyOut'] = 90;			
+		}
+	
+		if( isset($userForm['scrollbars']) )
+		{
+			if ( $userForm['scrollbars'] == "Yes" )
+				$SQLVars['scrollbars'] = "Yes";
+			else
+				$SQLVars['scrollbars'] = "No";
+		}
+		
+		if( isset($userForm['buttonWidth']) )
+		{
+			if ( $userForm['buttonWidth'] == "auto" )
+				$SQLVars['buttonWidth'] = "auto";
+			else if ( $userForm['buttonWidth'] == "large" )
+				$SQLVars['buttonWidth'] = "large";
+			else
+				$SQLVars['buttonWidth'] = "small";
+		}
+		
+		if( isset($userForm['cssStyle']) )
+		{
+			if ( $userForm['cssStyle'] == "webDip" )
+				$SQLVars['cssStyle'] = "webDip";
+			else
+				$SQLVars['cssStyle'] = "vDip";
+		}
+
+		if( isset($userForm['locale']) )
+		{
+			if( !in_array($userForm['locale'], Config::$availablelocales) )
+			{
+				$errors[] = "Specified locale not available";
+			}
+			else
+			{
+				$SQLVars['locale'] = $userForm['locale'];
+			}
+		}
 
 		if(isset($userForm['darkMode']))
 		{
@@ -532,6 +840,7 @@ class User {
 			u.timeJoined,
 			u.timeLastSessionEnded,
 			u.points,
+			u.lastModMessageIDViewed,
 			u.lastMessageIDViewed,
 			u.muteReports,
 			u.silenceID,
@@ -543,6 +852,21 @@ class User {
 			u.gameCount,
 			u.reliabilityRating,
 			u.tempBan,
+			u.rlGroup,
+			u.showCountryNames,
+			u.showCountryNamesMap,
+			u.colorCorrect,
+			u.unitOrder,
+			u.sortOrder,			
+			u.pointNClick,
+			u.terrGrey,
+			u.greyOut,
+			u.scrollbars,
+			u.buttonWidth,
+			u.directorLicense,
+			u.vpoints,
+			u.integrityBalance,
+			u.cssStyle,
 			0 as online,
 			u.deletedCDs, 
 			u.emergencyPauseDate, 
@@ -577,7 +901,8 @@ class User {
 
 		// Convert an array of types this user has into an array of true/false indexed by type
 		$this->type = explode(',', $this->type);
-		$validTypes = array('System','Banned','User','Moderator','Guest','Admin','Donator','DonatorBronze','DonatorSilver','DonatorGold','DonatorPlatinum','ForumModerator','Bot','SeniorMod');
+		$validTypes = array('System','Banned','User','Moderator','Guest','Admin','Donator','DonatorBronze','DonatorSilver','DonatorGold','DonatorPlatinum','ForumModerator'
+								,'DevBronze','DevSilver','DevGold', 'ModAlert','Bot','SeniorMod','DevAdmin');
 		$types = array();
 
 		foreach($validTypes as $type)
@@ -592,7 +917,7 @@ class User {
 			}
 		}
 		$this->type = $types;
-
+		
 		$this->notifications=new setUserNotifications($this->notifications);
 
 		$this->online = (bool) $this->online;
@@ -645,19 +970,12 @@ class User {
 
 		if ( (is_array($type) && $type['User']) || (!is_array($type) && strstr($type, 'User') !== false ) )
 		{
-			$buffer .= '<a href="./userprofile.php?userID='.$id.'"';
+			$buffer .= '<a href="./profile.php?userID='.$this->id.'"';
 
 			// Allow javascript to use this ID link:
 			$buffer.=' profileLinkUserID="'.$id.'">'.$username;
 
-			$buffer.='</a> ('.trim($points).libHTML::points().self::typeIcon($type).libHTML::identityIcon($identityScore).libHTML::loggedOn($id);
-			
-			$buffer .= ')<span class="userRelationships" profileLinkUserID="'.$id.'"></span>';
-
-			if( isset($User) && $User->type['Moderator'] )
-			{
-				$buffer .= ' (<a href="index.php?auid='.$id.'">+</a>)';
-			}
+			$buffer.=' ('.$this->vpoints.libHTML::vpoints().$this->typeIcon($this->type).')</a>';
 		}
 		else
 		{
@@ -667,7 +985,7 @@ class User {
 		return $buffer;
 	}
 
-	static function typeIcon($type) 
+	static function typeIcon($type, $showMod=true) 
 	{
 		// This must take either a list as it comes from a SQL query, or a built-in $this->type['Admin'] style array
 		if( is_array($type) ) 
@@ -682,8 +1000,8 @@ class User {
 		$buf='';
 
 		global $User;
-
-		if( strstr($type,'Moderator') )
+		
+		if( strstr($type,'ForumModerator') && $showMod==true)
 		{
 			if (!$User->isDarkMode())
 			{
@@ -694,7 +1012,6 @@ class User {
 				$buf .= '<img src="'.l_s('images/icons/mod3.png').'" alt="'.l_t('Mod').'" title="'.l_t('Moderator/Admin').'" />';
 			}
 		}
-				
 		elseif(strstr($type,'Banned') )
 			$buf .= '<img src="'.l_s('images/icons/cross.png').'" alt="X" title="'.l_t('Banned').'" />';
 
@@ -706,6 +1023,16 @@ class User {
 			$buf .= libHTML::silver();
 		elseif( strstr($type,'DonatorBronze') )
 			$buf .= libHTML::bronze();
+			
+		if( strstr($type,'ModAlert') && isset($User->type['Moderator']) && $User->type['Moderator'] )
+			$buf .= libHTML::alert();
+			
+		if( strstr($type,'DevGold') )
+			$buf .= libHTML::devgold();
+		elseif( strstr($type,'DevSilver') )
+			$buf .= libHTML::devsilver();
+		elseif( strstr($type,'DevBronze') )
+			$buf .= libHTML::devbronze();
 
 		return $buf;
 	}
@@ -930,7 +1257,7 @@ class User {
 	 * 
 	 * @param int $userID The id of the user to be temp banned.
 	 * @param int $days The time of the ban in days.
-	 * @param text $reason The reason for the temp ban.
+	 * @param string $reason The reason for the temp ban.
 	 * @param boolean $overwrite True, if the temp ban value should be overwritten
 	 *		in any case. If false, an existing temp ban might be only extended (for
 	 *		automated temp bans).
@@ -964,13 +1291,19 @@ class User {
 
 		$rankingDetails = array();
 
-		list($rankingDetails['position']) = $DB->sql_row("SELECT COUNT(id)+1 FROM wD_Users WHERE points > ".$this->points);
+		list($rankingDetails['position']) = $DB->sql_row("SELECT COUNT(id)+1
+			FROM wD_Users WHERE points > ".$this->points);
+			
+		list($rankingDetails['vPosition']) = $DB->sql_row("SELECT COUNT(id)+1
+			FROM wD_Users WHERE vpoints > ".$this->vpoints);
 
 		list($rankingDetails['worth']) = $DB->sql_row( "SELECT SUM(bet) FROM wD_Members WHERE userID = ".$this->id." AND status = 'Playing'");
 
 		$rankingDetails['worth'] += $this->points;
 
-		$tabl = $DB->sql_tabl( "SELECT COUNT(id), status FROM wD_Members WHERE userID = ".$this->id." GROUP BY status"	);
+		$tabl = $DB->sql_tabl(
+				"SELECT COUNT(id), status FROM wD_Members WHERE userID = ".$this->id." AND bet != 0 GROUP BY status"
+			);
 
 		$rankingDetails['stats'] = array();
 		while ( list($number, $status) = $DB->tabl_row($tabl) )
@@ -992,12 +1325,19 @@ class User {
 			INNER JOIN wD_Members m ON ( c.gameID = m.gameID and m.countryID = c.countryID )
 			WHERE c.userID <> ".$this->id." AND m.userID = ".$this->id
 			);
-
+		
+		if (isset($rankingDetails['stats']['Resigned']))
+			unset ($rankingDetails['stats']['Resigned']);
+	
+		if ($this->cdCount > 0)
+			$rankingDetails['stats']['Abandoned'] = $this->cdCount;
+		
 		$tabl = $DB->sql_tabl( "SELECT COUNT(m.id), m.status, SUM(m.bet) FROM wD_Members AS m
 					INNER JOIN wD_Games AS g ON m.gameID = g.id
 					WHERE m.userID = ".$this->id."
 						AND g.phase != 'Finished'
 						AND g.anon = 'Yes'
+						AND bet != 0
 					GROUP BY status");
 		$points=0;
 		while ( list($number, $status, $bets) = $DB->tabl_row($tabl) )
@@ -1008,6 +1348,9 @@ class User {
 
 		$rankingDetails['anon']['points'] = $points;
 
+		list($rankingDetails['stats']['Playing']) = $DB->sql_row("SELECT COUNT(id) FROM wD_Members WHERE userID = ".$this->id." AND status='Playing'");
+		list($rankingDetails['anon']['Playing'])  = $DB->sql_row("SELECT COUNT(m.id) FROM wD_Members m INNER JOIN wD_Games AS g ON m.gameID = g.id WHERE userID = ".$this->id." AND g.anon = 'Yes' AND status='Playing'");
+
 		$rankingDetails['rankingPlayers'] = $Misc->RankingPlayers;
 
 		// Prevent division by 0 when server is new
@@ -1015,6 +1358,9 @@ class User {
 
 		// Calculate the percentile of the player. Smaller is better.
 		$rankingDetails['percentile'] = ceil(100.0*$rankingDetails['position'] / $rankingPlayers);
+
+		// Calculate the percentile of the player. Smaller is better.
+		$rankingDetails['vpercentile'] = ceil(100.0*$rankingDetails['vPosition'] / $rankingPlayers);
 
 		$rankingDetails['rank'] = 'Political puppet';
 
@@ -1312,6 +1658,50 @@ class User {
 		else
 			$DB->sql_put("INSERT INTO wD_MuteCountry (userID, gameID, muteCountryID) VALUES (".$this->id.",".$gameID.",".$muteCountryID.")");
 	}
+		
+	/*
+	 * The functions to check if a user is Blocked
+	 * Basically it's the same as the Mute feature, but only to block a user from joining your games
+	 */
+	public function getBlockUsers() {
+		global $DB;
+		static $blockUsers;
+		if( isset($blockUsers) ) return $blockUsers;
+		$blockUsers = array();
+
+		$tabl = $DB->sql_tabl("SELECT blockUserID FROM wD_BlockUser WHERE userID=".$this->id);
+		while(list($blockUserID) = $DB->tabl_row($tabl))
+			$blockUsers[] = $blockUserID;
+
+		return $blockUsers;
+	}
+	public function isUserBlocked($blockUserID) {
+		return in_array($blockUserID,$this->getBlockUsers());
+	}
+	public function toggleUserBlock($blockUserID) {
+		global $DB;
+		$blockUserID = (int)$blockUserID;
+		if( $this->isUserBlocked($blockUserID) )
+			$DB->sql_put("DELETE FROM wD_BlockUser WHERE userID=".$this->id." AND blockUserID=".$blockUserID);
+		else
+			$DB->sql_put("INSERT INTO wD_BlockUser (userID, blockUserID) VALUES (".$this->id.",".$blockUserID.")");
+	}
+	
+	/*
+	 * Is the user allowed to be a game-director.
+	 */
+	public function DirectorLicense()
+	{
+		// Manual granting or blocking of GD-rights.
+		if ($this->directorLicense == 'Yes') return true;
+		if ($this->directorLicense == 'No')  return false;
+		
+		// Users with <25 games, or RR < 97 are not allowed.
+		include_once("lib/reliability.php");
+		if ($this->gameCount < 25 or $this->reliabilityRating < 97) return false;
+		return true;
+	}
+
 
 	/*
 	 * Check if the user has used an emergency pause on their games in the last 6 months, and if they have completed at least 10 games. 
@@ -1432,6 +1822,33 @@ class User {
 		list($tempBan) = $DB->sql_row("SELECT u.tempBan FROM wD_Users u  WHERE u.id = ".$this->id);
 
 		return $tempBan > time();
+	}
+
+	/*
+	 * Get the number of CDs taken over by this user in the last year.
+	 */
+	public function getCDtakeOvers()
+	{
+		global $DB;
+		list( $cdTakenCount ) = $DB->sql_row("SELECT COUNT(1) FROM wD_CivilDisorders
+			WHERE takenByUserID = ".$this->id." AND takenAtTime > ".(time() - 31536000));
+				
+		return $cdTakenCount;
+	}
+	
+	/*
+	 * Calculate the integrity rating:
+	 * 
+	 * CD-take-overs - unexcusedMissedTurns within the last year.
+	 */
+	public function getIntegrityRating()
+	{
+		if(!isset($this->integrityRating)) 
+		{
+			$this->integrityRating = $this->getCDtakeOvers() - $this->getYearlyUnExcusedMissedTurns();
+		}	
+			
+		return $this->integrityRating;
 	}
 
 	/* 

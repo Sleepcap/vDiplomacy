@@ -1,0 +1,18 @@
+@CHARSET "ISO-8859-1";
+
+.variantMachiavelliTTR .country0 { color: #000000 ! important; } /* Neutral */
+.variantMachiavelliTTR .country1 { color: #A000A0 ! important; } /* Aragon */
+.variantMachiavelliTTR .country2 { color: #007272 ! important; } /* Florence */
+.variantMachiavelliTTR .country3 { color: #999900 ! important; } /* Avignon */
+.variantMachiavelliTTR .country4 { color: #A50000 ! important; } /* Milan */
+.variantMachiavelliTTR .country5 { color: #000096 ! important; } /* Genoa */
+.variantMachiavelliTTR .country6 { color: #008E00 ! important; } /* Papacy */
+.variantMachiavelliTTR .country7 { color: #3F0000 ! important; } /* Venice */
+
+.variantMachiavelliTTR .occupationBar1 { background-color: #FF44F5; } /* Aragon */
+.variantMachiavelliTTR .occupationBar2 { background-color: #34DBD2; } /* Florence */
+.variantMachiavelliTTR .occupationBar3 { background-color: #FFFB2D; } /* Avignon */
+.variantMachiavelliTTR .occupationBar4 { background-color: #FF4242; } /* Milan */
+.variantMachiavelliTTR .occupationBar5 { background-color: #1C5CFF; } /* Genoa */
+.variantMachiavelliTTR .occupationBar6 { background-color: #46FF3F; } /* Papacy */
+.variantMachiavelliTTR .occupationBar7 { background-color: #A00000; } /* Venice */

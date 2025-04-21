@@ -76,14 +76,27 @@ class panelMembers extends Members
 	 */
 	function membersList()
 	{
-		if( $this->Game->phase == 'Pre-game')
+		global $User;
+		if( $this->Game->phase == 'Pre-game' && $this->Game->chooseYourCountry == 'No' )
 		{
 			$membersNames = array();
 			foreach($this->ByUserID as $Member)
 				$membersNames[] = '<span class="memberName">'.$Member->memberName().'</span>';
-
+			
+			return '<table><tr class="member memberAlternate1 memberPreGameList"><td>'
+				.implode(', ',$membersNames).'</td></tr></table>';
+		}
+		
+		// Choose your country:
+		if( $this->Game->phase == 'Pre-game' && $this->Game->chooseYourCountry == 'Yes' && !$User->type['Moderator'])
+		{
+			$membersNames = array();
+			foreach($this->ByUserID as $Member)
+				$membersNames[] = '<span class="memberName">'.$Member->memberCountryName().'</span>';
+			
 			return '<table><tr class="member memberAlternate1 memberPreGameList"><td>'.
-				implode(', ',$membersNames).'</td></tr></table>';
+				'This is '.($this->Game->anon=='Yes' ? '' : '<b>not</b> ').'an anon game, names will be revealed once the game '.($this->Game->anon=='Yes' ? 'ends' : 'starts').'.<br>'
+				.implode(', ',$membersNames).'</td></tr></table>';
 		}
 
 		libHTML::$alternate=2;
@@ -105,7 +118,7 @@ class panelMembers extends Members
 				foreach ($this->Game->civilDisorderInfo as $userID => $CD) 
 				{
 					$cdUser = new User($userID);
-					$extras .= '<tr class="member memberAlternate1"><td class="memberLeftSide" style="white-space: nowrap;"><span><a href="userprofile.php?userID='.$userID .'">'.$cdUser->username.'</a>'.
+					$extras .= '<tr class="member memberAlternate1"><td class="memberLeftSide" style="white-space: nowrap;"><span><a href="profile.php?userID='.$userID .'">'.$cdUser->username.'</a>'.
 							' <span class="points">('.$cdUser->points.libHTML::points().User::typeIcon($cdUser->type).')'
 					.(defined('AdminUserSwitch') ? ' (<a href="board.php?gameID='.$this->Game->id.'&auid='.$cdUser->id.'" class="light">+</a>)':'') .
 							'</span></span></td><td class="memberRightSide">';
@@ -135,10 +148,15 @@ class panelMembers extends Members
 		$buf = "";
 		if( 1==count($this->ByStatus['Left']) )
 		{
-			foreach($this->ByStatus['Left'] as $Member);
-
-			$buf .= '<input type="hidden" name="countryID" value="'.$Member->countryID.'" />
-				'.l_t('<label>Take over:</label> %s, for %s.',$Member->countryColored(),'<em>'.$Member->pointsValueInTakeover().libHTML::points().'</em>');
+			foreach($this->ByStatus['Left'] as $Member)
+			{
+				$buf .= '<input type="hidden" name="countryID" value="'.$Member->countryID.'" />
+					<label>Take over:</label> '.$Member->countryColored();
+					
+				if ($this->Game->pot > 0)
+					$buf .= ', for <em>'.$Member->pointsValueInTakeover().libHTML::points().'</em>'.
+						( ($Member->pointsValue() != $Member->pointsValueInTakeover()) ? ' (worth:'.$Member->pointsValue().libHTML::points().')':'');
+			}
 		}
 		else
 		{
@@ -149,13 +167,16 @@ class panelMembers extends Members
 
 				if ( $User->points >= $pointsValue )
 				{
-					$buf .= '<option value="'.$Member->countryID.'" />
-						'.l_t('%s, for %s',$Member->country,$pointsValue).'
-						</option>';
+					$buf .= '<option value="'.$Member->countryID.'" />'.l_t('%s',$Member->country);
+					
+					if ($this->Game->pot > 0)
+						$buf .= l_t(', for %s',$Member->pointsValueInTakeover().( ($Member->pointsValue() != $pointsValue) ? ' (worth:'.$pointsValue.')':''));
+						
+					$buf .= '</option>';
 				}
 			}
 			$buf .= '</select>';
-		}
+		}		
 		return $buf;
 	}
 
@@ -198,5 +219,36 @@ class panelMembers extends Members
 
 		return $this->occupationBarCache;
 	}
+	
+	/**
+	 * A form showing a selection of available countries Pregame
+	 * @return string
+	 */
+	public function selectCountryPreGame()
+	{	
+		
+		$buf = '<label>Join for</label> <em>'.$this->Game->minimumBet.libHTML::points().'</em> as: ';
+		
+		if( 1==count($this->Game->Variant->countries) - count($this->ByCountryID) )
+		{
+			// If there is only one available country use a single Join-target instead of the selection-box
+			foreach($this->Game->Variant->countries as $id=>$name)
+				if (!isset($this->ByCountryID[($id +1)]))
+					$buf .= '<span class="country'.($id +1).'">'.l_t($name).'</span>'.
+							'<input type="hidden" name="countryID" value="'.($id +1).'" />';
+		}
+		else
+		{
+			$buf .= '<select name="countryID">';
+			
+			foreach($this->Game->Variant->countries as $id=>$name)
+				if (!isset($this->ByCountryID[($id +1)]))
+					$buf .= '<option value="'.($id +1).'" />'.$name.'</option>';
+			
+			$buf .= '</select>';
+		}		
+		return $buf;
+	}
+	
 }
 ?>

@@ -1,0 +1,95 @@
+/* Interactive map */
+.buttonIA, #orderLineIA {
+	font-size: 14px;
+	background-color: #eaffea;
+	border: 1px solid #c1c1c1;
+	color:#009902;
+}
+.buttonIA {
+	font-size: 12px;
+	margin-right: 2px;
+}
+
+/* adjust the Civil-disorder-information-bar */
+.modEyes.bar {
+	border-top: unset;
+	border-left: unset;
+	border-right: unset;
+}
+
+.membersList {
+	background-color: #225;
+}
+
+.boardHeader .membersList, .gamePanelHome .membersList {
+	background-color: unset;
+}
+
+/*########## vDip new button-layout #########*/
+/*############## gerneric values ############*/
+button {
+	color: #222;
+	font-family: 'Source Sans Pro', sans-serif;
+}
+
+.button {
+	height:25px;
+	line-height:25px;
+	font-weight:600;
+	text-align:center;
+	background:#d4cfc9;
+	margin:3px 1px;
+	cursor:pointer;
+}
+.button img {
+	margin:-2px 1px 0 0;
+	vertical-align: middle;
+}
+
+/*############## map box ############*/
+.boxdetail.center {
+	text-align:center;
+}
+.map,
+.maptools {
+	display:inline-block;
+	text-align:center;
+	margin:0 auto;
+}
+.maptools {
+	margin-top:10px;
+}
+.maptools .button {
+	width:133px;
+	margin:1px;
+	padding:0;
+	display:inline-block;
+	white-space:nowrap;
+}
+.maptools .maphistory {
+	display:inline-block;
+	margin-right:30px;
+}
+.maptools .maphistory .button {
+	width:38px;
+}
+
+/*############## votes ############*/
+.votes {
+	text-align:center;
+}
+.votes .button {
+	width:122px;
+	height:25px;
+	line-height:21px;
+	display:inline-block;
+	position:relative;
+	font-size: 14px;	
+	border:2px solid #d4cfc9;
+}
+.votes .button.setvote {
+	border:2px solid #6D5238;
+}
+.votes h2 {
+	display:inline-block;
+}

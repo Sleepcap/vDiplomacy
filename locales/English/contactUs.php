@@ -12,10 +12,11 @@
             <li>Remove a missing player from a game.</li>
             <li>Detect cheaters.</li>
             <li>Ban/unban users, reset user/game invite codes, give/take points, change game settings like phase length, etc.</li>
+			<li>Handle bug reports.</li>
         </ul>
         <p>
-            For these issues use the info below to send reports. For other issues such as bug reports, general questions, etc, you should go elsewhere (e.g. the
-            <a href="/contrib/phpBB3/">forum</a> or the <a href="/contrib/phpBB3/viewforum.php?f=17"> bug reports section</a>).
+            For these issues use the info below to send reports. For general questions you should go elsewhere (e.g. the
+            <a href="forum.php">forum</a>).
         </p>
         <h4>Where to send</h4>
         <ul>

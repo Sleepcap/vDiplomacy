@@ -123,7 +123,7 @@ class search
 
 	public function printGamesList($Pager=null)
 	{
-		global $DB;
+		global $DB, $User;
 
 		$SQL = $this->sql();
 		//$this->devQueryData($SQL);
@@ -139,6 +139,10 @@ class search
 		{
 			$count++;
 			$Variant = libVariant::loadFromVariantID($row['variantID']);
+			
+			if (isset(Config::$hiddenVariants) && in_array($Variant->id,Config::$hiddenVariants) && $User->type['Guest'])
+				continue;			
+			
 			$G = $Variant->panelGame($row);
 			print $G->summary(false);
 		}

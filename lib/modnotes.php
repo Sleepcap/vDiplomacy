@@ -1,6 +1,100 @@
 <?php
 
 class libModNotes {
+	
+	static function SetUserNotes()
+	{
+		global $DB, $UserProfile, $User;
+		
+		$DB->sql_put("DELETE FROM wD_ModeratorNotes WHERE linkIDType='User' AND type='PrivateNote' AND linkID=".$UserProfile->id);			
+
+		// turn modalert on or off
+		if (isset($_REQUEST['alert']))
+		{
+			$DB->sql_put("UPDATE wD_Users SET type = CONCAT_WS(',',type,'ModAlert') WHERE id = ".$UserProfile->id);
+			$UserProfile->type['ModAlert'] = true;
+		}
+		else
+		{
+			$DB->sql_put("UPDATE wD_Users SET type = REPLACE(type,'ModAlert','') WHERE id = ".$UserProfile->id);		
+			$UserProfile->type['ModAlert'] = false;
+		}
+		
+		$notes=$DB->msg_escape($_REQUEST['EditNote'],false);
+		if ($notes == '')
+		{
+			if ($UserProfile->type['ModAlert'])
+			{
+				$DB->sql_put("UPDATE wD_Users SET type = REPLACE(type,'ModAlert','') WHERE id = ".$UserProfile->id);					
+				$UserProfile->type['ModAlert'] = false;
+			}
+		}
+		else
+		{
+		
+			$notes = preg_replace('#(modforum.php.viewthread[:= _]?)([0-9]+)#i',
+				'<a href="modforum.php?viewthread=\2#\2" class="light">\1\2</a>',$notes);
+			$notes = preg_replace('#(modforum.php.threadID[:= _]?)([0-9]+)#i',
+				'<a href="modforum.php?threadID=\2#\2" class="light">\1\2</a>',$notes);
+
+			$DB->sql_put("INSERT INTO wD_ModeratorNotes SET 
+				note='".$notes."',
+				linkID=".$UserProfile->id.",
+				timeSent=".time().",
+				fromUserID='".$User->id."',
+				type='PrivateNote',
+				linkIDType='User'");
+		}
+	}
+	
+	// UserNotes here:
+	static function UserNotesProfileHTML()
+	{
+		global $DB, $UserProfile;
+		list($notes)=$DB->sql_row("SELECT note FROM wD_ModeratorNotes WHERE linkIDType='User' AND linkID=".$UserProfile->id);
+		
+		if ($notes== '')
+			return '
+			<p><div>
+				ModNotes<span id="EditNoteButton"> (<a href="#" onclick="$(\'EditNoteBox\').show(); $(\'EditNoteButton\').hide(); return false;">Add</a>)</span>:
+				<div id="EditNoteBox" style="display:none;">
+					<TABLE style="width:90%">
+						<TD style="border: 1px solid #666">
+							<form method="post" style="display:inline;">
+								<textarea name="EditNote" style="width:100%;height:200px"></textarea><br />
+								<TABLE>
+									<TD><input type="checkbox" name="alert" value="on" '.($UserProfile->type['ModAlert'] ? 'checked="checked"':'').'> ModAlert</TD>
+									<TD align="right"><input type="Submit" class="form-submit" value="Submit" /></TD>
+								</TABLE>
+							</form>				
+						</TD>
+					</TABLE>
+				</div>
+			</div></p>';
+		else
+			return '
+			<p><div>
+				'.($UserProfile->type['ModAlert'] ? libHTML::alert() : '').'
+				ModNotes<span id="EditNoteButton"> (<a href="#" onclick="$(\'EditNoteBox\').show(); $(\'EditNoteText\').hide(); $(\'EditNoteButton\').hide(); return false;">Edit</a>)</span>:
+				'.($UserProfile->type['ModAlert'] ? libHTML::alert() : '').'
+				<TABLE style="width:90%">
+					<TD style="border: 1px solid #666">
+						<span id="EditNoteText">'.$notes.'</span>
+						<span id="EditNoteBox" style="display:none;">
+							<form method="post" style="display:inline;">
+								<textarea name="EditNote" style="width:100%;height:200px">'.str_ireplace("</textarea>", "<END-TA-DO-NOT-EDIT>", str_ireplace("<br />", "\n",
+									preg_replace('#<a href..modforum.php.viewthread.*class..light.>(.*)</a>#Ui','\1',$notes))).'</textarea><br />
+								<TABLE>
+									<TD><input type="checkbox" name="alert" value="on" '.($UserProfile->type['ModAlert'] ? 'checked="checked"':'').'> ModAlert</TD>
+									<TD align="right"><input type="Submit" class="form-submit" value="Submit" /></TD>
+								</TABLE>
+							</form>				
+						</span>
+					</TD>
+				</TABLE>
+			</div></p>';
+	}
+	
 	static function reportBoxHTML($linkIDType, $linkID) {
 		global $User;
 
@@ -107,4 +201,6 @@ class libModNotes {
 
 		libHTML::notice('Deleted', 'Moderator note successfully deleted.');
 	}
+	
+	
 }

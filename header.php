@@ -56,7 +56,6 @@ if( strlen(Config::$serverMessages['ServerOffline']) )
 	die('<html><head><title>Server offline</title></head>'.
 		'<body>'.Config::$serverMessages['ServerOffline'].'</body></html>');
 
-require_once('objects/memcached.php');
 
 if( ini_get('request_order') !== false ) {
 
@@ -93,7 +92,7 @@ if( ini_get('request_order') !== false ) {
 /*
  * If register_globals in enabled remove globals.
  */
-if (ini_get('register_globals'))
+if (ini_get('register_globals') or get_magic_quotes_gpc())
 {
 	function stripslashes_deep(&$value)
 	{
@@ -141,7 +140,7 @@ $GLOBALS = array();
 $GLOBALS['scriptStartTime'] = microtime(true);
 
 ini_set('memory_limit',"32M"); // From 8M to 32M to cater for games that are very large
-ini_set('max_execution_time','4');
+ini_set('max_execution_time','8');
 //ini_set('session.cache_limiter','public');
 ignore_user_abort(TRUE); // Carry on if the user exits before the script gets printed.
 	// This shouldn't be necessary for data integrity, but either way it may save reprocess time
@@ -183,6 +182,10 @@ if ( $Misc->Version != VERSION )
 	require_once(l_r('install/install.php'));
 }
 
+// Check the vDip-DatabaseVersion too...
+if ( $Misc->vDipVersion < VDIPVERSION )
+	require_once(l_r('install/vDipInstall.php'));
+
 // Taken from the php manual to disable cacheing.
 header("Last-Modified: Mon, 26 Jul 1997 05:00:00 GMT");
 header("Cache-Control: no-store, no-cache, must-revalidate");
@@ -212,7 +215,18 @@ require_once(l_r('lib/auth.php'));
 if( !defined('AJAX') )
 {
 	if( isset($_REQUEST['logoff']) )
-	{
+	{	
+		// Advanced UserLog
+		global $DB, $User;
+		$User = libAuth::auth();
+		$DB->sql_put("INSERT INTO wD_AccessLogAdvanced SET
+						userID   = ".$User->id.",
+						request  = CURRENT_TIMESTAMP,
+						ip       = INET_ATON('".$_SERVER['REMOTE_ADDR']."'),
+						action   = 'LogOff',
+						memberID = '0'"
+						);
+		
 		$success=libAuth::keyWipe();
 		$User = new User(GUESTID); // Give him a guest $User
 		header('refresh: 4; url=logon.php?noRefresh=on');

@@ -42,6 +42,7 @@ class libHTML
 				</div>
 				<div class="content content-follow-on">';
 	}
+	
 	public static function printWelcomePage()
 	{
 		print '<div class = "introToDiplomacy"><div class="content-notice" style="text-align:center">'.libHome::globalInfo().'</div></div>';
@@ -52,7 +53,7 @@ class libHTML
 		
 		require_once(l_r('locales/English/welcome.php'));
 		print '</div></div>';
-	
+
 		require_once(l_r('locales/English/intro.php'));
 		print '</div>';
 	}
@@ -66,25 +67,55 @@ class libHTML
 	}
 
 	private static $identityExplanations = array(
-        1 => 'There is no information about the identity behind this account',
-        2 => 'There is a small amount of information about the identity behind this account',
-        3 => 'There is some information that could loosely associate this account with an individual',
-        4 => 'There is reasonable information associating this account with an individual',
-        5 => 'There is some information that associates this account with an individual',
-        6 => 'There is a lot of information associating this account with an individual',
-        7 => 'This account is definitely identified with a particular individual'
-    );
-    public static function identityIcon($score)
-    {
+		1 => 'There is no information about the identity behind this account',
+		2 => 'There is a small amount of information about the identity behind this account',
+		3 => 'There is some information that could loosely associate this account with an individual',
+		4 => 'There is reasonable information associating this account with an individual',
+		5 => 'There is some information that associates this account with an individual',
+		6 => 'There is a lot of information associating this account with an individual',
+		7 => 'This account is definitely identified with a particular individual'
+	);
+	public static function identityIcon($score)
+	{
 		if( $score == -1 ) return '';
-        $score = min(max(0.0,$score),100.0) / 100.0;
-        if ( $score <= 1/5 ) $icon = 1;
-        else if ( $score <= 2/5 ) $icon = 2;
-        else if ( $score <= 3/5 ) $icon = 4;
-        else if ( $score <= 4/5 ) $icon = 6;
-        else if ( $score <= 5/5 ) $icon = 7;
+		$score = min(max(0.0,$score),100.0) / 100.0;
+		if ( $score <= 1/5 ) $icon = 1;
+		else if ( $score <= 2/5 ) $icon = 2;
+		else if ( $score <= 3/5 ) $icon = 4;
+		else if ( $score <= 4/5 ) $icon = 6;
+		else if ( $score <= 5/5 ) $icon = 7;
 		return '<img src="'.l_s('images/icons/shield'.$icon.'.svg').'" width=12 height=12 alt="(I'.$icon.')" title="'.$score.'%: '.l_t(self::$identityExplanations[$icon]).'" />';
-    }
+	}
+
+	/**
+	 * Links to the sandbox operations
+	 * @return string
+	 */
+	function sandboxBar()
+	{
+		global $User;
+
+		if( !$User->type['User'] ) return '';
+
+		return '<br /><strong>'.l_t('Sandbox:').'</strong> 
+			 <a href="javascript:copySandboxFromGame('.$this->id.')">'.l_t('Copy game to sandbox').'</a>'.
+			(!is_null($this->sandboxCreatedByUserID) && $User->id == $this->sandboxCreatedByUserID ? '
+			 - <a name="movedBack" href="javascript:moveSandboxTurnBack('.$this->id.')">'.l_t('Move sandbox back a turn').'</a>
+			 - <a href="javascript:deleteSandbox('.$this->id.')">'.l_t('Delete sandbox').'</a>
+			 - <a href="board.php?gameID='.$this->id.'&sbToken='.libAuth::sandboxToken_Key($this->id).'">'.l_t('Public link to sandbox').'</a>' : '');
+	}
+
+	/**
+	 * Links to the point and click UI, if a classic game
+	 * @return string
+	 */
+	function pointAndClickBar()
+	{
+		if( !$this->isClassicGame() ) return '';
+
+		return '<br /><strong>'.l_t('Point and click UI:').'</strong> 
+			 <a href="board.php?gameID='.$this->id.'&view=pointAndClick">'.l_t('Open').'</a>';
+	}
 	/**
 	 * The style which prevents an element from displaying (usually cached HTML to be displayed via JS)
 	 * @var string
@@ -160,15 +191,35 @@ class libHTML
 		return '<img height="16" width="16" src="'.l_s('images/icons/BronzeStar.png').'" alt="(B)" title="'.l_t('3rd Place').'" />';
 	}
 
+	static function devbronze()
+	{
+		return ' <img src="images/icons/dev_bronze.png" alt="(B)" title="Developer - bronze" />';
+	}
+
+	static function devsilver()
+	{
+		return ' <img src="images/icons/dev_silver.png" alt="(B)" title="Developer - silver" />';
+	}
+
+	static function devgold()
+	{
+		return ' <img src="images/icons/dev_gold.png" alt="(B)" title="Developer - gold" />';
+	}
+	
+	static function alert()
+	{
+		return ' <img src="images/icons/alert_minor.png" alt="(!)" title="ModAlert" />';
+	}
+
 	/**
 	 * The points icon
 	 * @return string
 	 */
-	static function points()
+	static function points($path = '')
 	{
-		return '<img src="'.l_s('images/icons/points.png').'" alt="D" title="'.l_t('webDiplomacy points').'" />';
+		return ' <img src="'.$path.l_s('images/icons/points.png').'" alt="D" title="'.l_t('webDiplomacy points').'" />';
 	}
-
+	
 	static function forumMessage($threadID, $messageID)
 	{
 		return '<a style="'.self::$hideStyle.'" class="messageIconForum" threadID="'.$threadID.'" messageID="'.$messageID.'" href="forum.php?threadID='.$threadID.'#'.$messageID.'">'.
@@ -334,10 +385,10 @@ class libHTML
 	/**
 	 * A link to an admin control panel action
 	 *
-	 * @param $actionName The name of the action
+	 * @param string $actionName The name of the action
 	 * @param array $args The args in a $name=>$value array
-	 * @param $linkName The name to give the link, the URL is returned if no linkName is given
-	 * @param $confirm Boolean to determine whether the action needs javascript confirmation
+	 * @param string $linkName The name to give the link, the URL is returned if no linkName is given
+	 * @param boolean $confirm Boolean to determine whether the action needs javascript confirmation
 	 * @return string A link URL or an <a href>
 	 */
 	static function admincp($actionName, $args=null, $linkName=null,$confirm=false)
@@ -560,77 +611,93 @@ class libHTML
 		global $DB;
 
 		require_once(l_r('global/definitions.php'));
-		
+		$jsVersion = JSVERSION;  // increment this to force clients to reload their JS files
+
 		global $User;
 
+		
+		/* Instead of many small css files only load one big file:
 		$variantCSS=array();
-
-		$darkMode = '';
-		$userOptionsJS = (new UserOptions())->asJS();
-		if( !is_null($DB) && isset($User) )
-		{
-			// set user's dark or light theme
-			if($User->getOptions()->value['darkMode'] == 'No')
-				$darkMode = '';
-			else
-				$darkMode = 'darkMode/';
-				
-			// Embed user options inline here rather than using a separate server request to get information already loaded
-			$userOptionsJS = $User->getOptions()->asJS();
-		}
-
 		foreach(Config::$variants as $variantName)
 			$variantCSS[] = '<link rel="stylesheet" href="'.STATICSRV.l_s('variants/'.$variantName.'/resources/'.$darkMode.'style.css').'?var='.CSSVERSION.'" type="text/css" />';
 		$variantCSS=implode("\n",$variantCSS);
+		*/
+		
+		// set user's dark or light theme
+		//if(isset($User) && ($User->options->value['darkMode'] == 'No'))
+			$darkMode = '';
+		//else
+		//	$darkMode = 'darkMode/';
 
+		
+		$CSSname = libCache::Dirname("css")."/".$darkMode."variants-".md5(filesize('config.php')).".css";
+		
+		if (!file_exists($CSSname))
+		{
+			$variantCSS = '';
+			foreach(Config::$variants as $variantName)
+				$variantCSS .= file_get_contents('variants/'.$variantName.'/resources/'.$darkMode.'style.css')."\n";
+			$handle = fopen($CSSname, 'w');
+			fwrite($handle, $variantCSS);
+			fclose($handle);
+		}
+		$variantCSS = '<link rel="stylesheet" href="'.$CSSname.'" type="text/css" />';
+		// End alternate CSS file patch
 
+		if (isset($User) && ($User->cssStyle == 'webDip'))
+			$cssColors = 'webDip';
+		else
+			$cssColors = 'vDip';
+			
 		/*
 		 * This line when included in the header caused certain translated hyphenated letters to come out as black diamonds with question marks.
 		 */
 		return '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 		<html xmlns="http://www.w3.org/1999/xhtml" xmlns:fb="http://www.facebook.com/2008/fbml">
-		<head>
-		<meta http-equiv="content-type" content="text/html;charset=utf-8" />
-			<meta http-equiv="Content-Style-Type" content="text/css" />'
-			.($noindex ? 
-			'<meta name="robots" content="noindex" />'
-			:
-			'<meta name="robots" content="index,follow" />'
-			).'
-			<meta name="description" content="'.l_t('webDiplomacy is an online, multiplayer, turn-based strategy game that lets you play Diplomacy online.').'" />
-			<meta name="keywords" content="'.l_t('diplomacy,diplomacy game,online diplomacy,classic diplomacy,web diplomacy,diplomacy board game,play diplomacy,php diplomacy').'" />
-			<link rel="shortcut icon" href="'.STATICSRV.l_s('favicon.ico').'" />
-			<link rel="icon" href="'.STATICSRV.l_s('favicon.ico').'" />
-			
-			<script type="text/javascript">'.$userOptionsJS.'</script>
-			<script type="text/javascript" src="javascript/clickhandler.js"></script>
-			<script type="text/javascript" src="'.STATICSRV.l_j('contrib/js/prototype.js').'"></script>
-			<script type="text/javascript" src="'.STATICSRV.l_j('contrib/js/scriptaculous.js').'"></script>
-			<script type="text/javascript" src="https://js.pusher.com/7.0/pusher.min.js"></script>
-			<link rel="stylesheet" type="text/css" href="'.STATICSRV.l_s('contrib/js/pushup/src/css/pushup.css').'" />
-			<script type="text/javascript" src="'.STATICSRV.l_j('contrib/js/pushup/src/js/pushup.js').'"></script>
-			'.( isset(Config::$recaptchaSiteKey) && !is_null(Config::$recaptchaSiteKey) && strlen(Config::$recaptchaSiteKey) > 1 ? 
-				'<script src="https://www.google.com/recaptcha/enterprise.js?render='.Config::$recaptchaSiteKey.'"></script>'
-				: '').'
-			<script type="text/javascript">
-				STATICSRV="'.STATICSRV.'";
-				var cssDirectory = "'.CSSDIR.'";
-					var cssVersion = "'.CSSVERSION.'";
-			</script>
-
-			<link rel="stylesheet" id="global-css" href="'.CSSDIR.l_s('/'.$darkMode.'global.css').'?ver='.CSSVERSION.'" type="text/css" />
-			<link rel="stylesheet" id="game-panel-css" href="'.CSSDIR.l_s('/'.$darkMode.'gamepanel.css').'?ver='.CSSVERSION.'" type="text/css" />
-			<link rel="stylesheet" id="home-css" href="'.CSSDIR.l_s('/'.$darkMode.'home.css').'?ver='.CSSVERSION.'" type="text/css" />
-			'.$variantCSS.'
-
-			<script type="text/javascript" src="'.l_j('javascript/desktopMode.js').'?ver='.JSVERSION.'"></script>
-			<title>'.l_t('%s - webDiplomacy',$title).'</title>
-			'.
-			Config::customHeader()
-			.'
-		</head>';
+	<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<meta name="robots" content="index,follow" />
+		<meta name="description" content="'.l_t('vDiplomacy is an online, multiplayer, turn-based strategy game that lets you play Diplomacy online.').'" />
+		<meta name="keywords" content="'.l_t('diplomacy,diplomacy game,online diplomacy,classic diplomacy,web diplomacy,diplomacy board game,play diplomacy,php diplomacy').'" />
+		<link rel="shortcut icon" href="'.STATICSRV.l_s('favicon.ico').'" />
+		<link rel="icon" href="'.STATICSRV.l_s('favicon.ico').'" />
+		<link rel="stylesheet" id="global-css"      href="'.CSSDIR.l_s('/'.$darkMode.'global.css').'?ver='.CSSVERSION.'" type="text/css" />
+		<link rel="stylesheet" id="game-panel-css"  href="'.CSSDIR.l_s('/'.$darkMode.'gamepanel.css').'?ver='.CSSVERSION.'" type="text/css" />
+		<link rel="stylesheet" id="home-css"        href="'.CSSDIR.l_s('/'.$darkMode.'home.css').'?ver='.CSSVERSION.'" type="text/css" />
+		<link rel="stylesheet" id="vdipButtons-css" href="'.CSSDIR.l_s('/'.$darkMode.'vDipButtons.css').'?ver='.CSSVERSION.'" type="text/css" />
+		<link rel="stylesheet" id="vdipColors-css"  href="'.CSSDIR.l_s('/'.$cssColors.'Colors.css').'?ver='.CSSVERSION.'" type="text/css" />
+		<link rel="apple-touch-icon-precomposed" href="'.STATICSRV.'apple-touch-icon.png" />
+		'.$variantCSS.'
+		<script type="text/javascript" src="useroptions.php"></script>
+		<script type="text/javascript" src="javascript/clickhandler.js"></script>
+		<script type="text/javascript" src="'.STATICSRV.l_j('contrib/js/prototype.js').'"></script>
+		<script type="text/javascript" src="'.STATICSRV.l_j('contrib/js/scriptaculous.js').'"></script>
+		<script type="text/javascript" src="https://js.pusher.com/7.0/pusher.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="'.STATICSRV.l_s('contrib/js/pushup/src/css/pushup.css').'" />
+		<script type="text/javascript" src="'.STATICSRV.l_j('contrib/js/pushup/src/js/pushup.js').'?ver='.JSVERSION.'"></script>
+		'.( isset(Config::$recaptchaSiteKey) && !is_null(Config::$recaptchaSiteKey) && strlen(Config::$recaptchaSiteKey) > 1 ? 
+			'<script src="https://www.google.com/recaptcha/enterprise.js?render='.Config::$recaptchaSiteKey.'"></script>'
+			: '').'
+		<script type="text/javascript">
+		    STATICSRV="'.STATICSRV.'";
+		    var cssDirectory = "'.CSSDIR.'";
+				var cssVersion = "'.CSSVERSION.'";
+		</script>
+		<script type="text/javascript" src="'.l_j('javascript/desktopMode.js').'?ver='.JSVERSION.'"></script>
+		<title>'.l_t('%s - vDiplomacy',$title).'</title>
+		'.
+		Config::customHeader()
+		.'
+		
+		<script type ="text/javascript" src="contrib/cookieWarning/warnCookies.js"></script>
+		<link href="contrib/cookieWarning/cookies.css" title="Cookies\' warning" rel="stylesheet" type="text/css" />
+		<div id="bg_image"></div>
+	</head>';
 	}
-
+	
+	
 	/**
 	 * Print the HTML which comes before the main content; title, menu, notification bar.
 	 *
@@ -701,7 +768,24 @@ class libHTML
 					</div>';
 			}
 		}
+		
+/* Disable chat.
+		if ( is_object($User) && $User->type['Moderator'] )
+		{
+			print '
+			<div class="content" id="chatresult"></div>
+		    <script language="javascript" type="text/javascript">
+				var nickName = "'.$User->username.'";
+				UpdateTimer();
+			</script>   
 
+			<div class="content-notice" id="chatsender" onkeyup="keypressed(event);">
+				Your message: <input type="text" name="msg" size="70" id="msg" />
+				<button onclick="doWork();">Send</button> - 
+				<button onclick="document.getElementById(\'chatresult\').style.height=\'250px\';">Expand</button>
+			</div>';
+		}
+*/
 		if ( is_object($User) && $User->type['User'] )
 		{
 			$gameNotifyBlock = libHTML::gameNotifyBlock();
@@ -709,7 +793,17 @@ class libHTML
 				print '<div class="content-notice"><div class="gamelistings-tabs">'.$gameNotifyBlock.'</div></div>';
 
 		}
-
+		
+		// Displayes a ModMessage and prevent any other site-content to be load.
+		if ( is_object($User) && $User->notifications->ForceModMessage )
+		{
+			require_once('modforum/modforum.php');
+			ModForum::checkReply();
+			// If there are still uncleared cases...
+			if ( $User->notifications->ForceModMessage )
+				ModForum::printModMessages();
+		}
+				
 	}
 
 	/**
@@ -738,7 +832,7 @@ class libHTML
 			$notice[]=$contents;
 		}
 
-		if ( $Misc->Notice && !is_null($DB))
+		if ( $Misc->Notice )
 		{
 			list($contents) = $DB->sql_row("SELECT message FROM wD_Config WHERE name = 'Notice'");
 			$notice[]=$contents;
@@ -762,12 +856,13 @@ class libHTML
 	 *
 	 * @return string The notification block HTML
 	 */
-	static public function gameNotifyBlock ()
+	static public function gameNotifyBlock()
 	{
 		global $User, $DB;
 
 		$tabl = $DB->sql_tabl(
 			"SELECT g.id, g.variantID, g.name, g.phase, m.orderStatus, m.countryID, (m.newMessagesFrom+0) as newMessagesFrom, g.processStatus
+			, g.processTime
 			FROM wD_Members m
 			INNER JOIN wD_Games g ON ( m.gameID = g.id )
 			WHERE m.userID = ".$User->id." 
@@ -785,6 +880,8 @@ class libHTML
 		}
 
 		$gameNotifyBlock = '';
+		$gameAlertBlock  = '';
+		$needRedAlert=false;
 
 		if ( $User->notifications->PrivateMessage and ! isset($_REQUEST['notices']))
 		{
@@ -839,6 +936,28 @@ class libHTML
 			}
 		}
         
+/*****************************************************
+*  Alert the mods about a new Mesage in the ModForum *
+*****************************************************/
+	if ( $User->notifications->ModForum && (strpos($_SERVER["REQUEST_URI"], 'modforum.php') === false) )
+	{
+		$gameNotifyBlock .= '<span class=""><a href="modforum.php">'.
+			'New Post in Modforum <img src="images/icons/mail.png" alt="New private messages" title="New private messages!" />'.
+			'</a></span> ';
+	}
+// END ModMessage
+
+/*****************************************************
+* Alter a player about a change in the CountrySwitch *
+*****************************************************/
+	if ( $User->notifications->CountrySwitch && (strpos($_SERVER["REQUEST_URI"], 'tab=CountrySwitch') === false) )
+	{
+		$gameNotifyBlock .= '<span class=""><a href="usercp.php?tab=CountrySwitch">'.
+			'Country Switch <img src="images/icons/alert.png" alt="Change in country-switch settings" title="Change in country-switch settings!" />'.
+			'</a></span> ';
+	}
+// END CountrySwitch
+			
 		foreach ( $gameIDs as $gameID )
 		{
 			$notifyGame = $notifyGames[$gameID];
@@ -857,26 +976,62 @@ class libHTML
 			// Don't print the game if we're looking at it.
 			if ( isset($_REQUEST['gameID']) and $_REQUEST['gameID'] == $gameID )
 				continue;
+			
+			if (!$notifyGame['orderStatus']->Saved && !$notifyGame['orderStatus']->None 
+				&& $notifyGame['phase'] != 'Pre-game' && $notifyGame['phase'] != 'Finished'
+				&& $notifyGame['processStatus'] != 'Paused' 
+				)
+			{
+				
+				if ($notifyGame['processTime'] - time() < 24*60*60)
+					$needRedAlert=true;
+				
+				$gameAlertBlock .= '<span class="variant'.Config::$variants[$notifyGame['variantID']].'">'.
+					'<a gameID="'.$gameID.'" class="country'.$notifyGame['countryID'].'" href="board.php?gameID='.$gameID.'">'.
+					$notifyGame['name']. ' ' . $notifyGame['orderStatus']->icon();
 
-			$gameNotifyBlock .= '<span class="variant'.Config::$variants[$notifyGame['variantID']].'">'.
-				'<a gameID="'.$gameID.'" class="country'.$notifyGame['countryID'].'" href="'.
-				// If in play-now mode the game links should go to the new board:
-				(defined('PLAYNOW') ? 'beta/' : 'board.php').
-				'?gameID='.$gameID.'">'.
-				$notifyGame['name'];
+				if ($notifyGame['processTime'] - time() < 2*60*60)
+					$gameAlertBlock .= '(<2 hours<img src="'.l_s('images/icons/alert.png').'"/>)';
+				elseif ($notifyGame['processTime'] - time() < 6*60*60)
+					$gameAlertBlock .= '(<6 hours<img src="'.l_s('images/icons/alert_minor.png').'"/>)';
+				elseif ($notifyGame['processTime'] - time() < 12*60*60)
+					$gameAlertBlock .= '(<12 hours)';
+															
+				if ( $notifyGame['newMessagesFrom'] )
+					$gameAlertBlock .= '<img src="'.l_s('images/icons/mail.png').'" alt="'.l_t('New messages').'" title="'.l_t('New messages!').'" />';
 
-			if ( $notifyGame['processStatus'] == 'Paused' )
-				$gameNotifyBlock .= '-<img src="'.l_s('images/icons/pause.png').'" alt="'.l_t('Paused').'" title="'.l_t('Game paused').'" />';
+				$gameAlertBlock .= '</a></span> ';
+			}
+			else
+			{
+				$gameNotifyBlock .= '<span class="variant'.Config::$variants[$notifyGame['variantID']].'">'.
+					'<a gameID="'.$gameID.'" class="country'.$notifyGame['countryID'].'" href="'.
+					// If in play-now mode the game links should go to the new board:
+					(defined('PLAYNOW') ? 'beta/' : 'board.php').
+					'?gameID='.$gameID.'">'.
+					$notifyGame['name'];
 
-			$gameNotifyBlock .= ' ';
+				if ( $notifyGame['processStatus'] == 'Paused' )
+					$gameNotifyBlock .= '-<img src="'.l_s('images/icons/pause.png').'" alt="'.l_t('Paused').'" title="'.l_t('Game paused').'" />';
 
-			$gameNotifyBlock .= $notifyGame['orderStatus']->icon();
-			if ( $notifyGame['newMessagesFrom'] )
-				$gameNotifyBlock .= '<img src="'.l_s('images/icons/mail.png').'" alt="'.l_t('New messages').'" title="'.l_t('New messages!').'" />';
+				$gameNotifyBlock .= ' ';
 
-			$gameNotifyBlock .= '</a></span> ';
+				if ( $notifyGame['phase'] != 'Pre-game' && $notifyGame['phase'] != 'Finished' )
+					$gameNotifyBlock .= $notifyGame['orderStatus']->icon();
+				if ( $notifyGame['newMessagesFrom'] )
+					$gameNotifyBlock .= '<img src="'.l_s('images/icons/mail.png').'" alt="'.l_t('New messages').'" title="'.l_t('New messages!').'" />';
+
+				$gameNotifyBlock .= '</a></span> ';
+			}
 		}
-		return $gameNotifyBlock;
+		
+		if ($gameAlertBlock != '')
+			$gameAlertBlock = '<div class="content-notice"'.($needRedAlert ? ' style="border-style: solid; border-color: red;"' : '').'><div class="gamelistings-tabs">'.$gameAlertBlock.'</div></div>';
+		
+		if ($gameNotifyBlock != '')
+			$gameNotifyBlock = '<div class="content-notice"><div class="gamelistings-tabs">'.$gameNotifyBlock.'</div></div>';
+		
+		return $gameAlertBlock . $gameNotifyBlock;
 	}
 
 	/**
@@ -927,8 +1082,7 @@ class libHTML
 				$links['modforum.php']=array('name'=>'Get Help', 'inmenu'=>TRUE, 'title'=>"Get help from the mod team");
 			}
 		}
-
-		$links['help.php']=array('name'=>'Help/Donate', 'inmenu'=>TRUE, 'title'=>'Get help and information; guides, intros, FAQs, stats, links');
+		$links['help.php']=array('name'=>'Help', 'inmenu'=>TRUE, 'title'=>'Get help and information; guides, intros, FAQs, stats, links');
 
 		// Items not displayed on the menu
 		$links['map.php']=array('name'=>'Map', 'inmenu'=>FALSE);
@@ -945,14 +1099,17 @@ class libHTML
 		$links['board.php']=array('name'=>'Board', 'inmenu'=>FALSE);
 		$links['profile.php']=array('name'=>'Profile', 'inmenu'=>FALSE);
 		$links['search.php']=array('name'=>'Find user', 'inmenu'=>false);
-		$links['userprofile.php']=array('name'=>'ProfileNew', 'inmenu'=>FALSE);
+		$links['profile.php']=array('name'=>'ProfileNew', 'inmenu'=>FALSE);
 		$links['translating.php']=array('name'=>'Translating', 'inmenu'=>FALSE);
 		$links['points.php']=array('name'=>'Points', 'inmenu'=>FALSE);
 		$links['halloffame.php']=array('name'=>'Hall of fame', 'inmenu'=>FALSE);
+		$links['hof.php']=array('name'=>'Hall of fame', 'inmenu'=>FALSE);
 		$links['developers.php']=array('name'=>'Developer info', 'inmenu'=>FALSE);
 		$links['datc.php']=array('name'=>'DATC', 'inmenu'=>FALSE);
 		$links['variants.php']=array('name'=>'Variants', 'inmenu'=>FALSE);
-		$links['adminInfo.php']=array('name'=>'Admin Info', 'inmenu'=>FALSE);
+		$links['press.php']=array('name'=>'Press', 'inmenu'=>FALSE);
+		$links['dev.php']=array('name'=>'DevTools', 'inmenu'=>FALSE);
+		$links['gdpr.php']=array('name'=>'GDPR/Datenschutz', 'inmenu'=>FALSE);
 		$links['tournamentInfo.php']=array('name'=>'Tournament Info', 'inmenu'=>FALSE);
 		$links['tournamentScoring.php']=array('name'=>'Tournament Scoring', 'inmenu'=>FALSE);
 		$links['tournamentRegistration.php']=array('name'=>'Tournament Registration', 'inmenu'=>FALSE);
@@ -977,6 +1134,29 @@ class libHTML
 			$links['logon.php']['inmenu']=false;
 			$links['register.php']['inmenu']=false;
 		}
+/************************
+*INPUT FROM MENUE HACK: *
+*************************/            
+		if (isset(Config::$top_menue))
+		{
+			if (array_key_exists('all',Config::$top_menue))
+				$links = array_merge($links,Config::$top_menue['all']);
+				
+			if ( is_object($User) )
+			{
+				if (array_key_exists('user',Config::$top_menue))
+					$links = array_merge($links,Config::$top_menue['user']);
+				if (( $User->type['Admin'] or $User->type['Moderator'] ) && array_key_exists('admin',Config::$top_menue))
+					$links = array_merge($links,Config::$top_menue['admin']);
+			}
+		}
+// END HACK
+
+		// Make the devTools top-menue visible to developers
+		if (is_object($User))
+			if ($User->type['DevAdmin'] || isset(Config::$devs))
+				if ($User->type['Admin'] || array_key_exists($User->username, Config::$devs))
+					$links['dev.php']=array('name'=>'DevTools', 'inmenu'=>TRUE);
 
 		return $links;
 	}
@@ -997,7 +1177,7 @@ class libHTML
 				<div id="header">
 					<div id="header-container">
 						<a href="./">
-							<img id="logo" src="'.l_s('images/logo.png').'" alt="'.l_t('webDiplomacy').'" />
+							<img id="logo" src="'.l_s('images/vlogo.png').'" alt="'.l_t('vDiplomacy').'" />
 						</a>';
 
 		if( defined('PLAYNOW') )
@@ -1073,10 +1253,10 @@ class libHTML
 								<a href="rules.php">Site Rules</a>
 								<a href="faq.php" title="Frequently Asked Questions">FAQ</a>
 								<a href="intro.php" title="Intro to Diplomacy">Diplomacy Intro</a>
+								<a href="features.php" title="VDip features">Features you should be aware of (not available on webDip).</a>
 								<a href="points.php" title="Points and Scoring Systems">Points/Scoring</a>
 								<a href="variants.php" title="Active webDiplomacy variants">Variants</a>
 								<a href="help.php" title="Site information, guides, stats, links">More Info</a>
-								<a href="donations.php">Donate</a>
 							</div>
 						</div>';
 					}
@@ -1088,20 +1268,23 @@ class libHTML
 								<a href="search.php">Find User</a>
 								<a href="gamelistings.php?gamelistType=Search">Game Search</a>
 								<a href="detailedSearch.php" title="advanced search of users and games">Advanced Search</a>
+								<a href="halloffame.php">Hall of Fame</a>
 							</div>
 						</div>
 						<div id="navSubMenu" class="clickable nav-tab">Games ▼
 							<div id="nav-drop">
 								<a href="gamelistings.php?gamelistType=New" title="Game listings; a searchable list of the games on this server">New Games</a>
-								<a href="gamelistings.php?gamelistType=Open%20Positions" title="Open positions dropped by other players, free to claim">Open Games</a>
-								<a href="gamecreate.php" title="Start up a new game">Start a New Game</a>
-								<a href="botgamecreate.php" title="Start up a new bots-only game">Start an AI/Bot Game</a>
+								<a href="gamelistings.php?gamelistType=Open%20Positions" title="Open positions dropped by other players, free to claim">Open Positions</a>
+								<a href="gamelistings.php?gamelistType=Active" title="View/Spectate games currently running">Active games</a>
+								<a href="tournaments.php" title="Information about tournaments on vDiplomacy">Tournaments</a>
+								<div class="hr"></div>
+								<a href="gamecreate.php" title="Start up a new game">Create a New Game</a>
 								<a href="gamecreateSandbox.php" title="Start up a new bots-only game">Start a Sandbox Game</a>
-								<a href="gamelistings.php?gamelistType=Active" title="View/Spectate games currently running">Active Games</a>
 								<!-- <a href="ghostRatings.php" title="Ghost Ratings Information">Ghost Ratings</a> -->
-								<a href="tournaments.php" title="Information about tournaments on webDiplomacy">Tournaments</a>
-								<a href="halloffame.php" title="Information about tournaments on webDiplomacy">Hall of Fame</a>
+								<div class="hr"></div>
+								<a href="halloffame.php" title="Information about tournaments on vDiplomacy">Hall of Fame</a>
 							</div>
+
 						</div>
 						<div id="navSubMenu" class="clickable nav-tab">Account ▼
 							<div id="nav-drop">';
@@ -1111,7 +1294,9 @@ class libHTML
 									<a href="contrib/phpBB3/ucp.php?i=179" title="Change your forum user settings">Forum Settings</a>';
 							}
 							$menu.='
-								<a href="usercp.php" title="Change your user specific settings">Settings</a>
+								<a href="usercp.php" title="Change your user specific settings">Site Settings</a>
+								<a href="usercp.php?tab=IAmap" title="Change your interactive map settings">Interactive Map Settings</a>
+								<a href="usercp.php?tab=CountrySwitch" title="Give your countries to another player">Country Switch Tool</a>
 								<a href="group.php" title="Manage your user relationships">Relationships</a>
 								<a href="useridentity.php" title="Verify your identity">Identity</a>
 								<a href="usernotifications.php" title="Manage site notifications">Notifications</a>
@@ -1121,14 +1306,46 @@ class libHTML
 							<div id="nav-drop">
 								<a href="rules.php">Site Rules</a>
 								<a href="faq.php" title="Frequently Asked Questions">FAQ</a>
+								<a href="features.php" title="Features you should be aware of (not available on webDip).">vDip Features</a>
 								<a href="intro.php" title="Intro to Diplomacy">Diplomacy Intro</a>
 								<a href="points.php" title="Points and Scoring Systems">Points/Scoring</a>
-								<a href="variants.php" title="Active webDiplomacy variants">Variants</a>
+								<!--<a href="variants.php" title="Active webDiplomacy variants">Variants</a>-->
 								<a href="help.php" title="Site information; guides, stats, links">More Info</a>
-								<a href="modforum.php">Get Help</a>
-								<a href="donations.php">Donate</a>
+								<!--<a href="contactUsDirect.php">Contact Us</a>
+								<a href="donations.php">Donate</a>-->
 							</div>
 						</div>';
+						
+						// Now add some vDip-Stuff to the menue...
+						
+						// Make the devTools top-menue visible to developers
+						if (is_object($User))
+							if ( ($User->type['DevAdmin'] || isset(Config::$devs)) && ($User->type['Admin'] || array_key_exists($User->username, Config::$devs)) )
+							{
+								$variantID = ( isset($_REQUEST['variantID']) && (isset(Config::$variants[intval($_REQUEST['variantID'])])) ) 
+									? intval($_REQUEST['variantID']) 
+									: '0'; 
+
+								$menu.='
+									<div id="navSubMenu" class="clickable nav-tab">DevTools ▼
+										<div id="nav-drop">
+											<a href="dev.php?tab=Base&variantID='.$variantID.'">Settings</a>
+											<a href="dev.php?tab=Colors&variantID='.$variantID.'">Colors</a>
+											<a href="dev.php?tab=Map&variantID='.$variantID.'">Map</a>
+											<a href="dev.php?tab=Units&variantID='.$variantID.'">Units</a>
+											<a href="dev.php?tab=Files&variantID='.$variantID.'">Files</a>
+											<a href="dev.php?tab=Preview&variantID='.$variantID.'">Preview</a>
+											<div class="hr"></div>
+											<a href="dev.php?tab=MapResize&variantID='.$variantID.'">MapResize</a>
+											<a href="dev.php?tab=Converter&variantID='.$variantID.'">Converter</a>
+											<a href="dev.php?tab=Admin&variantID='.$variantID.'">Admin</a>
+											<div class="hr"></div>
+											<a href="variants.php" title="Active webDiplomacy variants">Variants</a>
+										</div>
+									</div>';
+							}
+							else
+								$menu.='<div class="nav-tab"> <a href="variants.php" title="Active webDiplomacy variants">Variants</a> </div>';
 					}
 				}
 
@@ -1140,27 +1357,33 @@ class libHTML
 							<div id="nav-drop">
 								<a href="modforum.php" title="The modforum; ask your mod-team for help.">ModForum</a>
 								<div class="hr"></div>
-								<a href="admincp.php">Admin CP</a>';
+								<a href="admincp.php?tab=Control Panel">Admin CP</a>';
 
-						if( isset(Config::$customForumURL) ) { $menu.='<a href="contrib/phpBB3/mcp.php">Forum CP</a>'; }
+						if ( $User->type['Admin'] )
+							$menu.='
+								<a href="admincp.php?tab=Status Info">Status Info</a>
+								<a href="admincp.php?tab=Logs">Logfiles</a>';
 
-						$menu.='
-							<a href="admincp.php?tab=Relationships">Relationships/Suspicions</a>
-							<a href="admincp.php?tab=Account Analyzer">Account Analyzer</a>
-							<a href="admincp.php?tab=Chatlogs">Pull Press</a>
-							<a href="admincp.php?tab=Account Searcher">Account Searcher</a>
-							<a href="search.php">Find User</a>';
+							if( isset(Config::$customForumURL) ) { $menu.='<a href="contrib/phpBB3/mcp.php">Forum CP</a>'; }
 
-						if ( $User->type['Admin'] && isset(Config::$customForumURL))
-						{
-							$menu.='<a href="adminInfo.php">Admin Info</a>';
-						}
+							$menu.='
+								<a href="admincp.php?tab=Relationships">Relationships/Suspicions</a>
+								<a href="admincp.php?tab=Account Analyzer">Account Analyzer</a>
+								<a href="admincp.php?tab=Chatlogs">Pull Press</a>
+								<a href="admincp.php?tab=Account Searcher">Account Searcher</a>
+								<a href="search.php">Find User</a>';
+
+							if ( $User->type['Admin'] && isset(Config::$customForumURL))
+							{
+								$menu.='<a href="adminInfo.php">Admin Info</a>';
+							}
 
 						$menu.=' </div>
 						</div>';
 					}
-					//else
-					//	$menu.='<div class = "nav-tab"> <a href="modforum.php" title="The modforum; ask your mod-team for help.">ModForum</a> </div>';
+					else
+						$menu.='<div class = "nav-tab"> <a href="modforum.php" title="The modforum; ask your mod-team for help.">ModForum</a> </div>';
+						
 				}
 				$menu.='</div></div></div>';
 			}
@@ -1171,10 +1394,10 @@ class libHTML
 						<div id="header-goto">
 							<div class="nav-wrap">
 								<div class="nav-tab">
-									<a style="color:white" href="index.php">'.l_t('Home').'</a>
+									<a style="color:#6d5238" href="index.php">'.l_t('Home').'</a>
 								</div>
 								<div class="nav-tab">
-								<a style="color:white" href="'.$scriptname.'">'.l_t('Reload current page').'</a>
+								<a style="color:#6d5238" href="'.$scriptname.'">'.l_t('Reload current page').'</a>
 								</div>
 							</div>
 						</div>';
@@ -1308,9 +1531,9 @@ class libHTML
 		$stats=array(
 			'<a href="gamemaster.php" class="light">'.l_t('Last process').'</a>'=>($Misc->LastProcessTime?libTime::text($Misc->LastProcessTime):l_t('Never')),
 			'<a href="admincp.php?tab=Control%20Panel%20Logs" class="light">'.l_t('Last mod action').'</a>'=>($Misc->LastModAction?libTime::text($Misc->LastModAction):l_t('Never')),
-			'<a href="admincp.php?tab=Status%20lists" class="light">'.l_t('Error logs').'</a>'=>$Misc->ErrorLogs,
+			'<a href="admincp.php?tab=Status%20Info" class="light">'.l_t('Error logs').'</a>'=>$Misc->ErrorLogs,
 			l_t('Paused games')=>$Misc->GamesPaused,
-			'<a href="admincp.php?tab=Status%20lists" class="light">'.l_t('Crashed games').'</a>'=>$Misc->GamesCrashed,
+			'<a href="admincp.php?tab=Status%20Info" class="light">'.l_t('Crashed games').'</a>'=>$Misc->GamesCrashed,
 		);
 
 		$first=true;
@@ -1327,16 +1550,18 @@ class libHTML
 
 	static private function footerCopyright()
 	{
+		// Cookie-check as requested by the EU-laws...
+		$cookiesWarning='<div id="cookiesWarning"></div><script language="JavaScript" type="text/javascript">checkCookieExist();</script>';
+	
 		// Version, sourceforge and HTML compliance logos
-		return l_t('webDiplomacy version <strong>%s</strong>',number_format(VERSION/100,2)).'<br />
-			<div>
-			<a class="light" id="js-desktop-mode" style="cursor: pointer; color: #006699;" onclick="toggleDesktopMode(true)">Enable Desktop Mode</a>
-			</div>
-			<br />
-
-			<a href="http://github.com/kestasjk/webDiplomacy" class="light">GitHub Project</a> |
-			<a href="http://github.com/kestasjk/webDiplomacy/issues" class="light">Bug Reports</a> | <a href="mailto:'.Config::$modEMail.'" class="light">Moderator Email</a> |
-			<a href="modforum.php" class="light">Moderator forum</a>';
+		return $cookiesWarning.l_t('
+			<a class="light" id="js-desktop-mode" style="cursor: pointer; color: #006699;" onclick="toggleDesktopMode()">Enable Desktop Mode</a><br /><br />
+			based on webDiplomacy version <strong>%s</strong>-vDip.<strong>%s</strong>',number_format(VERSION/100,2),VDIPVERSION.'<br />
+			<a href="http://github.com/Sleepcap/vDiplomacy" class="light">GitHub Project</a> | 
+			<a href="http://github.com/Sleepcap/vDiplomacy/issues" class="light">Bug Reports</a> | 
+			<a href="modforum.php" class="light">Contact Moderator</a>
+			<br><br>
+			<a href="impresum.php">Impresum</a> - <a href="gdpr.php">GDPR/Datenschutz</a><br />');
 	}
 
 	public static $footerScript=array();
@@ -1411,10 +1636,11 @@ class libHTML
 				this.username="'.htmlentities($User->username).'";
 				this.points='.$User->points.'
 				this.lastMessageIDViewed='.$User->lastMessageIDViewed.';
+				this.lastModMessageIDViewed='.$User->lastModMessageIDViewed.';
 				this.timeLastSessionEnded='.$User->timeLastSessionEnded.';
 				this.token="'.md5(Config::$secret.$User->id.'Array').'";
-				this.darkMode="'.$User->options->value['darkMode'].'";
-			}
+				this.darkMode="No";' //"'.$User->options->value['darkMode'].'";
+			.'}
 			User = new UserClass();
 			var headerEvent = document.getElementsByClassName("clickable");
 
@@ -1494,9 +1720,57 @@ class libHTML
 
 		if( Config::$debug )
 			$buf .= '<br /><strong>JavaScript localization lookup failures:</strong><br /><span id="jsLocalizationDebug"></span>';
+		if (isset(Config::$piwik))
+			$buf .= '<script type="text/javascript" src="'.Config::$piwik.'piwik.js"></script>
+			<script type="text/javascript">
+				try {
+					var piwikTracker = Piwik.getTracker("'.Config::$piwik.'piwik.php", 1);
+					piwikTracker.setCustomVariable(1, "User", "'.htmlentities($User->username).'", "visit");
+					piwikTracker.trackPageView();
+					piwikTracker.enableLinkTracking();
+				} catch( err ) {}
+			</script><noscript><p><img src="'.Config::$piwik.'piwik.php?idsite=1" style="border:0" alt="" /></p></noscript>';
 
 		return $buf;
 	}
+	
+	/**
+	 * The icon to block an unblocked player, optionally with link
+	 * @param $url URL to link to
+	 * @return string
+	 */
+	static function unblocked($url=false)
+	{
+		$buf = '';
+		if($url) $buf .= '<a href="'.$url.'">';
+		$buf .= '<img src="images/icons/good.png" alt="Block player" title="Block player" />';
+		if($url) $buf .= '</a>';
+		return $buf;
+	}
+
+	/**
+	 * The icon to unblocked an block player, optionally with link
+	 * @param $url URL to link to
+	 * @return string
+	 */
+	static function blocked($url=false)
+	{
+		$buf = '';
+		if($url) $buf .= '<a href="'.$url.'">';
+		$buf .= '<img src="images/icons/bad.png" alt="Blocked. Click to un-block." title="Blocked. Click to un-block." />';
+		if($url) $buf .= '</a>';
+		return $buf;
+	}
+	
+	/**
+	 * The vpoints icon
+	 * @return string
+	 */
+	static function vpoints()
+	{
+		return ' <img src="images/icons/vpoints.png" alt="D" title="vDiplomacy points" />';
+	}
+	
 }
 
 ?>

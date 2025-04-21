@@ -55,9 +55,9 @@ class processMember extends Member
 
 		// Again, this is relying on the member record already being gone but not reloaded so the game can erase the game.
 		// There is also a check here to make sure that BotVsMember games are deleted if the member leaves, which can otherwise cause issues
-		if(count($Game->Members->ByUserID)==1 or $Game->playerTypes=='MemberVsBots')
+		if((count($Game->Members->ByUserID)==1 && $Game->directorUserID == 0) or $Game->playerTypes=='MemberVsBots')
 		{
-			// No-one else left in the game
+			// No-one else left in the game and no game director
 			processGame::eraseGame($Game->id);
 		}
 		else
@@ -68,7 +68,12 @@ class processMember extends Member
 			$Game->resetMinimumBet();			
 
 			// Notify the remaining players
-			$Game->Members->sendExcept($this,'No',l_t("<strong>%s</strong> left the game.",$this->username));
+			if ( $this->Game->isMemberInfoHidden() )
+				$name = 'Someone';
+			else
+				$name = "<strong>".$this->username."</strong>";
+				
+			$Game->Members->sendExcept($this,'No',l_t("<strong>%s</strong> left the game.",$name));
 
 			$Game = $this->Game;
 		}
@@ -81,19 +86,27 @@ class processMember extends Member
 	/**
 	 * Create a new member record, load it into the Members object, should only occur in a Pre-game setting.
 	 *
-	 * @param $userID The userID
-	 * @param $bet The bet, will throw an exception if the user doesn't have enough
+	 * @param int $userID The userID
+	 * @param string $bet The bet, will throw an exception if the user doesn't have enough
+	 * @param int $countryID
 	 */
-	static function create($userID, $bet, $countryID=0)
+	static function create($userID, $bet, $countryID = 0)
 	{
 		global $DB, $Game;
 
-		assert('$Game instanceof processGame');
+		assert($Game instanceof processGame);
 
 		// It is assumed this is being run within a transaction
 
+		if ($countryID > count($Game->Variant->countries) && $Game->chooseYourCountry=='Yes')
+			$countryID = 1;
+		elseif ($Game->chooseYourCountry=='No')
+			$countryID = 0;
+			
 		$DB->sql_put("INSERT INTO wD_Members SET
 			userID = ".$userID.", gameID = ".$Game->id.", countryID=".$countryID.", orderStatus='None,Completed,Ready', orderStatusChanged=UNIX_TIMESTAMP(), bet = 0, timeLoggedIn = ".time().", excusedMissedTurns = ".$Game->excusedMissedTurns);
+		
+		$DB->sql_put('DELETE FROM wD_WatchedGames WHERE gameID='.$Game->id.' AND userID='.$userID);
 
 		$Game->Members->load();
 
@@ -161,7 +174,7 @@ class processMember extends Member
 			if( isset($supplementAmount) && $supplementAmount>0 ) $bet -= $supplementAmount;
 		}
 
-		assert('$bet <= $this->Game->pot');
+		assert($bet <= $this->Game->pot);
 
 		User::pointsTransfer($this->userID, 'Cancel', $bet, $this->gameID, $this->id);
 
@@ -331,7 +344,7 @@ class processMember extends Member
 		global $DB;
 
 		$this->setStatus('Left');
-
+		
 		// Register the civil disorder
 		$DB->sql_put(
 			"INSERT INTO wD_CivilDisorders ( gameID, userID, countryID, turn, bet, SCCount ,forcedByMod)
@@ -396,11 +409,12 @@ class processMember extends Member
 	 */
 	function setTakenOver()
 	{
-		$refundedPoints = $this->awardSupplement();
+// No refunds if your country was taken over...	
+//		$refundedPoints = $this->awardSupplement();
 
 		$but="";
-		if($refundedPoints)
-			$but=l_t(", but you have been refunded %s to make up your starting 100",$refundedPoints);
+//		if($refundedPoints)
+//			$but=l_t(", but you have been refunded %s to make up your starting 100",$refundedPoints);
 
 		$this->send('No','No',l_t("Your empire in civil disorder was taken over, so you have lost your ".
 			"bet in this game%s. Better luck next time!",$but));
@@ -506,6 +520,45 @@ class processMember extends Member
 		$DB->sql_put("UPDATE wD_Members m SET m.excusedMissedTurns = ".$this->excusedMissedTurns." WHERE m.id = ".$this->id);
 		
 		$this->send('No','No',l_t("You have missed a deadline and lost an excuse (%s left). "."Be more reliable!",$this->excusedMissedTurns));
+	}
+	
+	/**
+	 * vDip-feature:
+	 * If a regainExcusesDuration is set as game option, members can earn back 
+	 * excuses if they did not miss n consecutive deadlines.
+	 */
+	function checkExcuseEarnBack() 
+	{
+		global $DB;	
+		
+		if( $this->Game->regainExcusesDuration == 99 ) return; // no excuse regaining set
+		if( $this->excusedMissedTurns >= $this->Game->excusedMissedTurns ) return; // cannot regain missed turn since at max
+		
+		// get the time of the last miss by this member
+		list( $timeLastMiss ) = $DB->sql_row("SELECT turnDateTime FROM wD_MissedTurns
+			WHERE gameID = ".$this->gameID."
+				AND userID = ".$this->userID."
+				AND countryID = ".$this->countryID."
+				ORDER BY turnDateTime DESC LIMIT 1");
+		
+		if( !$timeLastMiss ) return; // no miss so far
+		
+		// get the turns since the last miss
+		list( $turnsSinceLastMiss ) = $DB->sql_row("SELECT COUNT(*) FROM wD_TurnDate
+			WHERE gameID = ".$this->gameID."
+				AND userID = ".$this->userID."
+				AND countryID = ".$this->countryID."
+				AND turnDateTime > ".$timeLastMiss);
+		
+		// check if user can earn back excuse
+		if ( $turnsSinceLastMiss > 0 && ($turnsSinceLastMiss % $this->Game->regainExcusesDuration) == 0 )
+		{
+			$this->excusedMissedTurns++;
+			
+			$DB->sql_put("UPDATE wD_Members m SET m.excusedMissedTurns = ".$this->excusedMissedTurns." WHERE m.id = ".$this->id);
+		
+			$this->send('No','No',l_t("You have earned an excuse back due to reliable play for %s turns.",$this->Game->regainExcusesDuration));
+		}	
 	}
 }
 

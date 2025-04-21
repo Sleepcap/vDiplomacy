@@ -1,0 +1,14 @@
+@CHARSET "ISO-8859-1";
+
+.variantChromatic .country0 { color: #CE7800 ! important; } /* Global */
+.variantChromatic .country1 { color: #007BA5 ! important; } /* Blue   */
+.variantChromatic .country2 { color: #b8ad00 ! important; } /* Yellow */
+.variantChromatic .country3 { color: #333333 ! important; } /* Dark  */
+.variantChromatic .country4 { color: #808080 ! important; } /* Light */
+.variantChromatic .country5 { color: #D62929 ! important; } /* Red    */
+
+.variantChromatic .occupationBar1 { background-color: #79AFC6; } /* Blue   */
+.variantChromatic .occupationBar2 { background-color: #EAEAAF; } /* Yellow */
+.variantChromatic .occupationBar3 { background-color: #7f7f7f; } /* Dark  */
+.variantChromatic .occupationBar4 { background-color: #ebebeb; } /* Light */
+.variantChromatic .occupationBar5 { background-color: #C48F85; } /* Red    */

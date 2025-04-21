@@ -23,6 +23,11 @@
  * @subpackage Forms
  */
 
+
+// do not use this feature for vdip
+print("Not implemented");
+die();
+
 // Check whether we're in play-now mode:
 define('IN_CODE',true);
 require_once('config.php');

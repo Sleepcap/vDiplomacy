@@ -4,6 +4,8 @@ defined('IN_CODE') or die('This script can not be run by itself.');
 
 if (!$User->type['Moderator']) { die ('Only admins or mods can run this script'); }
 
+require_once ('adminAdvancedAccessLogVDip.php'); // Load the vDip-detailed-search.
+
 class UserData
 {
     public $userID;
@@ -188,7 +190,7 @@ if ((is_int($days)) && ($days > 0) && ($days < 1001))
     {   
         if (($checkIPs=='checked' and $values->IPCount > 0) or ($chCookies=='checked' and $values->CookieCount > 0) or ($checkFingerprint=='checked' and $values->FingerprintCount > 0) or ($checkFingerprintPro=='checked' and $values->FingerprintProCount > 0)) 
         {
-            print '<TR><TD class= "modTools"><a href="userprofile.php?userID='.$values->userID.'">'.$values->username.'</a></TD>';
+            print '<TR><TD class= "modTools"><a href="profile.php?userID='.$values->userID.'">'.$values->username.'</a></TD>';
             print '<TD class= "modTools">'.$values->email.'</TD>';
             print '<TD class= "modTools">'.libTime::text($values->timeJoined).'</TD>';
 

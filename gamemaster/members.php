@@ -74,6 +74,51 @@ class processMembers extends Members
 	}
 
 	/**
+	 * Send message about the game phase being extended
+	 */
+	function notifyExtended()
+	{
+		require_once "lib/gamemessage.php";
+		$msg= "Per 2/3 majority vote the gamephase got extended by 4 days.\n(Voters: ";
+		foreach($this->ByStatus['Playing'] as $Member)
+			if (in_array('Extend',$Member->votes))
+				$msg.= $Member->country . ' / ';
+		$msg=rtrim($msg,' /') . ")"; 
+		libGameMessage::send(0, 'GameMaster', $msg , $this->Game->id);		
+		$this->sendToPlaying('No',"The gamephase got extended by 4 days.");
+	}
+	
+	/**
+	 * Clear all extend votes from each Member for the next phase
+	 */
+	function clearExtendVotes()
+	{
+		global $DB;
+		list($clearTurn) = $DB->sql_row('
+			SELECT turn + 2 FROM wD_GameMessages WHERE
+				message LIKE "%voted for a Extend%" AND fromCountryID = 0 AND gameID = '.$this->Game->id.'
+				ORDER BY turn DESC LIMIT 1');
+		
+		if ($clearTurn != $this->Game->turn) return;
+			
+		$extVoteSet=false;
+		foreach($this->ByStatus['Playing'] as $Member)
+		{
+			if (in_array('Extend',$Member->votes))
+			{
+				$extVoteSet=true;
+				unset($Member->votes[array_search('Extend', $Member->votes)]);
+				$DB->sql_put("UPDATE wD_Members SET votes='".implode(',',$Member->votes)."' WHERE id=".$Member->id);	
+			}
+		}
+		if ($extVoteSet)
+		{
+			require_once "lib/gamemessage.php";
+			libGameMessage::send(0, 'GameMaster', 'Extend-request didn\'t reach 2/3 majority. All extend-votes cleared.' , $this->Game->id);
+		}
+	}
+	
+	/**
 	 * Count the units and supply centers of the members in this game, and refresh the
 	 * Member objects and update the member records.
 	 */
@@ -136,6 +181,33 @@ class processMembers extends Members
 				return true;
 
 		return false;
+	}
+
+	/**
+	 * Set players who have missed too many phases to be Left (which doesn't mean they get their
+	 * points, they can still rejoin.
+	 *
+	 * @return boolean True if one or more have just left, false if no-one has just left
+	 */
+	function findSetLeft()
+	{
+		$left=false;
+		// Ignore Live games for the 2-player games.
+		$ignore = ( (count($this->Game->Variant->countries) > 2) ? 1 : 0);
+
+		// Eliminate players who've left
+		foreach($this->ByStatus['Playing'] as $Member)
+		{
+			assert($Member->missedPhases >= 0 and $Member->missedPhases <= 2);
+
+			if($Member->missedPhases == 2)
+			{
+				$left=true;
+				$Member->setLeft($ignore);
+			}
+		}
+
+		return $left;
 	}
 
 	/**
@@ -228,12 +300,25 @@ class processMembers extends Members
 			// If more than one is left over see if any of them have supplyCenterTarget or more supply centers
 			foreach($this->ByStatus['Playing'] as $Member)
 			{
-				if ( $this->Game->Variant->supplyCenterTarget <= $Member->supplyCenterNo )
-					return $Member;
+				if ( $this->Game->targetSCs > 0 )
+				{
+					if ( $this->Game->targetSCs <= $Member->supplyCenterNo )
+					{
+						return $this->check_for_Winner_that_works_with_same_SC_count();
+					}
+				}
+				elseif ( $this->Game->Variant->supplyCenterTarget <= $Member->supplyCenterNo )
+				{
+					return $this->check_for_Winner_that_works_with_same_SC_count();
+				}
 				// The players which have lost go into 'Survived' mode when the other player is set to Won
 			}
 		}
-
+		
+		// Do an additional check if we reached maxTurns:
+		if (($this->Game->turn == ($this->Game->maxTurns - 1)) && ($this->Game->maxTurns > 0))
+			return $this->check_for_Winner_that_works_with_same_SC_count();
+		
 		return false;
 	}
 
@@ -243,7 +328,7 @@ class processMembers extends Members
 	function setDrawn()
 	{
 		$this->prepareLog();
-		assert('count($this->ByStatus[\'Playing\']) > 0');
+		assert(count($this->ByStatus['Playing']) > 0);
 
 		// Calculate the points each player gets.
 		// These are pre-calculated because if they aren't the pot has to be decreased, and active
@@ -268,7 +353,7 @@ class processMembers extends Members
 	function setConcede()
 	{
 		$this->prepareLog();
-		assert('count($this->ByStatus[\'Playing\']) > 0');
+		assert(count($this->ByStatus['Playing']) > 0);
 
 		foreach($this->ByStatus['Left'] as $Member)
 			$Member->setResigned();
@@ -373,7 +458,7 @@ class processMembers extends Members
 		if( !isset(Config::$pointsLogFile) || !Config::$pointsLogFile )
 			return;
 
-		assert('is_array($this->logBefore);');
+		assert(is_array($this->logBefore));
 
 		$before=$this->logBefore;
 		$after=$this->pointsInfoLog();
@@ -473,7 +558,7 @@ class processMembers extends Members
 		$countryID=(int)$countryID;
 
 		// If we're not locked for UPDATE we can't keep things consistant
-		assert('$this->Game->lockMode == UPDATE');
+		assert($this->Game->lockMode == UPDATE);
 
 		if ( $this->Game->private and md5($password) != $this->Game->password and $password != $this->Game->password )
 			throw new Exception(l_t("The invite code you supplied is incorrect, please try again."));
@@ -488,12 +573,48 @@ class processMembers extends Members
 		if ( $User->userIsTempBanned() )
 			throw new Exception("You are blocked from joining new games.");
 
+		// Check for additional requirements:
+		require_once(l_r('lib/reliability.php'));		 
+		if ( $this->Game->minPhases > $User->phaseCount)
+			throw new Exception("You did not play enough phases to join this game. (Required:".$this->Game->minPhases." / You:".$User->phaseCount.")");
+
+		// Handle RL-relations
+		require_once ("lib/relations.php");			
+		if ($message = libRelations::checkRelationsGame($User, $this->Game))
+			throw new Exception($message);
+		
+		// Check for reliability-rating:		
+ 		require_once(l_r('lib/reliability.php'));		 		
+ 		if ( $this->Game->phase == 'Pre-game' && libReliability::userGameLimitRestriction($User, $this->Game))
+			throw new Exception('You are blocked from joining new games due to game limits.');
+
+		// Check if there is a block against a player
+		list($muted) = $DB->sql_row("SELECT count(*) FROM wD_Members AS m
+									LEFT JOIN wD_BlockUser AS f ON ( m.userID = f.userID )
+									LEFT JOIN wD_BlockUser AS t ON ( m.userID = t.blockUserID )
+								WHERE m.gameID = ".$this->Game->id." AND (f.blockUserID =".$User->id." OR t.userID =".$User->id.")");
+		if ($muted > 0)
+			throw new Exception("You can't join. A player in this game has you blocked or you blocked a player in this game");
+				
 		// We can join, the only question is how?
 
 		if ( $this->Game->phase == 'Pre-game' )
 		{
+		
+			// Check if there is a player with no countryID => Game wants random countrydistribution.
+			foreach ($this->ByUserID as $MemberCheck)
+				if ($MemberCheck->countryID == 0)
+					$countryID = -1;
+		
 			// Creates the Member record, the member object, and records the bet
-			processMember::create($User->id, $this->Game->minimumBet);
+			if( $countryID!=-1 )
+			{
+				if (isset($this->ByCountryID[$countryID]))
+					throw new Exception("You cannot join this game as ".$this->Game->Variant->countries[$countryID -1]." someone else was faster.");
+				processMember::create($User->id, $this->Game->minimumBet,$countryID);
+			}
+			else
+				processMember::create($User->id, $this->Game->minimumBet);
 
 			$M = $this->ByUserID[$User->id];
 			if ($this->Game->isMemberInfoHidden() )
@@ -507,6 +628,7 @@ class processMembers extends Members
 				// Ready to start
 				$this->Game->resetMinimumBet();
 			}
+			
 		}
 		else
 		{
@@ -524,6 +646,14 @@ class processMembers extends Members
 				throw new Exception(l_t("You do not have enough points to take over that countryID."));
 
 			$CD->setTakenOver(); // Refund its points if required, and send it a message
+			
+			// vDip: Record CD as taken over by new user
+			$DB->sql_put("UPDATE wD_CivilDisorders
+					SET takenByUserID = ".$User->id.", takenAtTime = ".time()."
+					WHERE gameID = ".$CD->gameID."
+						AND userID = ".$CD->userID."
+						AND countryID = ".$CD->countryID."
+			");
 
 			// Start updating the member record and object
 			list($orderCount) = $DB->sql_row("SELECT COUNT(id) FROM wD_Orders
@@ -533,17 +663,21 @@ class processMembers extends Members
 			$DB->sql_put("UPDATE wD_Members
 					SET userID = ".$User->id.", status='Playing', orderStatus=REPLACE(orderStatus,'Ready',''), orderStatusChanged=UNIX_TIMESTAMP(),
 						timeLoggedIn = ".time()."
-					WHERE id = ".$CD->id);
+						, votes=''
+						, excusedMissedTurns=".$this->Game->excusedMissedTurns
+					." WHERE id = ".$CD->id);
 			$DB->sql_put('DELETE FROM wD_WatchedGames WHERE userID='.$User->id. ' AND gameID='.$this->Game->id);
 
 			unset($this->ByUserID[$CD->userID]);
 			unset($this->ByStatus['Left'][$CD->id]);
 
+			$playerLeftID=$CD->userID;
 			$CD->userID = $User->id;
 			$CD->status = 'Playing';
 			$CD->orderStatus->Ready=false;
 			$CD->points = $User->points;
-
+			$CD->reliabilityRating = $User->reliabilityRating;
+			
 			$this->ByUserID[$CD->userID] = $CD;
 			$this->ByStatus['Playing'][$CD->id] = $CD;
 
@@ -553,12 +687,26 @@ class processMembers extends Members
 			$CDCountryName=$this->Game->Variant->countries[$CD->countryID-1];
 
 			if ( $this->Game->isMemberInfoHidden() )
-				$this->sendExcept($CD,'No',l_t('Someone has taken over %s.',$CDCountryName));
+//				$this->sendExcept($CD,'No',l_t('Someone has taken over %s.',$CDCountryName));
+			{
+				require_once "lib/gamemessage.php";
+				$msg = 'Someone has taken over '.$CDCountryName.' replacing "<a href="profile.php?userID='.$playerLeftID.'">'.$CD->username.'</a>". Reconsider your alliances.';
+				libGameMessage::send(0, 'GameMaster', $msg , $this->Game->id);
+				$this->sendExcept($CD,'No','Someone has taken over '.$CDCountryName.'.');
+			}
 			else
-				$this->sendExcept($CD,'No',l_t('%s has taken over %s.',$User->username,$CDCountryName));
-			$CD->send('No','No',l_t('You took over %s! Good luck',$CDCountryName));
+			{
+				require_once "lib/gamemessage.php";
+				$msg = $User->username.' has taken over '.$CDCountryName.' replacing "<a href="profile.php?userID='.$playerLeftID.'">'.$CD->username.'</a>". Reconsider your alliances.';
+				libGameMessage::send(0, 'GameMaster', $msg, $this->Game->id);
+				$this->sendExcept($CD,'No',$User->username.' has taken over '.$CDCountryName.'.');
+			}
+			$CD->send('No','No','You took over '.$CDCountryName.'! Good luck');
 		}
 
+		// Recalculate CC and IP matches if a new player joins...
+		$this->updateCCIP();
+		
 		$this->Game->gamelog(l_t('New member joined'));
 
 		$this->joinedRedirect();
@@ -596,9 +744,12 @@ class processMembers extends Members
 					AND EXISTS(SELECT o.id FROM wD_Orders o WHERE o.gameID = m.gameID AND o.countryID = m.countryID)");
 
 		// increment the turn count (turn counts are decremented after 1 year in /gamemaster.php)
+		// vdip: readded phaseCount increment (the old simple increment is sufficient and 
+		//	does also avoid overwriting records of the past)
 		$DB->sql_put("UPDATE wD_Users u
 				INNER JOIN wD_Members m ON m.userID = u.id
-				SET u.yearlyPhaseCount = u.yearlyPhaseCount + 1, u.isPhasesDirty = 1
+				SET u.yearlyPhaseCount = u.yearlyPhaseCount + 1, u.isPhasesDirty = 1,
+				u.phaseCount = u.phaseCount + 1
 				WHERE m.gameID = ".$this->Game->id."
 					AND ( m.status='Playing' OR m.status='Left' )
 					AND EXISTS(SELECT o.id FROM wD_Orders o WHERE o.gameID = m.gameID AND o.countryID = m.countryID)");
@@ -646,6 +797,8 @@ class processMembers extends Members
 	/**
 	 * Handle NMRs and check, if further sanctions due to unexcused NMRs have
 	 * to be imposed.
+	 * 
+	 * vDip: Do also check if members can earn back an excuse.
 	 */
 	function handleNMRs()
 	{
@@ -660,7 +813,10 @@ class processMembers extends Members
 
 		foreach( $this->ByStatus['Playing'] as $Member )
 		{
- 			if( $Member->missedPhases == 0 ) { continue; } // no NMR
+ 			if( $Member->missedPhases == 0 ) { 
+				$Member->checkExcuseEarnBack();
+				continue; // no NMR
+			} 
 
 			$this->activeNMRs = true; // there is at least one active NMR
 
@@ -750,38 +906,67 @@ class processMembers extends Members
 				 * 7: 14-day
 				 * 8: 30-days
 				 * 9 or more: infinite (1 year)
+				 * 
+				 * vDip:
+				 * Sanctions defined in lib/reliability.php
 				 */
 				$memberMsg.=" ".l_t("You missed %s ".(($yearlyCount == 1)?"deadline":"deadlines"). " without an excuse during this year.",$yearlyCount);
-
-				if( $yearlyCount <= 3 )
+				
+				$User = new User($Member->userID);
+				$integrity = $User->getIntegrityRating();
+				require_once('lib/reliability.php');
+				
+				if( $integrity-libReliability::$maxRatingForSanction > 0)
 				{
-					$Member->send('No','No',$memberMsg." ".l_t("%s more ". ((4-$yearlyCount == 1)?"miss":"misses"). " will impose a temporary ban on you.", 4-$yearlyCount));
-				}
-
-				elseif( $yearlyCount >= 9)
+					$Member->send('No','No',$memberMsg." ".l_t("%s more ". (($integrity-libReliability::$maxRatingForSanction == 1)?"miss":"misses"). " will impose a temporary ban and game limit on you.", $integrity-libReliability::$maxRatingForSanction));
+				} 
+				else 
 				{
-					User::tempBanUser($Member->userID, 6, 'System', FALSE);
-					$Member->send('No','No',$memberMsg." ".l_t("Due to your unreliable behavior you will be prevented from joining games for six days. "
-					. "Contact the Mods to lift the ban."));
-				}
-
-				else
-				{
-					$days = 0;
-					switch($yearlyCount)
+					// get sanction
+					$sanction = libReliability::getCurrentSanction($User);
+					
+					$days = $sanction['tempBan'];
+					$gLi = $sanction['gameLimit'];
+							
+					if($days > 0)
 					{
-						case 4: $days = 1; break;
-						case 5: $days = 2; break;
-						case 6: $days = 3; break;
-						case 7: $days = 4; break;
-						case 8: $days = 5; break;
+						User::tempBanUser($Member->userID, $days,'System', FALSE);
+						$memberMsg .= " ".l_t("You are temporarily banned from joining, rejoining, or making games for %s "
+							. (($days==1)?"day":"days").".", $days);
 					}
-
-					User::tempBanUser($Member->userID, $days,'System', FALSE);
-					$Member->send('No','No',$memberMsg." ".l_t("You are temporarily banned from joining, rejoining, or making games for %s "
-							. (($days==1)?"day":"days")	. ". Please be more reliable!", $days));
+					if($gLi < 50)
+					{
+						$memberMsg .= " ".l_t("You received a game limit of up to %s ".(($gLi==1)?"game":"games").".", $gLi);
+					}
+					$memberMsg .= " ".l_t("Be more reliable!");
+					
+					$Member->send('No','No',$memberMsg);	
 				}
 
+//				elseif( $yearlyCount >= 9)
+//				{
+//					User::tempBanUser($Member->userID, 365, 'System', FALSE);
+//					$Member->send('No','No',$memberMsg." ".l_t("Due to your unreliable behavior you will be prevented from joining games for a year. "
+//					. "Contact the Mods to lift the ban."));
+//				} 
+//
+//				else 
+//				{
+//					$days = 0;
+//					switch($yearlyCount)
+//					{
+//						case 4: $days = 1; break;
+//						case 5: $days = 3; break;
+//						case 6: $days = 7; break;
+//						case 7: $days = 14; break;
+//						case 8: $days = 30; break;
+//					}
+//					
+//					User::tempBanUser($Member->userID, $days,'System', FALSE);
+//					$Member->send('No','No',$memberMsg." ".l_t("You are temporarily banned from joining, rejoining, or making games for %s "
+//							. (($days==1)?"day":"days")	. ". Be more reliable!", $days));	
+//				}
+					
 			}
 		}
 	}
@@ -797,6 +982,57 @@ class processMembers extends Members
 			$a['members'][] = $Member->processStatus();
 
 		return $a;
+	}
+	
+	/**
+	 * Check the previous turns if more than one players reach the target SCs at the same turn.
+	 *
+	 * @return processMember The winning Member.
+	 */
+	function check_for_Winner_that_works_with_same_SC_count()
+	{
+		$winners=array();
+		$maxSC=0;
+		foreach($this->ByStatus['Playing'] as $Member)
+		{
+			if ( $Member->supplyCenterNo > $maxSC )
+			{
+				$maxSC=$Member->supplyCenterNo;
+				$winners=array();
+			}	
+			if ( (count($winners)==0) or ($Member->supplyCenterNo == $maxSC) )
+				$winners[]=$Member->countryID;
+		}
+		if (count($winners) > 1)
+		{
+			global $DB;
+			for ($turn=$this->Game->turn; $turn>-1; $turn--)
+			{
+				$sql='SELECT ts.countryID, COUNT(*) AS ct FROM wD_TerrStatusArchive ts 
+						JOIN wD_Territories as t ON (t.id = ts.terrID AND t.mapID='.$this->Game->Variant->mapID.')
+					WHERE t.supply="Yes" AND ts.turn='.$turn.' AND ts.gameID='.$this->Game->id.'
+						AND ts.countryID IN ('.implode(', ', $winners).')
+					GROUP BY ts.countryID 
+					HAVING ct = (
+						SELECT COUNT(*) AS ct2 FROM wD_TerrStatusArchive ts2
+							JOIN wD_Territories as t2 ON (t2.id = ts2.terrID AND t2.mapID='.$this->Game->Variant->mapID.')
+						WHERE t2.supply="Yes" AND ts2.turn='.$turn.' AND ts2.gameID='.$this->Game->id.'
+							AND ts2.countryID IN ('.implode(', ', $winners).')
+						GROUP BY ts2.countryID ORDER BY ct2 DESC LIMIT 1)';
+				$tabl = $DB->sql_tabl($sql);
+				$winners=array();
+				while( list($countryID, $sc) = $DB->tabl_row($tabl) )
+					$winners[]=$countryID;
+				// Exit loop if only one winner is left...
+				if (count($winners) == 1)
+					$turn=0;
+			}
+		}
+		// Still no winner found:
+		if (count($winners) > 1)
+			$winners[0]=$winners[rand(0,count($winners)-1)];
+			
+		return $this->ByCountryID[$winners[0]];		
 	}
 }
 ?>

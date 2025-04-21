@@ -74,7 +74,7 @@ class processGame extends Game
 	 */
 	function applyVote($vote)
 	{
-		assert('$this->phase != "Finished"');
+		assert($this->phase != 'Finished');
 		if($this->phase != "Pre-game")
 		{
 			$this->gamelog(l_t('Applying vote'));
@@ -85,6 +85,7 @@ class processGame extends Game
 				case 'Cancel': $this->setCancelled(); break;
 				case 'Pause': $this->togglePause(); break;
 				case 'Concede': $this->setConcede(); break;
+				case 'Extend': if( $this->processStatus != 'Paused' ) $this->extendPhase(); break;
 			}
 		}
 	}
@@ -107,7 +108,7 @@ class processGame extends Game
 	 */
 	function setAbandoned()
 	{
-		assert('$this->phase != "Finished"');
+		assert($this->phase != 'Finished');
 
 		$this->Members->setAbandoned();
 
@@ -122,7 +123,7 @@ class processGame extends Game
 	 */
 	function setCancelled()
 	{
-		assert('$this->phase != "Finished"');
+		assert($this->phase != 'Finished');
 
 		$this->Members->setCancelled();
 
@@ -201,7 +202,7 @@ class processGame extends Game
 	 * Restores a game from a backup table, or throws an exception if it isn't in a backup table.
 	 * Will erase the live game before restoring it from backup.
 	 *
-	 * @param $gameID The game ID
+	 * @param int $gameID The game ID
 	 */
 	static function restoreGame($gameID)
 	{
@@ -437,13 +438,25 @@ class processGame extends Game
 	 *
 	 * @return Game The object corresponding to the new game
 	 */
-	public static function create($variantID, $name, $password, $bet, $potType, $phaseMinutes, $phaseMinutesRB, $nextPhaseMinutes, $phaseSwitchPeriod, $joinPeriod, $anon, $press, $missingPlayerPolicy='Normal', $drawType, $rrLimit, $excusedMissedTurns, $playerTypes)
+	public static function create($variantID, $name, $password, $bet, $potType, $phaseMinutes, $phaseMinutesRB, $nextPhaseMinutes, $phaseSwitchPeriod, $joinPeriod, $anon, $press, $missingPlayerPolicy='Normal', $drawType, $rrLimit, $excusedMissedTurns
+		,$maxTurns 
+		,$targetSCs 
+		,$minPhases
+		,$regainExcusesDuration
+		,$delayDeadlineMaxTurn
+		,$moderator
+		,$chooseYourCountry
+		,$description
+		,$noProcess
+		,$fixStart
+		,$playerTypes
+		)
 	{
 		global $DB;
 
-		if ( $name == 'DATC-Adjudicator-Test' and ! defined('DATC') )
+		if ( ($name == 'DATC-Adjudicator-Test' or preg_match('/DATC\-Adjudicator\-\w+\-Test/', $name)) and ! defined('DATC') )
 		{
-			throw new Exception(l_t("The game name 'DATC-Adjudicator-Test' is reserved for the automated DATC tester."));
+			throw new Exception(l_t("The game name '$name' is reserved for the automated DATC tester."));
 		}
 
 		// Find a unique game name
@@ -466,7 +479,7 @@ class processGame extends Game
 				$name = substr($name,0,50-strlen('-'.$i));
 			}
 		}
-
+		
 		/*
 		 * The password is not salted, because it's given out to several people anyway and it
 		 * isn't worth changing the existing behaviour.
@@ -474,6 +487,22 @@ class processGame extends Game
 		$pTime = time() + $joinPeriod*60;
 		$pTime = $pTime - fmod($pTime, 300) + 300;	// for short game & phase timer
 		$startTime = 0;
+		
+		$Variant = libVariant::loadFromVariantID($variantID);
+		// Check the starting SCs for each player (multiplied by 2)...
+		$sql='SELECT count(*)*2 FROM wD_Territories
+				WHERE mapID='.$Variant->mapID.' AND supply="Yes" AND countryID>0 
+				GROUP BY countryID ASC LIMIT 1';
+		list($minSC) = $DB->sql_row($sql);
+		
+		// TargetSCs greater than any starting SCs
+		if ($targetSCs != 0 && $minSC > $targetSCs)
+			$targetSCs = $minSC;
+			
+		// Set the target SCs maximum to the available SCs
+		if ($Variant->supplyCenterCount < $targetSCs)
+			$targetSCs = $Variant->supplyCenterCount;
+										
 		$DB->sql_put("INSERT INTO wD_Games
 					SET variantID=".$variantID.",
 						name = '".$name.($i > 1 ? '-'.$i : '')."',
@@ -492,13 +521,37 @@ class processGame extends Game
 						drawType='".$drawType."', 
 						minimumReliabilityRating=".$rrLimit.",
 						excusedMissedTurns = ".$excusedMissedTurns.",
-						playerTypes = '".$playerTypes."',
-						startTime = ".$startTime);
+						startTime = ".$startTime.",
+						maxTurns = ".$maxTurns.", 
+						targetSCs = ".$targetSCs.", 
+						minPhases = ".$minPhases.", 
+						regainExcusesDuration = ".$regainExcusesDuration.",
+						delayDeadlineMaxTurn = ".$delayDeadlineMaxTurn.", 
+						directorUserID = ".$moderator.",
+						chooseYourCountry = '".$chooseYourCountry."',
+						description = '".$description."',
+						noProcess = '".$noProcess."',
+						fixStart = '".$fixStart."',
+						rlPolicy = '".($anon == 'Yes' ? 'Strict' : 'None' )."',
+						playerTypes = '".$playerTypes."'");
 
 		$gameID = $DB->last_inserted();
-
-		$Variant=libVariant::loadFromVariantID($variantID);
-		return $Variant->processGame($gameID);
+		
+		$Game = $Variant->processGame($gameID);
+		// Fix the bet for variants with small numbers of players.		
+		if (isset(Config::$limitBet) && isset(Config::$limitBet[(count($Game->Variant->countries))]))
+		{
+			$maxbet = Config::$limitBet[(count($Variant->countries))];
+			$bet = ( ($bet > $maxbet) ? $maxbet : $bet );
+			$DB->sql_put("UPDATE wD_Games SET minimumBet = ".$bet." WHERE id=".$gameID);
+			$Game->minimumBet = $bet;
+		}
+		
+		// 2-player games are all PublicPressOnly und WTA.
+		if (count($Game->Variant->countries) == 2)
+			$DB->sql_put("UPDATE wD_Games SET pressType='PublicPressOnly', potType='Winner-takes-all' WHERE id=".$gameID);
+		
+		return $Game;
 	}
 
 	/**
@@ -509,7 +562,7 @@ class processGame extends Game
 	{
 		global $Misc, $DB;
 
-		assert('$this->processStatus != "Paused"');
+		assert($this->processStatus != 'Paused');
 
 		$this->gamelog('Game crashed');
 
@@ -572,13 +625,20 @@ class processGame extends Game
 			$minimumBet = $this->Members->pointsLowestCD();
 		}
 
-	// The new value isn't the same, and it isn't comparing false with null (which are the same in this case)
-	// This really needs to be cleaned up so that it isn't relying on how true/false/null work.
-		if ( ($minimumBet === 0 || $minimumBet !== $this->minimumBet) && !( $minimumBet===false && is_null($this->minimumBet)) )
+		// All players joined this game, set minimumBet to NULL
+		if ( $this->phase != 'Pre-game' && count($this->Members->ByStatus['Left']) == 0 )
+		{
+			$DB->sql_put("UPDATE wD_Games SET minimumBet = NULL WHERE id=".$this->id);
+			$this->minimumBet = null;
+		}
+		// The new value isn't the same, and it isn't comparing false with null (which are the same in this case)
+		// This really needs to be cleaned up so that it isn't relying on how true/false/null work.
+		elseif ( ($minimumBet === 0 || $minimumBet !== $this->minimumBet) && !( $minimumBet===false && is_null($this->minimumBet)) )
 		{
 			$DB->sql_put("UPDATE wD_Games SET minimumBet = ".($minimumBet !== false?$minimumBet:'NULL')." WHERE id=".$this->id);
 			$this->minimumBet = $minimumBet;
 		}
+		
 	}
 
 	/**
@@ -595,6 +655,19 @@ class processGame extends Game
 		// Don't record NMRs for bot games
 		if( $this->playerTypes == 'MemberVsBots' ) return;
 	
+		/*
+		* Make a note of NMRs. An NMR is where a member's orderStatus does not contain "Saved", but there are orders to
+		* be submitted and the user is playing. (Note this could be changed to require orderStatus is "Completed", if
+		* incomplete orders don't count as moves.)
+		*/
+		$DB->sql_put("INSERT INTO wD_NMRs (gameID, userID, countryID, turn, bet, SCCount)
+				SELECT m.gameID, m.userID, m.countryID, ".$this->turn." as turn, m.bet, m.supplyCenterNo
+				FROM wD_Members m
+				WHERE m.gameID = ".$this->id."
+					AND ( m.status='Playing' OR m.status='Left' )
+					AND EXISTS(SELECT o.id FROM wD_Orders o WHERE o.gameID = m.gameID AND o.countryID = m.countryID)
+					AND NOT m.orderStatus LIKE '%Saved%' AND NOT m.orderStatus LIKE '%Ready%' AND NOT m.orderStatus LIKE '%Completed%'");
+		
 		// detect which players NMR this turn, exclude anyone who is left to avoid giving them unearned un-excused missed turns. 
 		$tabl = $DB->sql_tabl("SELECT m.id 
 				FROM wD_Members m 
@@ -656,7 +729,16 @@ class processGame extends Game
 	{
 		global $DB;
 		$this->processTime = time() + $this->getCurPhaseMinutes()*60;
+			
+		// Extend the processTime by a day if no processing is allowed.
+		while (strpos( $this->noProcess, date("w", $this->processTime)) !== FALSE)
+			$this->processTime += 86400;
+
 		$DB->sql_put("UPDATE wD_Games SET processTime = ".$this->processTime." WHERE id = ".$this->id);
+
+		// Set the "lastProcessed"-time for the chessClock
+		$this->lastProcessed = time();
+		$DB->sql_put("UPDATE wD_Games SET lastProcessed = ".$this->lastProcessed." WHERE id = ".$this->id);
 	}
 
 	/**
@@ -674,7 +756,15 @@ class processGame extends Game
 		}
 
 		$this->processTime = $newProcessTime;
+		// Extend the processTime by a day if no processing is allowed.
+		while (strpos( $this->noProcess, date("w", $this->processTime)) !== FALSE)
+			$this->processTime += 86400;
+
 		$DB->sql_put("UPDATE wD_Games SET processTime = ".$this->processTime." WHERE id = ".$this->id);
+
+		// Set the "lastProcessed"-time for the chessClock
+		$this->lastProcessed = time();
+		$DB->sql_put("UPDATE wD_Games SET lastProcessed = ".$this->lastProcessed." WHERE id = ".$this->id);
 	}
 
 	/**
@@ -760,6 +850,11 @@ class processGame extends Game
 		 * - Create new orders for the current phase
 		 * - Set the next date for game processing
 		 */
+		 
+		// Only for VDip: Do not record NMRs for 2-player or live games
+		// Also on VDip the NMRs and phases-played do add up, even if a country is in CD. So watch your game...
+		if ( (count($this->Variant->countries) == 2) or ($this->phaseMinutes <= 30) )
+			$DB->sql_put("UPDATE wD_Members SET orderStatus = 'Ready' WHERE status='Playing' AND gameID=".$this->id);
 
 		 /*
 		 * If the required amount of time has passed, switch the game's phaseMinutes.
@@ -780,7 +875,8 @@ class processGame extends Game
 		 * Handle the NMRs. This method does record 
 		 */
 		$this->Members->handleNMRs();
-			
+		
+		
  		// If all remaining players NMRed the same turn put all Left players back into the game and Draw.
 		if (count($this->Members->ByStatus['Playing']) == 0)
 		{
@@ -796,7 +892,7 @@ class processGame extends Game
 
 			$this->setDrawn();
 		}
-		elseif( $this->Members->withActiveNMRs() )
+		elseif( $this->Members->withActiveNMRs() && $this->turn < $this->delayDeadlineMaxTurn)
 		{
 			require_once(l_r('lib/gamemessage.php'));
 			/*
@@ -812,10 +908,17 @@ class processGame extends Game
 			$this->Members->notifyGameExtended();
 			
 			libGameMessage::send('Global','GameMaster', $extendMessage);
-		} 
+ 		} 
 		else 
 		{
 			/*
+			 * Clear all extend-votes for the current phase
+			 */
+			 $this->Members->clearExtendVotes();
+		
+			/*
+			 * We have entered a new turn; clean the TerrStatus records of the previous turn's
+			 * retreatingUnitID, occupiedFromTerrID, standoff data, which is no longer valid.
 			 * Except for wiping redundant TerrStatus data after a new turn and generating new orders
 			 * this function is the only place which will interact with and manipulate the Orders,
 			 * Moves, TerrStatus, Units and *Archive tables
@@ -1168,8 +1271,8 @@ class processGame extends Game
 
 		if ( $gameOver )
 		{
-			$gameOver = ", gameOver = '".$gameOver."'";
 			$this->gameOver = $gameOver;
+			$gameOver = ", gameOver = '".$gameOver."'";
 		}
 
 		$DB->sql_put("UPDATE wD_Games SET phase='".$phase."' ".$turn.$gameOver." WHERE id=".$this->id);
@@ -1222,6 +1325,10 @@ class processGame extends Game
 		global $DB;
 		$DB->sql_put("UPDATE wD_Games SET finishTime=".time()." WHERE id=".$this->id);
 		 
+		// Return any switched countries...
+		include_once("lib/countryswitch.php");
+		libSwitch::clearAllSwitches($this);
+		
 		$this->Members->setWon($Winner);
 		
 		//Do GR Stuff
@@ -1240,6 +1347,14 @@ class processGame extends Game
 		
 		// Then the game is set to finished
 		$this->setPhase('Finished', 'Won');
+		
+		// Update the VDip-Ratings
+		if ($this->pot > 0)
+		{
+			include_once("lib/rating.php");
+			libRating::updateRatings($this);
+		}
+		
 	}
 
 	/**
@@ -1421,6 +1536,10 @@ class processGame extends Game
 				FROM wD_MovesArchive WHERE gameID = ".$this->id." AND turn = ".($this->turn-1));
 		}
 
+		// Return any switched countries...
+		include_once("lib/countryswitch.php");
+		libSwitch::clearAllSwitches($this);
+		
 		// Sets the Members statuses to Drawn as needed, gives refunds, sends messages
 		$this->Members->setDrawn();
 		
@@ -1439,6 +1558,13 @@ class processGame extends Game
 		}
 		
 		$this->setPhase('Finished', 'Drawn');
+		
+		// Update the VDip-Ratings
+		if ($this->pot > 0)
+		{
+			include_once("lib/rating.php");
+			libRating::updateRatings($this);
+		}
 
 		$DB->sql_put("DELETE FROM wD_Orders WHERE gameID = ".$this->id);
 		$DB->sql_put("DELETE FROM wD_Units WHERE gameID = ".$this->id);
@@ -1446,7 +1572,31 @@ class processGame extends Game
 
 		Game::wipeCache($this->id,$this->turn);
 	}
+	
+	public function extendPhase()
+	{
+		global $DB;
 
+		if( $this->phase == 'Pre-game' )
+			throw new Exception("This game hasn't started");
+
+		if( $this->phase == 'Finished' )
+			throw new Exception("This game is finished");
+
+		if( $this->processStatus == 'Paused' )
+			throw new Exception("This game is paused");
+			
+		$this->Members->notifyExtended();
+		
+		$DB->sql_put(
+			"UPDATE wD_Games
+			SET processTime = ".($this->processTime + 345600)."
+			WHERE id = ".$this->id);
+
+		// Any extend votes are now void
+		$DB->sql_put("UPDATE wD_Members SET votes = REPLACE(votes,'Extend','') WHERE gameID = ".$this->id);
+	}
+	
 	/**
 	 * All players but one choosed to concede.
 	 * End the game; archive the terrstatus and moves, delete active data, set members to defeated

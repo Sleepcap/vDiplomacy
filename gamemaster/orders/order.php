@@ -64,6 +64,7 @@ class processOrder
 					countryID, toTerrID, fromTerrID, viaConvoy, /* Order */
 					unitType, /* Unit */
 					success, dislodged /* Move */
+					, orderID /* orderID */
 				)
 				SELECT
 					o.gameID, ".$Game->turn.", o.type, u.terrID,
@@ -74,6 +75,7 @@ class processOrder
 						For dislodged, however, 'Undecided' means that it
 						was not dislodged */
 					m.success, m.dislodged
+					, o.id
 				FROM wD_Orders o
 				/* Moves needed to get success/dislodged results data */
 				INNER JOIN wD_Moves m ON ( m.orderID = o.id AND m.gameID=".$GLOBALS['GAMEID']." )
@@ -104,16 +106,18 @@ class processOrder
 					countryID, toTerrID, fromTerrID, viaConvoy, /* Order */
 					unitType, /* Unit */
 					success, dislodged /* Move */
+					, orderID /* orderID */
 				)
 				SELECT
 					o.gameID, ".$Game->turn.", o.type, o.toTerrID,
 					o.countryID, NULL, NULL, 'No',
 					NULL,
 					m.success, 'No'
+					, o.id
 				FROM wD_Orders o
 				/* Moves needed to get success/dislodged results data */
 				INNER JOIN wD_Moves m ON ( m.orderID = o.id AND m.gameID=".$GLOBALS['GAMEID']." )
-				WHERE o.gameID = ".$Game->id." AND NOT o.type = 'Wait' AND success = 'Yes'");
+				WHERE o.gameID = ".$Game->id." AND success = 'Yes'");
 		}
 	}
 

@@ -7,7 +7,7 @@ class ColdWarVariant extends WDVariant {
 	public $mapID      = 91;
 	public $name       = 'ColdWar';
 	public $fullName   = 'Cold War';
-	public $description= 'The best of vDips 2-player action brought to webDip!';
+	public $description= 'vDip\'s best in 2-player action!';
 	public $adapter    = 'Firehawk & Safari';
 	public $version    = '1';
 	public $codeVersion= '1.0.6';

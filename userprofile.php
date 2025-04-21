@@ -117,7 +117,7 @@ if ( $User->type['Moderator'] )
 		if($UserProfile->modLastCheckedOn() > 0 && $lastCheckedBy > 0)
 		{
 			list($modUsername) = $DB->sql_row("SELECT username FROM `wD_Users` WHERE id = ".$lastCheckedBy);
-			print '<p class="profileCommentURL">Investigated: '.libTime::text($modLastCheckedOn).', by: <a href="/userprofile.php?userID='.$lastCheckedBy.'">'.$modUsername.'</a></p>';
+			print '<p class="profileCommentURL">Investigated: '.libTime::text($modLastCheckedOn).', by: <a href="/profile.php?userID='.$lastCheckedBy.'">'.$modUsername.'</a></p>';
 		}
 		else
 		{
@@ -1237,7 +1237,7 @@ function printPageBar($pagenum, $maxPage, $sortCol, $sortType, $sortBar = False)
 	if ($maxPage > 1 && $sortBar)
 	{
 		print '<span style="float:right;">
-			<FORM class="advancedSearch" method="get" action="userprofile.php#results">
+			<FORM class="advancedSearch" method="get" action="profile.php#results">
 			<b>Sort By:</b>
 			<select  class = "advancedSearch" name="sortCol">
 				<option'.(($sortCol=='id') ? ' selected="selected"' : '').' value="id">Game ID</option>
@@ -1283,7 +1283,7 @@ function printPageButton($pagenum, $currPage)
 	else
 	{
 		print '<div style="display:inline-block; margin:3px;">';
-		print '<FORM method="get" action=userprofile.php#results>';
+		print '<FORM method="get" action=profile.php#results>';
 
 		foreach($_REQUEST as $key => $value)
 		{

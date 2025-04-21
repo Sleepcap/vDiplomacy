@@ -69,7 +69,12 @@ class userMember extends panelMember
 	public function toggleVote($voteName)
 	{
 		global $DB,$User;
-
+		
+		if ($this->Game->adminLock == 'Yes') return;
+		if (strpos($this->Game->blockVotes,$voteName)!== false) return;			
+			
+		$voteText = $voteName;
+		
 		// Unpause is stored as Pause in the database
 		if ( $voteName == 'Unpause' )
 			$voteName = 'Pause';
@@ -81,7 +86,32 @@ class userMember extends panelMember
 		if($voteOn)
 			unset($this->votes[array_search($voteName, $this->votes)]);
 		else
+		{
 			$this->votes[] = $voteName;
+			
+			$count=0;
+			foreach($this->Game->Members->ByStatus['Playing'] as $Member)
+				if (in_array($voteName ,$Member->votes))
+					$count++;
+			if ($count == 1 && !($this->Game->drawType == 'draw-votes-hidden' && $voteText == 'Draw'))
+			{
+				require_once l_r('lib/gamemessage.php');
+				$msg = $this->country.' voted for a '.$voteText.'. ';
+				if ($voteText == 'Draw')
+					$msg .= 'If everyone votes Draw the game will end and the points are split equally among all the surviving players, regardless of how many supply centers each player has.';
+				if ($voteText == 'Pause')
+					$msg .= 'If everyone votes Pause the game stop and wait till everybody votes Unpause. Please consider backing this.';
+				if ($voteText == 'Unpause')
+					$msg .= 'If everyone votes Unpause the game will continoue. Please consider backing this.';
+				if ($voteText == 'Cancel')
+					$msg .= 'If everyone votes Cancel all points will be refunded and the game will be deleted from the database.';
+				if ($voteText == 'Extend')
+					$msg .= 'If 2/3 of the active players vote Extend the the current phase will be extend by 4 days. Please consider backing this. If the majority is not reached by "'.$this->Game->Variant->turnAsDate($this->Game->turn + 2).'" the votes will be cleared.';
+				if ($voteText == 'Concede')
+					$msg .= 'If everyone (but one) votes concede the game will end and the player _not_ voting Concede will get all the points. Everybody else will get a defeat.';			
+				libGameMessage::send(0, 'GameMaster', $msg , $this->Game->id);
+			}
+		}
 
 		// Keep a log that a vote was set in the game messages, so the vote time is recorded
 		require_once(l_r('lib/gamemessage.php'));
@@ -105,7 +135,7 @@ class userMember extends panelMember
 	/**
 	 * Register that you have viewed the messages from a certain countryID and
 	 * no longer need notification of them
-	 *da
+	 *
 	 * @param string $seenCountryID The countryID who's messages were read
 	 */
 	public function seen($seenCountryID)

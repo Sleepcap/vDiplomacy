@@ -50,9 +50,19 @@ if ( 'Pre-game' != $Game->phase )
 
     $DB->sql_put("COMMIT");
 }
+else
+{
+    $CB = $Game->Variant->Chatbox();
+	
+	// Pregame CountryID is always 0
+	$msgCountryID = 0;
+	
+	$CB->postMessage($msgCountryID);
+	$DB->sql_put("COMMIT");
+}
+
 
 //RE-generate chat box
-
 $messages = $CB->getMessages($msgCountryID);
 
 if ( $messages == "" )

@@ -1,0 +1,44 @@
+name = 'Canton'
+fullName = 'Canton Diplomacy'
+description= 'Canton is set in Asia at the beginning of the 20th century'
+author = 'Paul Webb'
+adapter = 'Enriador & Oli'
+homepage = 'http://www.dipwiki.com/index.php?title=Canton'
+
+starting year = '1901'
+target SCs = '19'
+
+Countries:
+
+1) Britain
+color: 'Norway' (Classic Chaos)
+starting units: A - Calcutta (Cal), A - Delhi (Del), F - Madras (Mad)
+2) China
+color: 'Marseilles' (Classic Chaos)
+starting units: A - Chungking (Chu), A - Shanghai (Sha), A - Tibet (Tib), A - Peking (Pek)
+3) France
+color: 'Denmark' (Classic Chaos)
+starting units: A - Hanoi (Han), F - Hue (Hue), A - Saigon (Sai)
+4) Holland
+color: 'Constantinople' (Classic Chaos)
+starting units: F - Borneo, F - Java (Jav), F - Sumatra (Sum)
+5) Japan
+color: 'Belgium' (Classic Chaos)
+starting units: A - Kyoto (Kyo), F - Sasebo (Sas), F - Tokyo (Tok)
+6) Russia
+color: 'Holland' (Classic Chaos)
+starting units: A - Irkutsk (Irk), A - Moscow (Mos), F - Khabarovsk (Kha), F - Sevastopol (Sev)
+7) Turkey
+color: 'Bulgaria' (Classic Chaos)
+starting units: F - Baghdad (Bag), A - Damascus (Dam), F - Constantinople (Con)
+
+
+Special rules: Constantinople (CON) and Egypt (EGY) are canals (like KIE, CON and DEN in Classic).
+
+Smallmap: Done
+smallmapNames: Done.
+map: Done.
+mapNames: Done.
+
+Link to maps: https://www.dropbox.com/sh/6ya4rn5r5r8mlgc/AABWzOLYCkiz_ShKqtzAus2oa?dl=0
+ 

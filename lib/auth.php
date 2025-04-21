@@ -184,6 +184,15 @@ class libAuth
 	{
 		return self::sandboxToken_Key($gameID) === $key;
 	}
+	private static $formTokeURL_cached = false;
+	public static function formTokenURLParameter()
+	{
+		if( self::$formTokeURL_cached === false ){
+			$time=time();
+			self::$formTokeURL_cached = 'formToken='.$time.'_'.self::formToken_Key($time);
+		}
+		return self::$formTokeURL_cached;
+	}
 
 	public static function email_token($email)
 	{
@@ -268,6 +277,19 @@ class libAuth
 				$User = self::key_User($key);
 			else
 				$User = new User(GUESTID);
+
+			// Advanced UserLog
+			if(isset($_REQUEST['loginuser']) AND isset($_REQUEST['loginpass']))
+			{
+				global $DB;
+				$DB->sql_put("INSERT INTO wD_AccessLogAdvanced SET
+								userID   = ".$User->id.",
+								request  = CURRENT_TIMESTAMP,
+								ip       = INET_ATON('".$_SERVER['REMOTE_ADDR']."'),
+								action   = 'LogOn',
+								memberID = '0'"
+								);
+			}	
 		}
 
 		return $User;
@@ -280,7 +302,7 @@ class libAuth
 	 */
 	static public function adminUserSwitch(User $User)
 	{
-		assert('$User->type["Admin"]');
+		assert($User->type['Admin']);
 
 		if ( isset($_REQUEST['auid']) )
 		{

@@ -329,9 +329,20 @@ else
 			</select></p>
 			<p>Variant: <select class="gameCreate" name="variant">
 				<option'.(($_REQUEST['variant']=='All') ? ' selected="selected"' : '').' value="All">All</option>';
-			foreach (Config::$variants as $variantID=>$variantName)
+			
+			$variants = array();
+					
+			foreach(Config::$variants as $variantID=>$variantName) {
+				$variant = libVariant::loadFromVariantID($variantID);
+				
+				$variants[$variant->fullName] = $variant;			
+			}
+			
+			ksort($variants);
+			
+			foreach ($variants as $variant)
 			{
-				if($variantID != 57) {print '<option'.(($_REQUEST['variant']==$variantName) ? ' selected="selected"' : '').' value='.$variantName.'>'.$variantName.'</option>';}
+				print '<option'.(($_REQUEST['variant']==$variant->name) ? ' selected="selected"' : '').' value='.$variant->name.'>'.$variant->fullName.'</option>';
 			}
 			print '</select></p>
 			<p>Excused Missing Turns: <select class="gameCreate" name="excusedTurns">

@@ -66,7 +66,8 @@ and our code <a href="https://github.com/kestasjk/webDiplomacy">here</a></p>
 <p>Any questions, please use the <a href="modforum.php">moderator forum</a> or contact us via GitHub, and a member of the dev team will answer.</p>
 
 <h3>Code links</h3> 
-<p><a href="https://github.com/kestasjk/webDiplomacy" class="light">github.com/kestasjk/webDiplomacy</a> - the code</p>
+<p><a href="https://github.com/Sleepcap/vDiplomacy" class="light">github.com/Sleepcap/vDiplomacy</a> - the vDiplomacy-code</p>
+<p><a href="https://github.com/kestasjk/webDiplomacy" class="light">github.com/kestasjk/webDiplomacy</a> - the original webDiplomacy-code</p>
 <p><a href="https://github.com/kestasjk/webDiplomacy/issues" class="light">github.com/kestasjk/webDiplomacy</a> - the issues</p>
 
 <h3>Webmasters</h3>

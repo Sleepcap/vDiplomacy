@@ -1,0 +1,14 @@
+@CHARSET "ISO-8859-1";
+
+.variantManifestDestiny .country0 { color: #000000 ! important; } /* Neutral */
+.variantManifestDestiny .country1 { color: #FF2626 ! important; } /* Britain */
+.variantManifestDestiny .country2 { color: #0026FF ! important; } /* United States */
+.variantManifestDestiny .country3 { color: #007070 ! important; } /* Texas */
+.variantManifestDestiny .country4 { color: #00870F ! important; } /* Mexico */
+.variantManifestDestiny .country5 { color: #A58700 ! important; } /* Spain */
+
+.variantManifestDestiny .occupationBar1 { background-color: #FF2626; } /* Britain */
+.variantManifestDestiny .occupationBar2 { background-color: #0026FF; } /* United States */
+.variantManifestDestiny .occupationBar3 { background-color: #00FFFF; } /* Texas */
+.variantManifestDestiny .occupationBar4 { background-color: #00FF21; } /* Mexico */
+.variantManifestDestiny .occupationBar5 { background-color: #FFD800; } /* Spain */

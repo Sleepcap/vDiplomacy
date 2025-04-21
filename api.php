@@ -28,7 +28,6 @@ require_once('header.php');
 require_once('global/definitions.php');
 require_once('locales/layer.php');
 require_once('objects/database.php');
-require_once('objects/memcached.php');
 require_once('board/orders/orderinterface.php');
 require_once('api/responses/members_in_cd.php');
 require_once('api/responses/unordered_countries.php');
@@ -1193,7 +1192,7 @@ class SetOrders extends ApiEntry {
 	 * @throws ClientForbiddenException
 	 */
 	public function run($userID, $permissionIsExplicit) {
-		global $DB, $MC;
+		global $DB;
 		$args = $this->getArgs();
 		$gameID = $args['gameID'];	// checked in getAssociatedGame()
 		$turn = $args['turn'];
@@ -1420,12 +1419,41 @@ class SetOrders extends ApiEntry {
 				'countryID' => $row['countryID']
 			);
 		}
+		
+		// Process Game
+        if ($orderInterface->orderStatus->Ready && !$previousReadyValue) {
+            require_once(l_r('objects/misc.php'));
+            require_once(l_r('objects/notice.php'));
+            require_once(l_r('objects/user.php'));
+            global $Misc;
+            $Misc = new Misc();
+            $game = $this->getAssociatedGame();
 
-		// Leave a hint for the game master that this game should be checked:
-        if ($orderInterface->orderStatus->Ready && !$previousReadyValue)
-		{
-			$MC->append('processHint',','.$gameID);
-		}
+            if( $game->processStatus!='Crashed' && $game->attempts > count($game->Members->ByID)*2 )
+            {
+                $DB->sql_put("COMMIT");
+                require_once(l_r('gamemaster/game.php'));
+
+                $game = libVariant::$Variant->processGame($game->id);
+                $game->crashed();
+                $DB->sql_put("COMMIT");
+            }
+            elseif( $game->needsProcess() )
+            {
+                $DB->sql_put("UPDATE wD_Games SET attempts=attempts+1 WHERE id=".$game->id);
+                $DB->sql_put("COMMIT");
+
+                require_once(l_r('gamemaster/game.php'));
+                $game = libVariant::$Variant->processGame($gameID);
+                if( $game->needsProcess() )
+                {
+                    $game->process();
+                    $DB->sql_put("UPDATE wD_Games SET attempts=0 WHERE id=".$game->id);
+                    $DB->sql_put("COMMIT");
+                }
+            }
+        }
+
         // Returning current orders
 		return json_encode($currentOrders);
 	}
@@ -1829,7 +1857,7 @@ class Api {
 	 * @throws ServerInternalException
 	 */
 	public function run() {
-		global $MC, $User;
+		global $User;
 		// Get route.
 		if (!isset($_GET['route']))
 			throw new RequestException('No route provided.');

@@ -48,33 +48,109 @@ class panelGameBoard extends panelGame
 		if( file_exists($staticFilename) && $User->getOptions()->value['showMoves'] == 'Yes' )
 			$smallmapLink = STATICSRV.$staticFilename.'?nocache='.rand(0,99999);
 
-		$map = '
+		if ($User->colorCorrect != 'Off')
+		{
+			$staticFilename = str_replace(".map","-".$User->colorCorrect.".map",$staticFilename);
+			$smallmapLink .= '&colorCorrect='.$User->colorCorrect;
+			$largemapLink .= '&colorCorrect='.$User->colorCorrect;
+		}
+
+		if ($User->showCountryNamesMap == 'Yes')
+		{
+			$staticFilename = str_replace(".map","-names.map",$staticFilename);
+			$smallmapLink .= '&countryNames';
+			$largemapLink .= '&countryNames';
+		}
+		
+
+/*		$map = '
 		<div id="mapstore">
 			<img id="mapImage" src="'.$smallmapLink.'" alt=" " title="'.l_t('The small map for the current phase. If you are starting a new turn this will show the last turn\'s orders').'" style="width: auto; max-width: 100%;" onclick="window.open(\''.$betaLink.'\');" />
 			<p class="lightgrey" style="text-align:center">
 				<a class="mapnav" href="#" onClick="loadMap('.$this->id.','.$mapTurn.',-1); return false;">
-                      <img id="Start" src="'.l_s('images/historyicons/Start_disabled.png').'" alt="'.l_t('Start').'" title="'.l_t('View the map from the first turn').'" /></a>
-				<a class="mapnav" href="#" onClick="loadMapStep('.$this->id.','.$mapTurn.',-1); return false;"><img id="Backward" src="'.l_s('images/historyicons/Backward_disabled.png').'" alt="'.l_t('Backward').'" title="'.l_t('View the map from the previous turn').'" /></a>
-                <!--    The following is the toggle for removing the movement arrows. Uncomment this section if you want the movement arrow toggle.
-                <a class="mapnav" href="#" onClick="toggleMoves('.$this->id.','.$mapTurn.'); return false;"><img id="NoMoves" src="images/historyicons/hidemoves.png" alt="NoMoves" title="Toggle movement lines" />
-                </a>                 -->
-			   <a id="LargeMapLink" class="mapnav" href="'.$largemapLink.'" target="_blank" class="light"><img src="'.l_s('images/historyicons/external.png').'" alt="'.l_t('Open large map').'" title="'.l_t('This button will open the large map in a new window. The large map shows all the moves, and is useful when the small map isn\'t clear enough.').'" /></a></span>
-                     
-				<a class="mapnav" href="#" onClick="loadMapStep('.$this->id.','.$mapTurn.',1); return false;"><img id="Forward" src="'.l_s('images/historyicons/Forward_disabled.png').'" alt="'.l_t('Forward').'" title="'.l_t('View the map from the next turn').'" /></a>
-				<a class="mapnav" href="#" onClick="loadMap('.$this->id.','.$mapTurn.','.$mapTurn.'); return false;"><img id="End" src="'.l_s('images/historyicons/End_disabled.png').'" alt="'.l_t('End').'" title="'.l_t('View the map from the most recent turn').'" /></a>'.
+					<img id="Start" src="'.l_s('images/historyicons/Start_disabled.png').'" alt="'.l_t('Start').'" title="'.l_t('View the map from the first turn').'" />
+				</a>
+				<a class="mapnav" href="#" onClick="loadMapStep('.$this->id.','.$mapTurn.',-1); return false;">
+					<img id="Backward" src="'.l_s('images/historyicons/Backward_disabled.png').'" alt="'.l_t('Backward').'" title="'.l_t('View the map from the previous turn').'" />
+				</a>
+				<a class="mapnav" href="#" onClick="toggleMoves('.$this->id.','.$mapTurn.'); return false;">
+					<img id="NoMoves" src="images/historyicons/'.($User->options->value['showMoves'] == 'No'? 'show':'hide').'moves.png" alt="NoMoves" title="Toggle movement lines" />
+				</a>
+				<a id="LargeMapLink" class="mapnav" href="'.$largemapLink.'" target="_blank" class="light">
+					<img src="'.l_s('images/historyicons/external.png').'" alt="'.l_t('Open large map').'" title="'.l_t('This button will open the large map in a new window. The large map shows all the moves, and is useful when the small map isn\'t clear enough.').'" /></a></span>
+				<a class="mapnav" href="#" onClick="loadMapStep('.$this->id.','.$mapTurn.',1); return false;">
+				<img id="Forward" src="'.l_s('images/historyicons/Forward_disabled.png').'" alt="'.l_t('Forward').'" title="'.l_t('View the map from the next turn').'" />
+				</a>
+				<a class="mapnav" href="#" onClick="loadMap('.$this->id.','.$mapTurn.','.$mapTurn.'); return false;">
+				<img id="End" src="'.l_s('images/historyicons/End_disabled.png').'" alt="'.l_t('End').'" title="'.l_t('View the map from the most recent turn').'" />
+				</a>'.
 				($this->Members->isJoined() ? '<a class="mapnav" href="#" onClick="togglePreview('.$this->id.','.$mapTurn.'); return false;"><img id="Preview" src="images/historyicons/Preview.png" alt="PreviewMoves" title="Show server side stored orders on the map" /></a>' : '').'
-							
 			</p>
 			<p id="History" class="lightgrey"></p>
 		</div>';
+		
+/*
+			<div class="sitesection">
+				<section>
+					<div class="boxhandle" title="hide/show section"></div><h2 class="boxtitle">Show Map</h2>
+				</section>
+			</div>
+*/
 
+		$map = '
+			<div id="mapstore" class="boxdetail center">
+				
+				<div class="map">
+					<img id="mapImage" src="'.$smallmapLink.'" alt=" " title="'.l_t('The small map for the current phase. If you are starting a new turn this will show the last turn\'s orders').'" />
+				</div>
+				<div class="maptools" style="display: block;">
+					<div class="maphistory">
+						<div class="button" onClick="loadMap('.$this->id.','.$mapTurn.',-1); return false;">
+							<img id="Start" src="'.l_s('images/historyicons/Start_disabled.png').'" alt="'.l_t('Start').'" title="'.l_t('View the map from the first turn').'" />
+						</div>
+						<div class="button" onClick="loadMapStep('.$this->id.','.$mapTurn.',-1); return false;">
+							<img id="Backward" src="'.l_s('images/historyicons/Backward_disabled.png').'" alt="'.l_t('Backward').'" title="'.l_t('View the map from the previous turn').'" />
+						</div>
+						<div class="button" onClick="loadMapStep('.$this->id.','.$mapTurn.',1); return false;">
+							<img id="Forward" src="'.l_s('images/historyicons/Forward_disabled.png').'" alt="'.l_t('Forward').'" title="'.l_t('View the map from the next turn').'" />
+						</div>
+						<div class="button" onClick="loadMap('.$this->id.','.$mapTurn.','.$mapTurn.'); return false;">
+							<img id="End" src="'.l_s('images/historyicons/End_disabled.png').'" alt="'.l_t('End').'" title="'.l_t('View the map from the most recent turn').'" />
+						</div>
+					</div>
+					<div class="button" onClick="toggleMoves('.$this->id.','.$mapTurn.'); return false;">
+						<img id="NoMoves" src="images/historyicons/'.($User->options->value['showMoves'] == 'No'? 'show':'hide').'moves.png" alt="NoMoves" title="Toggle movement lines" /> Toggle moves
+					</div>
+					'.($this->Members->isJoined() ? '
+					<div class="button" href="#" onClick="togglePreview('.$this->id.','.$mapTurn.'); return false;">
+						<img id="Preview" src="images/historyicons/Preview.png" alt="PreviewMoves" title="Show server side stored orders on the map" /> Preview
+					</div>' : '').'
+					
+					<a id="LargeMapLink" href="'.$largemapLink.'" target="_blank" class="light"> <div class="button">
+						<img src="images/historyicons/bigmap.png"> Big map
+					</div> </a>
+				</div>
+				<div id="History" class="lightgrey"></div>
+			</div>			
+		';
+
+		if ($User->phaseCount < 30 && $this->phase != 'Pre-game')
+			$map .= '<p style="text-align:center">Tip: Failed orders are usually only displayed on the largemap (<a href="'.$largemapLink.'" class="light"><img src="'.l_s('images/historyicons/external.png').'"></a>).</p>';
+		
+		if ($User->colorCorrect != 'Off')
+			$map .= '<script type="text/javascript">var colorCorrect="&colorCorrect='.$User->colorCorrect.'";</script>';
+
+		if ($User->showCountryNamesMap != 'No')
+			$map .= '<script type="text/javascript">var showCountryNamesMap=true;</script>';
+			
 		$this->mapJS($mapTurn);
 
 		return $map;
 	}
 
-	protected function mapJS($mapTurn) 
+	protected function mapJS($mapTurn)
 	{
+
 		libHTML::$footerScript[] = 'turnToText='.$this->Variant->turnAsDateJS()."
 		mapArrows($mapTurn,$mapTurn);
 		";
@@ -118,10 +194,13 @@ class panelGameBoard extends panelGame
 	 * form, which board.php processes.
 	 * @return string
 	 */
-	function votes()
+/*	function votes()
 	{
 		global $User;
 		if ( ( $this->phase == 'Pre-game' || $this->phase == 'Finished' ) || !isset($this->Members->ByUserID[$User->id]) ) return '';
+
+		if ($this->adminLock == 'Yes')
+			return '';
 
 		$vAllowed = Members::$votes;
 		$vSet = $this->Members->ByUserID[$User->id]->votes;
@@ -166,6 +245,9 @@ class panelGameBoard extends panelGame
 			</tr>
 		</table>';
 
+		// vDip vote-Buttons do not need a table:
+		$buf = '<div class="bar membersList memberVotePanel"><a name="votebar"></a>'.$this->showVoteForm($vVote, $vCancel);
+			
 		return $buf . '</div>';
 	}
 
@@ -225,6 +307,7 @@ class panelGameBoard extends panelGame
 	 * @param array $vCancel Votes which can be cancelled
 	 * @return string
 	 */
+/*
 	function showVoteForm($vVote, $vCancel)
 	{
 		$buf = '<form onsubmit="return confirm(\''. l_t("Are you sure you want to cast this vote?").'\');" action="board.php?gameID='.$this->id.'#votebar" method="post">';
@@ -234,6 +317,8 @@ class panelGameBoard extends panelGame
 
 		foreach($vVote as $vote)
 		{
+			if (strpos($this->blockVotes,$vote)!== false) continue;			
+			
 			if ( $vote == 'Pause' && $this->processStatus == 'Paused' )
 				$vote = 'Unpause';
 
@@ -347,7 +432,163 @@ class panelGameBoard extends panelGame
 
 		return $buf;
 	}
+*/	
+	function votes()
+	{
+		global $User;
+		if ( ( $this->phase == 'Pre-game' || $this->phase == 'Finished' ) ||
+			!isset($this->Members->ByUserID[$User->id]) ||
+			$this->Members->ByUserID[$User->id]->status != 'Playing')
+			return '';
+		
+		if ($this->adminLock == 'Yes') return '';
 
+		$vAllowed = Members::$votes;
+		$vSet = $this->Members->ByUserID[$User->id]->votes;
+		$vPassed = $this->Members->votesPassed();
+
+		$vCancel=array();
+		$vVote=array();
+		
+		foreach($vAllowed as $vote) $votesCast[$vote]=array();
+			
+		foreach($this->Members->ByStatus['Playing'] as $Member)
+			foreach ($Member->votes as $vote)
+				$votesCast[$vote][] = $Member->country;
+		
+		$buf = '<div class="bar membersList memberVotePanel"><a name="votebar"></a><div class="votes">';
+		$buf .= '<form action="board.php?gameID='.$this->id.'#votebar" method="post">';
+		$buf .= '<input type="hidden" name="formTicket" value="'.libHTML::formTicket().'" />';
+		
+		foreach($vAllowed as $vote)
+		{
+			if (strpos($this->blockVotes,$vote)!== false) continue;
+
+			if(in_array($vote, $vSet))
+			{
+				if(!in_array($vote, $vPassed))
+					$buf .= $this->voteHTML($vote, $votesCast[$vote], true);
+			}
+			else
+				$buf .= $this->voteHTML($vote, $votesCast[$vote], false);
+		}
+		$buf .= '</form>';
+		
+		$buf .= '<img id = "modBtnVote" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" style="padding: 8px;"/>
+		<div id="voteModal" class="modal">
+			<div class="modal-content">
+				<span class="close1">&times;</span>
+				<p><strong>Draw Vote: </strong></br>
+					If all players vote draw, the game will be drawn. ';
+		switch ($this->potType) 
+		{
+			case 'Points-per-supply-center':
+					$buf .= 'This game is scored using points per supply center. In a draw, points are split evenly among all players remaining.';
+					break;
+			case 'Winner-takes-all':
+					$buf .= 'This game is scored using draw size scoring. In a draw, points are split evenly among all players remaining.';
+					break;             
+			case 'Unranked':
+					$buf .= 'This game is unranked. In a draw, all points are returned to their previous owners.';
+					break;             
+			case 'Sum-of-squares':
+					$buf .= 'This game is scored using sum of squares. In a draw, points are split among remaining players based upon how many supply centers they have.';
+					break;             
+			default:
+					trigger_error("Unknown pot type '".$this->potType."'");
+					break;
+		}
+		switch ($this->drawType) 
+		{
+			case 'draw-votes-public':
+				$buf .= ' Draw votes are publicly displayed in this game.';
+				break;
+			case 'draw-votes-hidden':
+				$buf .= ' Draw votes are not publicly known in this game.';
+				break;
+			default:
+				trigger_error("Unknown draw type '".$this->drawType."'");
+				break;
+		}
+		$buf.= '</p>';
+		
+		if( $this->processStatus == 'Paused' )
+		{
+			$buf .= '<p><strong>Unpause Vote: </strong></br>
+						If all players vote unpause, the game will be unpaused. If a game is stuck paused, email the mods at webdipmod@gmail.com for help.
+					</p>';
+		}
+		else
+		{
+			$buf .= '<p><strong>Pause Vote: </strong></br>
+						If all players vote pause, the game will be paused until all players vote unpause. If you need a game paused'. ($this->pressType == 'NoPress' ? '' : ' due to an emergency').', click on the Need Help? link just above this icon to contact the mods.
+					</p>';
+		}
+		
+		$buf .= '<p><strong>Cancel Vote: </strong></br>
+					If all players vote cancel, the game will be cancelled. All points will be refunded, and the game will be deleted. Cancels are typically used in the first year or two of a game with missing players.
+				</p>';
+
+		if ($this->playerTypes <> 'Members')
+		{
+			$buf .= '<p><strong>Bot Voting: </strong></br>
+				The bots in this game do not get a pause or unpause vote, pausing and unpausing only counts human votes. <br><br>
+				If a bot is winning a game and has gained supply centers in the last 4 turns, it will stop the game from being drawn or cancelled. Otherwise bot games can be drawn or cancelled anytime.  
+			</p>';
+		}
+		
+		$buf .='
+			</div>
+		</div>';
+		
+		$buf .= '<script>
+		var modal1 = document.getElementById("voteModal");
+		var btn1 = document.getElementById("modBtnVote");
+		var span1 = document.getElementsByClassName("close1")[0];
+		btn1.onclick = function() { modal1.style.display = "block"; }
+		span1.onclick = function() { modal1.style.display = "none"; }
+		window.onclick = function(event) {
+		  if (event.target == modal1) { modal1.style.display = "none"; }
+		}
+		</script>';
+
+		$buf .= '<div style="clear:both"></div></div><div class="hr"></div>';
+
+			
+		return $buf;
+	}
+
+	function voteHTML($vote, $votesActiveBy, $voteActive)
+	{
+		
+		global $User;
+		
+		if ( $vote == 'Pause' && $this->processStatus == 'Paused' ) $vote = 'Unpause';
+
+		if ($voteActive){
+			$style    = "button setvote";
+			$question = l_t("Are you sure you want to withdraw your ".$vote." vote?");
+		} else {
+			$style    = "button";
+			$question = l_t("Are you sure you want to cast this ".$vote." vote?");
+		}
+
+		$voteCountries = implode (", ", $votesActiveBy);
+		$voteCountries = str_replace($this->Members->ByUserID[$User->id]->country, "You", $voteCountries);
+		if ( $vote == 'Draw' && $this->drawType == 'draw-votes-hidden' ) {
+			$voteCountries = "(draw votes are hidden)";
+		}
+		
+		$voteActiveImage = (($voteCountries != '' && $voteCountries != '(draw votes are hidden)')  ? ' <img src="images/icons/alert.png">' : '');
+		$buttonTitle     = ($voteCountries != '' ? 'title = "Voted: '.$voteCountries.'"' : ''); ;
+		
+		$buf = '<button class="'.$style.'" name="'.$vote.'" onclick="return confirm(\''. $question.'\');" '
+				.$buttonTitle.'/> <img src="images/icons/vote_'.strtolower($vote).'.png"> '.$vote.$voteActiveImage.'</button>';
+
+		return $buf;
+	}
+
+	
 	public function __construct($gameData)
 	{
 		parent::__construct($gameData);
@@ -392,6 +633,8 @@ class panelGameBoard extends panelGame
 		$buf = '<div class="titleBar">
 				'.$this->titleBar(true).'
 			</div>';
+		
+		$buf .= $this->description();
 
 		$noticeBar = $this->gameNoticeBar();
 		if ( $noticeBar )

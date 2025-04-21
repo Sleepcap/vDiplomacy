@@ -31,23 +31,25 @@ libHTML::starthtml();
 
 if( isset($_REQUEST['forgotPassword']) and $User->type['Guest'] )
 {
-	print libHTML::pageTitle(l_t('Reset your password/find lost username'),l_t('Get back into your account!'));
+	print libHTML::pageTitle(l_t('Reset your password'),l_t('Resetting passwords using your e-mail account, in-case you forgot your password.'));
 
 	try
 	{
 		if ( $_REQUEST['forgotPassword'] == 1 )
 		{
-			print '<p> <strong>Forgot your username?</strong></br> Search for it by the email you registered with <a href="profile.php">here.</a> If you cannot find it email 
-			the moderator team at '.Config::$modEMail.' and they will help you get back into your account. <strong>Do not make a new account.</strong> </p>
+			print '<p>'.l_t('Enter your username here, and an e-mail will be sent to the address you registered with, with an '.
+			'activation link that will set a new password.').
+			'</p>
 			
-			<p><strong>Forgot your password?</strong></br> Enter your username below and an e-mail will be sent to the email you registered containing an '.
-			'activation link that will set a new password. If you no longer have access to that email account email the moderator team at '.Config::$modEMail.'</p>
-
 			<form action="./logon.php?forgotPassword=2" method="post">
-				<strong>'.l_t('Username').'</strong>
-				<input type="text" tabindex="1" maxlength=30 size=15 class="login" name="forgotUsername"></br></br>
-				<input type="submit" class="green-Submit" value="Reset Password">
-			</form>';
+				<ul class="formlist">
+				<li class="formlisttitle">'.l_t('Username').'</li>
+				<li class="formlistfield"><input type="text" tabindex="1" maxlength=30 size=15 name="forgotUsername"></li>
+				<li class="formlistdesc">'.l_t('The vDiplomacy username of the account which you can\'t log in to.').'</li>
+				<li><input type="submit" class="form-submit" value="'.l_t('Send code').'"></li>
+				</ul>
+			</form>
+			<a href="logon.php?resendUsername=1" class="light">'.l_t('Forgot your username? Recover it here.').'</a>';
 		}
 		elseif ( $_REQUEST['forgotPassword'] == 2 && isset($_REQUEST['forgotUsername']) )
 		{
@@ -58,24 +60,16 @@ if( isset($_REQUEST['forgotPassword']) and $User->type['Guest'] )
 					"<a href='logon.php?forgotPassword=1' class='light'>go back</a> and check your spelling."));
 			}
 
-			if( $MC->get('forgot_'.$forgottenUser->id) !== false )
-			{
-				throw new Exception(l_t("To help prevent abuse please wait 5 minutes before resending forgotten e-mail recovery links. ".
-					"In the meantime please check your spam folder for a missing recovery e-mail, or contact the moderator team."));
-			}
-			
-			$MC->set('forgot_'.$forgottenUser->id, 0, 5*60); // Set a flag preventing resends for 5 minutes
-
 			require_once(l_r('objects/mailer.php'));
 			$Mailer = new Mailer();
-			$Mailer->Send(array($forgottenUser->email=>$forgottenUser->username), l_t('webDiplomacy forgotten password verification link'),
-			l_t("You can use this link to get a new password generated:")."<br>
-			".libAuth::email_validateURL($forgottenUser->email)."&forgotPassword=3<br><br>
+			$Mailer->Send(array($forgottenUser->email=>$forgottenUser->username), l_t('vDiplomacy forgotten password verification link'),
+l_t("You can use this link to get a new password generated:")."<br>
+".libAuth::email_validateURL($forgottenUser->email)."&forgotPassword=3<br><br>
 
-			".l_t("If you have any further problems contact the moderator team at %s.",Config::$modEMail)."<br>");
+".l_t("If you have any further problems contact the server's admin at %s.",Config::$adminEMail)."<br>");
 
-			print '<p>'.l_t('An email has been sent with a reset link, click that link and enter a new password. '.
-				'If you do not see the email check your spam folder.').'</p>';
+			print '<p>'.l_t('An e-mail has been sent with a verification link, which will allow you to have your password reset. '.
+				'If you can\'t find the e-mail in your inbox try your junk folder/spam-box.').'</p>';
 		}
 		elseif ( $_REQUEST['forgotPassword'] == 3 && isset($_REQUEST['emailToken']) )
 		{
@@ -94,7 +88,7 @@ if( isset($_REQUEST['forgotPassword']) and $User->type['Guest'] )
 				SET password=UNHEX('".libAuth::pass_Hash($newPassword)."')
 				WHERE id=".$userID." LIMIT 1");
 
-			print '<p>'.l_t('Thanks for verifying your email, this is your new password, which you can '.
+			print '<p>'.l_t('Thanks for verifying your address, this is your new password, which you can '.
 					'change once you have logged back on:').'<br /><br />
 
 				<strong>'.$newPassword.'</strong></p>
@@ -111,32 +105,88 @@ if( isset($_REQUEST['forgotPassword']) and $User->type['Guest'] )
 	libHTML::footer();
 }
 
-if( ! $User->type['User'] ) 
+if( isset($_REQUEST['resendUsername']) and $User->type['Guest'] )
 {
-	print libHTML::pageTitle(l_t('Log on'),l_t('Enter your webDiplomacy account username and password to log into your account.'));
+	print libHTML::pageTitle(l_t('Recover your username'),l_t('Resend your username to your e-mail account, in-case you forgot it.'));
+
+	try
+	{
+		if ( $_REQUEST['resendUsername'] == 1 )
+		{
+			print '<p>'.l_t('Enter your eMail address here, and an e-mail with the corresponding username will be sent.').'</p>
+
+			<form action="./logon.php?resendUsername=2" method="post">
+				<ul class="formlist">
+				<li class="formlisttitle">'.l_t('eMail').'</li>
+				<li class="formlistfield"><input type="text" tabindex="1" size=15 name="resendEMail"></li>
+				<li class="formlistdesc">'.l_t('The eMail address of the account which you forgot the username.').'</li>
+				<li><input type="submit" class="form-submit" value="'.l_t('Recover username').'"></li>
+				</ul>
+			</form>';
+		}
+		elseif ( $_REQUEST['resendUsername'] == 2 && isset($_REQUEST['resendEMail']) )
+		{
+			$eMail = $DB->escape($_REQUEST['resendEMail']);
+			list($username) = $DB->sql_row("SELECT username FROM wD_Users WHERE email='".$DB->escape($_REQUEST['resendEMail'])."'");
+			if ($username == '')
+				throw new Exception(l_t("Cannot find an account for the given eMail address. Please ".
+					"<a href='logon.php?resendUsername=1' class='light'>go back</a> and check your spelling."));
+
+			require_once(l_r('objects/mailer.php'));
+			$Mailer = new Mailer();
+			$Mailer->Send(array($eMail=>$username), l_t('vDiplomacy recover username.'),
+				l_t("The username linked to this eMail address is:")."<br>".$username."<br><br>".
+				l_t("If you have any further problems contact the server's mods at %s.",(isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail))."<br>");
+
+			print '<p>'.l_t('An e-mail with your username has been sent to %s. ',$eMail).'<br>'.
+				l_t('If you can\'t find the e-mail in your inbox try your junk folder/spam-box.'.
+				"If you have any further problems contact the server's mods at %s.",(isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail)).'</p>';
+		}
+	}
+	catch(Exception $e)
+	{
+		print '<p class="notice">'.$e->getMessage().'</p>';
+	}
+
+	print '</div>';
+	libHTML::footer();
+}
+
+if( ! $User->type['User'] ) {
+	print libHTML::pageTitle(l_t('Log on'),l_t('Enter your vDiplomacy account username and password to log into your account.'));
 	print '
-		<div class = "login">
 		<form action="./index.php" method="post">
 
-			<strong>Username</strong>
-			<input type="text" tabindex="1" maxlength=30 size=15 class="login" name="loginuser"></br></br>
+		<ul class="formlist">
 
-			<strong>Password</strong>
-			<input type="password" tabindex="2" maxlength=30 size=15 class="login" name="loginpass"></br></br>
+		<li class="formlisttitle">'.l_t('Username').'</li>
+		<li class="formlistfield"><input type="text" tabindex="1" maxlength=30 size=15 name="loginuser"></li>
+		<li class="formlistdesc">'.l_t('Your vDiplomacy username. If you don\'t have one please '.
+			'<a href="register.php" class="light">register</a>.').'</li>
 
-			<strong>Remember me</strong>
-			<input type="checkbox" />
-			<div class="loginDesc">Do you want to stay logged in permanently? Do not use on a public computer!</div></br>
+		<li class="formlisttitle">'.l_t('Password').'</li>
+		<li class="formlistfield"><input type="password" tabindex="2" maxlength=30 size=15 name="loginpass"></li>
+		<li class="formlistdesc">'.l_t('Your vDiplomacy password.').'</li>
 
-			<input type="submit" class="green-Submit" value="Log on">
+		<li class="formlisttitle">'.l_t('Remember me').'</li>
+		<li class="formlistfield"><input type="checkbox" /></li>
+		<li class="formlistdesc">'.l_t('Do you want to stay logged in permanently? '.
+			'If you are on a public computer you should not stay logged on permanently!').'</li>
+
+		<li><input type="submit" class="form-submit" value="'.l_t('Log on').'"></li>
+		</ul>
 		</form>
-		<p><a href="logon.php?forgotPassword=1" class="light">Forgot your username or password?</a></p>
-		<p><a href="register.php" class="light">Not a member? Register!</a></p>
-		</div>';
-} 
-else 
-{
-	print libHTML::pageTitle('Log off','Log out of your webDiplomacy account, to prevent other users of this computer accessing it.');
+		<div class="hr"></div>
+		<p><b>Troubleshooting:</b>
+			<ul>
+				<li>If you forgot your password, use the lost password finder <a href="logon.php?forgotPassword=1">here</a>.</li>
+				<li>If you forgot your username, use the username recovery <a href="logon.php?resendUsername=1">here</a>.</li>
+				<li>If you forgot both, first use the username recovery <a href="logon.php?resendUsername=1">here</a>, and than the lost password finder <a href="logon.php?forgotPassword=1">here</a>.</li>
+				<li>If you are still unable to log in, contact the mods here: <a href="mailto:'.(isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail).'">'.(isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail).'</a></li>
+			</ul>
+		</p>';
+} else {
+	print libHTML::pageTitle('Log off','Log out of your vDiplomacy account, to prevent other users of this computer accessing it.');
 	print '<form action="./logon.php" method="get">
 		<p class="notice"><input type="hidden" name="logoff" value="on">
 		<input type="submit" class="form-submit" value="'.l_t('Log off').'"></p>

@@ -1,0 +1,44 @@
+@CHARSET "ISO-8859-1";
+
+.variantA_Modern_Europe .country0 { color: #000000 ! important; } /* Neutral */
+.variantA_Modern_Europe .country1 { color: #8E6F08 ! important; } /* Czechia */
+.variantA_Modern_Europe .country2 { color: #A6ADBD ! important; } /* Finland */
+.variantA_Modern_Europe .country3 { color: #1029AD ! important; } /* France */
+.variantA_Modern_Europe .country4 { color: #AA0000 ! important; } /* Georgia */
+.variantA_Modern_Europe .country5 { color: #2f3d4d ! important; } /* Germany */
+.variantA_Modern_Europe .country6 { color: #5DB5E3 ! important; } /* Greece */
+.variantA_Modern_Europe .country7 { color: #009E60 ! important; } /* Ireland */
+.variantA_Modern_Europe .country8 { color: #7DAB54 ! important; } /* Italy */
+.variantA_Modern_Europe .country9 { color: #9A4574 ! important; } /* Lithuania */
+.variantA_Modern_Europe .country10 { color: #DC8A39 ! important; } /* Netherlands */
+.variantA_Modern_Europe .country11 { color: #DB6777 ! important; } /* Poland */
+.variantA_Modern_Europe .country12 { color: #1D5734 ! important; } /* Portugal */
+.variantA_Modern_Europe .country13 { color: #1560B2 ! important; } /* Romania */
+.variantA_Modern_Europe .country14 { color: #608350 ! important; } /* Russia */
+.variantA_Modern_Europe .country15 { color: #A64839 ! important; } /* Serbia */
+.variantA_Modern_Europe .country16 { color: #E7B50C ! important; } /* Spain */
+.variantA_Modern_Europe .country17 { color: #0852A5 ! important; } /* Sweden */
+.variantA_Modern_Europe .country18 { color: #C05943 ! important; } /* Turkey */
+.variantA_Modern_Europe .country19 { color: #6A6868 ! important; } /* Ukraine */
+.variantA_Modern_Europe .country20 { color: #800000 ! important; } /* United Kingdom */
+
+.variantA_Modern_Europe .occupationBar1 { background-color: #978104; } /* Czechia */
+.variantA_Modern_Europe .occupationBar2 { background-color: #CDD4E4; } /* Finland */
+.variantA_Modern_Europe .occupationBar3 { background-color: #1432D2; } /* France */
+.variantA_Modern_Europe .occupationBar4 { background-color: #AA0000; } /* Georgia */
+.variantA_Modern_Europe .occupationBar5 { background-color: #4C6179; } /* Germany */
+.variantA_Modern_Europe .occupationBar6 { background-color: #5DB5E3; } /* Greece */
+.variantA_Modern_Europe .occupationBar7 { background-color: #009E60; } /* Ireland */
+.variantA_Modern_Europe .occupationBar8 { background-color: #7DAB54; } /* Italy */
+.variantA_Modern_Europe .occupationBar9 { background-color: #9A4574; } /* Lithuania */
+.variantA_Modern_Europe .occupationBar10 { background-color: #DC8A39; } /* Netherlands */
+.variantA_Modern_Europe .occupationBar11 { background-color: #C55C6A; } /* Poland */
+.variantA_Modern_Europe .occupationBar12 { background-color: #277446; } /* Portugal */
+.variantA_Modern_Europe .occupationBar13 { background-color: #1560B2; } /* Romania */
+.variantA_Modern_Europe .occupationBar14 { background-color: #608350; } /* Russia */
+.variantA_Modern_Europe .occupationBar15 { background-color: #A64839; } /* Serbia */
+.variantA_Modern_Europe .occupationBar16 { background-color: #E7B50C; } /* Spain */
+.variantA_Modern_Europe .occupationBar17 { background-color: #0852A5; } /* Sweden */
+.variantA_Modern_Europe .occupationBar18 { background-color: #C05943; } /* Turkey */
+.variantA_Modern_Europe .occupationBar19 { background-color: #6A6868; } /* Ukraine */
+.variantA_Modern_Europe .occupationBar20 { background-color: #990000; } /* United Kingdom */

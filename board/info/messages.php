@@ -97,6 +97,9 @@ else
 	printPageBar($pagenum, $maxPage, $msgFilter);
 }
 
+// Set the global messages as seen (usefull in Nopress games to remove the newmessage-icon after a Gamemaster post)
+if( is_object($Member) ) $Member->seen(0);
+
 print '</div>';
 
 function printPageBar($pagenum, $maxPage, $msgFilter, $sortBar = False)

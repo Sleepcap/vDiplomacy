@@ -113,7 +113,11 @@ foreach($tabs as $tabChoice=>$tabTitle)
 
 print '</div>';
 print '<br/><div style="text-align:center">
-    For detailed information on how tournaments work on webDiplomacy, click <a href="tournamentInfo.php">here</a>.</div>';
+    For detailed information on how tournaments work on vDiplomacy, click <a href="tournamentInfo.php">here</a>.</div>';
+
+if ($User->type['Moderator'])
+	print '<div style="text-align:center">
+		Mods/Admins can create a new tournament <a href="tournamentManagement.php">here</a>.</div>';
 
 libHTML::pagebreak();
 
@@ -198,17 +202,17 @@ while (list($id, $name, $description, $status, $minRR, $year, $totalRounds, $for
         if ($firstPlace > 0)
         {
             list($firstUsername) = $DB->sql_row("Select u.username from wD_Users u where u.id =".$firstPlace);
-            print '<div class = "tournamentCenter">'.libHTML::goldStar().'First Place: <a href="userprofile.php?userID='.$firstPlace.'">'.$firstUsername.'</a>'.libHTML::goldStar().'</div>';
+            print '<div class = "tournamentCenter">'.libHTML::goldStar().'First Place: <a href="profile.php?userID='.$firstPlace.'">'.$firstUsername.'</a>'.libHTML::goldStar().'</div>';
         }
         if ($secondPlace > 0)
         {
             list($secondUsername) = $DB->sql_row("Select u.username from wD_Users u where u.id =".$secondPlace);
-            print '<div class = "tournamentCenter">'.libHTML::silverStar().'Second Place: <a href="userprofile.php?userID='.$secondPlace.'">'.$secondUsername.'</a>'.libHTML::silverStar().'</div>';
+            print '<div class = "tournamentCenter">'.libHTML::silverStar().'Second Place: <a href="profile.php?userID='.$secondPlace.'">'.$secondUsername.'</a>'.libHTML::silverStar().'</div>';
         }
         if ($thirdPlace > 0)
         {
             list($thirdUsername) = $DB->sql_row("Select u.username from wD_Users u where u.id =".$thirdPlace);
-            print '<div class = "tournamentCenter">'.libHTML::bronzeStar().'Third Place: <a href="userprofile.php?userID='.$thirdPlace.'">'.$thirdUsername.'</a>'.libHTML::bronzeStar().'</div>';
+            print '<div class = "tournamentCenter">'.libHTML::bronzeStar().'Third Place: <a href="profile.php?userID='.$thirdPlace.'">'.$thirdUsername.'</a>'.libHTML::bronzeStar().'</div>';
         }  
         print '<br>';
     }
@@ -245,18 +249,18 @@ while (list($id, $name, $description, $status, $minRR, $year, $totalRounds, $for
     if ($directorID > 0 )
     {
         list($directorUsername) = $DB->sql_row("Select username from wD_Users where id =".$directorID);
-        print '<strong>Director:</strong> <a href="userprofile.php?userID='.$directorID.'">'.$directorUsername.'</a>';
+        print '<strong>Director:</strong> <a href="profile.php?userID='.$directorID.'">'.$directorUsername.'</a></br> ';
     }
     if ($coDirectorID > 0 )
     {
         list($coDirectorUsername) = $DB->sql_row("Select username from wD_Users where id =".$coDirectorID);
-        print '</br> <strong>Co-Director:</strong> <a href="userprofile.php?userID='.$coDirectorID.'">'.$coDirectorUsername.'</a></br>';
+        print '<strong>Co-Director:</strong> <a href="profile.php?userID='.$coDirectorID.'">'.$coDirectorUsername.'</a></br>';
     }
 
-    if ($forumThreadLink != '') { print '</br> <strong>Forum thread:</strong> <a href="'.$forumThreadLink.'">here</a>'; }
-    if ($externalLink != '') { print '</br> <strong>External site:</strong> <a href="'.$externalLink.'">here</a></br></br>'; }
+    if ($forumThreadLink != '') { print '<strong>Forum thread:</strong> <a href="'.$forumThreadLink.'">here</a></br> '; }
+    if ($externalLink != '') { print '<strong>External site:</strong> <a href="'.$externalLink.'">here</a></br></br>'; }
 
-    print'<strong>Description:</strong></br>'.$description.'
+    print'</br> <strong>Description:</strong></br>'.$description.'
     </br></br>
     <strong>Start year:</strong> '.$year.' </br></br>
     <strong>Rounds: </strong> '.$totalRounds.'
@@ -343,13 +347,13 @@ while (list($id, $name, $description, $status, $minRR, $year, $totalRounds, $for
                 // If the game was drawn we want to show a link to each of the winners, so group concat does a pivot on the multiple rows in wD_Members into a single column to display that. 
                 if ($gameOver == 'Drawn')
                 {
-                    list($drawingMembers) = $DB->sql_row( "select GROUP_CONCAT(CONCAT('<a href=\"userprofile.php?userID=',m.userID ,'\">',u.username ,'</a>') SEPARATOR ' ') from wD_Members m 
+                    list($drawingMembers) = $DB->sql_row( "select GROUP_CONCAT(CONCAT('<a href=\"profile.php?userID=',m.userID ,'\">',u.username ,'</a>') SEPARATOR ' ') from wD_Members m 
                     inner join wD_Users u on u.id = m.userID where m.gameID = ".$gameID." and m.status = 'Drawn'");
                     print '<td>'.$drawingMembers.'</td>';
                 }
                 else if ($gameOver == 'Won')
                 {
-                    list($winningMembers) = $DB->sql_row( "select CONCAT('<a href=\"userprofile.php?userID=',m.userID ,'\">',u.username ,'</a>') from wD_Members m 
+                    list($winningMembers) = $DB->sql_row( "select CONCAT('<a href=\"profile.php?userID=',m.userID ,'\">',u.username ,'</a>') from wD_Members m 
                     inner join wD_Users u on u.id = m.userID where m.gameID = ".$gameID." and m.status = 'Won'");
                     print '<td>'.$winningMembers.'</td>';
                 }

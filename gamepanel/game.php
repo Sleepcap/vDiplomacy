@@ -21,6 +21,7 @@
 defined('IN_CODE') or die('This script can not be run by itself.');
 
 require_once(l_r('gamepanel/members.php'));
+require_once('lib/reliability.php');
 
 /**
  * The game panel class; it extends the Game class, which contains the information, with a set
@@ -53,6 +54,7 @@ class panelGame extends Game
 		print '
 		<div class="gamePanel variant'.$this->Variant->name.'">
 			'.$this->header().'
+			'.$this->description().'
 			'.$this->members().'
 			'.$this->votes().'
 			'.$this->links().'
@@ -142,10 +144,23 @@ class panelGame extends Game
 			static $timerCount=0;
 		$timerCount++;
 
-		$buf =
-			'
-			<span class="gameTimeRemainingNextPhase">'.($this->phase == 'Pre-game' ? l_t('Start:') : l_t('Next:')).'</span> '.$this->processTimetxt().' <span class="timestampGamesWrapper"> ('.libTime::detailedText($this->processTime).') </span>
-			';
+		if( $this->phase == 'Pre-game' )
+		{
+			$buf = '<span class="gameTimeRemainingNextPhase">';
+			if( $this->fixStart == 'Yes' )
+				$buf .= l_t('Start:').'</span> '. $this->processTimetxt().' ('.libTime::detailedText($this->processTime).')';
+			else
+				$buf .= l_t('Start: <b>If full</b> - Expires: ').' </span>'.$this->processTimetxt().' ('.libTime::detailedText($this->processTime).')</span>';
+		}	
+		else
+		{
+			$buf = '<span class="gameTimeRemainingNextPhase">'.l_t('Next:').'</span> '.
+				$this->processTimetxt().' ('.libTime::detailedText($this->processTime).')';
+
+			//if ( $this->Members->isJoined() )
+				//$buf .= ' <span class="gameTimeRemainingFixed">('.libTime::text($this->processTime).')</span>';
+
+		}
 
 		return $buf;
 	}
@@ -179,6 +194,9 @@ class panelGame extends Game
 		if( $this->pot > $Misc->GameFeaturedThreshold )
 			$buf .= '<img src="'.l_s('images/icons/star.png').'" alt="'.l_t('Featured').'" title="'.l_t('This is a featured game, one of the highest stakes games on the server!').'" /> ';
 
+		if( $this->adminLock == 'Yes' )
+			$buf .= '<img src="images/icons/lock.png" alt="Locked" title="Game is currently locked by an admin (usually to fix some errors)." /> ';
+			
 		if( $this->private )
 			$buf .= '<img src="'.l_s('images/icons/lock.png').'" alt="'.l_t('Private').'" title="'.l_t('This is a private game; invite code needed!').'" /> ';
 
@@ -244,19 +262,52 @@ class panelGame extends Game
 		$rightMiddle .= '</div>';
 
 		$rightBottom = '<div class="titleBarRightSide">'.
-					l_t('%s excused missed turn','<span class="excusedNMRs">'.$this->excusedMissedTurns.'</span>
-					').
+					l_t('%s excused NMR','<span class="excusedNMRs">'.$this->excusedMissedTurns.'</span>');
+					if ($this->regainExcusesDuration == 99)
+						$rightBottom .= ' / '.l_t('no regaining');
+					else
+						$rightBottom .= ' / '.l_t('regain after %s turn(s)','<span class="excusedNMRs">'.$this->regainExcusesDuration."</span>");
+					if ($this->delayDeadlineMaxTurn >= 99)
+						$rightBottom .= l_t(' / extend always');
+					elseif ($this->delayDeadlineMaxTurn == 0)
+						$rightBottom .= l_t(' / extend never');
+					else
+						$rightBottom .= ' / '.l_t('extend the first %s turn(s)','<span class="excusedNMRs">'.$this->delayDeadlineMaxTurn.'</span>');
+		$rightBottom .=				
 				'</div>';
 
-		$date=' - <span class="gameDate">'.$this->datetxt().'</span>, <span class="gamePhase">'.l_t($this->phase).'</span>';
+		$date=' - <span class="gameDate">'.$this->datetxt().'</span>, <span class="gamePhase">';
+
+		if ($this->phase == 'Pre-game')
+		{
+			$needed = count($this->Variant->countries) - count($this->Members->ByID);
+			$date .= $needed.' player'.($needed == 1 ? '' : 's').' (of '.count($this->Variant->countries).') missing.</span>';
+		}
+		else
+			$date .= l_t($this->phase).'</span>';
+
 
 		$leftTop = '<div class="titleBarLeftSide">
 				'.$this->gameIcons().
 				'<span class="gameName">'.$this->titleBarName().'</span>';
 
-		$leftBottom = '<div class="titleBarLeftSide"><div>
-				'.l_t('Pot:').' <span class="gamePot">'.$this->pot.' '.libHTML::points().'</span>';
+		$leftBottom = '<div class="titleBarLeftSide"><div>';
 
+		
+		if ($this->pot > 0 || ($this->pot == 0 && count($this->Members->ByID) == 0 && $this->minimumBet != 0) )
+			$leftBottom .= l_t('Pot:').' <span class="gamePot">'.$this->pot.' '.libHTML::points().'</span>';
+		else
+			$leftBottom .= '<i><a class="light" href="features.php#4_4">'.l_t('Unrated').'</a></i>';
+
+		if ($this->potModifier >= 1){
+			$leftBottom .= ' / <i>('.libHTML::vpoints().' <a class="light" href="features.php#2_11"> loss-prevention';
+			
+			if ($this->potModifier > 1)
+				$leftBottom .= ' 1/'.$this->potModifier.'-scoring';
+					
+			$leftBottom .= '</a>)</i>';
+		}
+		
 		$leftBottom .= $date.'</div>';
 
 		$leftBottom .= '<div>'.$this->gameVariants().'</div>';
@@ -397,10 +448,17 @@ class panelGame extends Game
 	 */
 	function archiveBar()
 	{
+		if( $this->phase == 'Finished' )
+			return '<strong>'.l_t('Archive:').'</strong> '.
+				'<a href="board.php?gameID='.$this->id.'&amp;viewArchive=Orders">'.l_t('Orders').'</a>
+				- <a href="board.php?gameID='.$this->id.'&amp;viewArchive=Maps">'.l_t('Maps').'</a>
+				- <a href="board.php?gameID='.$this->id.'&amp;viewArchive=Messages">'.l_t('Messages').'</a>
+				- <a href="board.php?gameID='.$this->id.'&amp;viewArchive=Graph">'.l_t('Graph').'</a>';
+		else	
 		return '<strong>'.l_t('Archive:').'</strong> '.
-			'<a href="board.php?gameID='.$this->id.'&amp;viewArchive=Orders">'.l_t('Orders').'</a>
-			- <a href="board.php?gameID='.$this->id.'&amp;viewArchive=Maps">'.l_t('Maps').'</a>
-			- <a href="board.php?gameID='.$this->id.'&amp;viewArchive=Messages">'.l_t('Messages').'</a>';
+				'<a href="board.php?gameID='.$this->id.'&amp;viewArchive=Orders">'.l_t('Orders').'</a>
+				- <a href="board.php?gameID='.$this->id.'&amp;viewArchive=Maps">'.l_t('Maps').'</a>
+				- <a href="board.php?gameID='.$this->id.'&amp;viewArchive=Messages">'.l_t('Messages').'</a>';
 	}
 
 	/**
@@ -414,11 +472,11 @@ class panelGame extends Game
 		if( !$User->type['User'] ) return '';
 
 		return '<br /><strong>'.l_t('Sandbox:').'</strong> 
-			 <a href="javascript:copySandboxFromGame('.$this->id.')">'.l_t('Copy game to sandbox').'</a>'.
+			<a href="javascript:copySandboxFromGame('.$this->id.')">'.l_t('Copy game to sandbox').'</a>'.
 			(!is_null($this->sandboxCreatedByUserID) && $User->id == $this->sandboxCreatedByUserID ? '
-			 - <a name="movedBack" href="javascript:moveSandboxTurnBack('.$this->id.')">'.l_t('Move sandbox back a turn').'</a>
-			 - <a href="javascript:deleteSandbox('.$this->id.')">'.l_t('Delete sandbox').'</a>
-			 - <a href="board.php?gameID='.$this->id.'&sbToken='.libAuth::sandboxToken_Key($this->id).'">'.l_t('Public link to sandbox').'</a>' : '');
+			- <a name="movedBack" href="javascript:moveSandboxTurnBack('.$this->id.')">'.l_t('Move sandbox back a turn').'</a>
+			- <a href="javascript:deleteSandbox('.$this->id.')">'.l_t('Delete sandbox').'</a>
+			- <a href="board.php?gameID='.$this->id.'&sbToken='.libAuth::sandboxToken_Key($this->id).'">'.l_t('Public link to sandbox').'</a>' : '');
 	}
 
 	/**
@@ -430,7 +488,7 @@ class panelGame extends Game
 		if( !$this->isClassicGame() ) return '';
 
 		return '<br /><strong>'.l_t('Point and click UI:').'</strong> 
-			 <a href="board.php?gameID='.$this->id.'&view=pointAndClick">'.l_t('Open').'</a>';
+			<a href="board.php?gameID='.$this->id.'&view=pointAndClick">'.l_t('Open').'</a>';
 	}
 
 	/**
@@ -448,7 +506,7 @@ class panelGame extends Game
 	 */
 	function joinBar()
 	{
-		global $User;
+		global $DB,$User;
 
 		if ( $this->Members->isJoined() )
 		{
@@ -478,43 +536,74 @@ class panelGame extends Game
 					($this->minimumReliabilityRating));
 			}
 
+			if ($this->minimumReliabilityRating > 0)
+			{
+				$buf .= l_t('Minimum Reliability Rating: <span class="%s">%s%%</span>. ',
+					($User->reliabilityRating < $this->minimumReliabilityRating ? 'Austria' :'Italy'), 
+					($this->minimumReliabilityRating));
+			}
+			
+			if ($this->minPhases > 0)
+			{
+				$buf .= l_t('Minimum phases played: <span class="%s">%s</span>.',
+					($User->phaseCount < (int)($this->minPhases - 1) ? 'Austria' :'Italy'), 
+					(int)($this->minPhases - 1));
+			}
+			
 			if ( $this->isJoinable() )
 			{
-				if( $this->minimumBet <= 100 && !$User->type['User'] && !$this->private )
+				if( $this->minimumBet <= 100 && !$User->type['User'] && !$this->private && $this->minPhases == 0)
 					return l_t('A newly registered account can join this game; '.
 						'<a href="register.php" class="light">register now</a> to join.');
 
 				$question = l_t('Are you sure you want to join this game?').'\n\n';
-				if ( $this->isLiveGame() )
+				
+				if ( $this->isLiveGame() && $this->fixStart == 'No' )
 				{
-					$question .= l_t('The game will start at the scheduled time even if all %s players have joined.', count($this->Variant->countries));
+					$question = l_t('This is a live game.').'\n'.l_t('The game will start at the scheduled time even if all %s players have joined.', count($this->Variant->countries));
 				}
 				else
 				{
-					$question .= l_t('The game will start when all %s players have joined.', count($this->Variant->countries));
+					if ($this->fixStart == 'No')
+						$question = l_t('The game will start when all %s players have joined.', count($this->Variant->countries));
+					else
+						$question = l_t('The game will start at the scheduled time even if all %s players have joined.', count($this->Variant->countries));
+					
+					list($turns,$games) = $DB->sql_row('SELECT SUM(turn), COUNT(*) FROM wD_Games WHERE variantID='.$this->Variant->id.' AND phase = "Finished"');
+					if ($games > 3)
+					{
+						$avgDur = libTime::timeLengthText((($turns / $games) - $this->turn) * 2.5 * $this->phaseMinutes * 60 );
+						if ($avgDur > 0)
+							$question .= '\n'.l_t('Looking at our stats this game might take (roughly) %s to complete.',$avgDur) ;
+					}
+					
 				}
-
-				if ($User->reliabilityRating >= $this->minimumReliabilityRating)
+				
+				if ($User->reliabilityRating >= $this->minimumReliabilityRating && ($User->phaseCount >= $this->minPhases)) 
 				{
-					if (!($User->userIsTempBanned()))
+					if (!($User->userIsTempBanned() || ($this->phase == "Pre-game" && libReliability::userGameLimitRestriction($User, $this))))
 					{
 						$buf .= '<form onsubmit="return confirm(\''.$question.'\');" method="post" action="board.php?gameID='.$this->id.'"><div>
 							<input type="hidden" name="formTicket" value="'.libHTML::formTicket().'" />';
 
-						if( $this->phase == 'Pre-game' )
+						if ( $this->private )
+							$buf .= '<br />'.self::passwordBox();
+						
+						if( $this->phase == 'Pre-game'&& count($this->Members->ByCountryID)>0 )
 						{
-							$buf .= l_t('Bet to join: %s: ','<em>'.$this->minimumBet.libHTML::points().'</em>');
+							$buf .= $this->Members->selectCountryPreGame();
+						}
+						elseif( $this->phase == 'Pre-game' )
+						{
+							if ( $this->pot > 0 )
+								$buf .= 'Bet to join: <em>'.$this->minimumBet.libHTML::points().'</em>: ';
 						}
 						else
 						{
 							$buf .= $this->Members->selectCivilDisorder();
 						}
-
-						if ( $this->private )
-							$buf .= '<br />'.self::passwordBox();
-
+						
 						$buf .= ' <input type="submit" name="join" value="'.l_t('Join').'" class="form-submit" />';
-
 						$buf .= '</div></form>';
 					}
 				}
@@ -524,6 +613,10 @@ class panelGame extends Game
 				if ($User->userIsTempBanned())
 				{
 					$buf .= '<span style="font-size:75%;">(Due to a temporary ban you cannot join games.)</span>';
+				}
+				elseif($this->phase == "Pre-game" && libReliability::userGameLimitRestriction($User, $this))
+				{
+					$buf .= '<span style="font-size:75%;">(Due to <a href="reliability.php">game limits</a> you cannot join games.)</span>';
 				}
 				elseif ($User->reliabilityRating < $this->minimumReliabilityRating)
 				{
@@ -559,13 +652,60 @@ class panelGame extends Game
 	 */
 	function openBar()
 	{
+/*		I've put the following code in remarks to isplay the view Button, even if it's the PreGame-Phase 
+		(to view the chat for example).
 		if( !$this->Members->isJoined() && $this->phase == 'Pre-game' )
 			return '';
-
+*/
 		return
 			'
 				<a href="board.php?gameID='.$this->id.'#gamePanel">'.l_t($this->Members->isJoined()?'Open':'View').'</a>
 			';
+	}
+	
+	/**
+	 * A bar with a button letting people view the game
+	 * @return string
+	 */
+	public function description()
+	{
+		if ($this->description == "" && $this->directorUserID == 0) return;
+	
+		global $User;
+		
+		$buf = '<div class="bar titleBar" '.($this instanceof panelGameBoard ? '' : 'style="background-color:#FAFAFA"').'>';
+		
+		if ($this->directorUserID != 0)
+		{
+			$director = new User($this->directorUserID);
+			$buf .= 'This is a moderated game. Gamedirector: '.$director->profile_link();
+			if (isset($this->Members->ByUserID[$this->directorUserID]))
+				$buf .= ' (is playing too)';
+			$buf .= '.';
+		}
+
+		if ($this->description != "")
+		{
+			if ($this->isJoinable() || $this->phase == 'Pre-game' || !$this->Members->isJoined() )
+			{
+				$buf .= '<div class="hr"></div>'.$this->description.'</span>';
+			}
+			else
+			{
+				$buf .= '<span id="DescriptionButton">
+							<a href="#" onclick="$(\'Description\').show(); $(\'DescriptionButton\').hide(); return false;">
+								<br>Click here to view game description.
+							</a>
+						</span>';
+						
+				$buf .= '<span id="Description" style="'.libHTML::$hideStyle.'">
+							<div class="hr"></div>
+							'.$this->description.'</span>';
+			}
+		}	
+		$buf .= '</div><div style="font-size:5px; clear:both"><br></div>';
+	
+		return $buf;
 	}
 }
 

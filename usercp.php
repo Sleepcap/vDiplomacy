@@ -78,12 +78,33 @@ if ( isset($_REQUEST['userForm']) )
 {
 	libAuth::formToken_Valid();
 	
+	
+	// A small hack for the RSS-Button
+	if (isset($_POST['rssButton']))
+	{
+		if ($_POST['rssButton'] != "Delete")
+		{
+			do {
+				$rssID = ''; $keyspace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+				$max = mb_strlen($keyspace, '8bit') - 1;
+				for ($i = 0; $i < 30; ++$i)
+					$rssID .= $keyspace[random_int(0, $max)];
+				
+				$DB->sql_put("UPDATE wD_Users SET rssID = '".$rssID."' WHERE id = ".$User->id);
+				list($ok) = $DB->sql_row('SELECT count(*) FROM wD_Users WHERE rssID="'.$rssID.'"');
+			} while ($ok > 1);	
+		} else {
+			$DB->sql_put("UPDATE wD_Users SET rssID = '' WHERE id = ".$User->id);
+		}
+	}
+		
 	$formOutput = '';
 	
 	require_once('lib/sms.php');
 
 	try
 	{
+		
 		$errors = array();
 		$SQLVars = User::processForm($_REQUEST['userForm'], $errors);
 		
@@ -92,7 +113,20 @@ if ( isset($_REQUEST['userForm']) )
 
 		unset($errors);
 
-		$allowed = array('E-mail'=>'email', 'Homepage'=>'homepage','Comment'=>'comment');
+		$allowed = array(
+				'showCountryNames'=>'showCountryNames',
+				'showCountryNamesMap'=>'showCountryNamesMap',
+				'color Correct'=>'colorCorrect',
+				'SortOrder'=>'sortOrder',
+				'UnitOrder'=>'unitOrder',
+				'pointNClick opt in'=>'pointNClick',
+				'Add greyout overlay'=>'terrGrey',
+				'greyout intensity' => 'greyOut',
+				'cssStyle'=>'cssStyle',
+				'forceDesktop'=>'forceDesktop',
+				'Remove scrollbars from smallmap'=>'scrollbars',
+				'Button size'=>'buttonWidth',
+				'E-mail'=>'email', 'Homepage'=>'homepage','Comment'=>'comment');
 
 		$User->getOptions()->set($_REQUEST['userForm']);
 
@@ -204,14 +238,93 @@ if (isset($_COOKIE['wD-Tutorial-Settings']))
 	setcookie('wD-Tutorial-Settings', '', ['expires'=>time()-3600,'samesite'=>'Lax']);
 }
 
+function printAndFindTab()
+{
+	global $User, $Misc;
+
+	$tabs = array();
+
+	$tabs['General']=l_t("General settings");
+	$tabs['Features']=l_t("Special features");
+	$tabs['IAmap']=l_t("Interactive map");
+	$tabs['CountrySwitch']=l_t("Send your games to other players");
+
+	$tab = 'General';
+	$tabNames = array_keys($tabs);
+
+	if( isset($_REQUEST['tab']) && in_array($_REQUEST['tab'], $tabNames) )
+		$tab = $_REQUEST['tab'];
+
+	print '<div class="gamelistings-tabs">';
+	foreach($tabs as $tabChoice=>$tabTitle)
+	{
+		print '<a title="'.$tabTitle.'" href="usercp.php?tab='.$tabChoice;
+		print ( ( $tab == $tabChoice ) ?  '" class="current"' : '"');
+		print '>'.l_t($tabChoice).'</a>';
+	}
+	print '</div>';
+	return $tab;
+}
+
+function printAndFindTab()
+{
+	global $User, $Misc;
+
+	$tabs = array();
+
+	$tabs['General']=l_t("General settings");
+	$tabs['Features']=l_t("Special features");
+	$tabs['IAmap']=l_t("Interactive map");
+	$tabs['CountrySwitch']=l_t("Send your games to other players");
+
+	$tab = 'General';
+	$tabNames = array_keys($tabs);
+
+	if( isset($_REQUEST['tab']) && in_array($_REQUEST['tab'], $tabNames) )
+		$tab = $_REQUEST['tab'];
+
+	print '<div class="gamelistings-tabs">';
+	foreach($tabs as $tabChoice=>$tabTitle)
+	{
+		print '<a title="'.$tabTitle.'" href="usercp.php?tab='.$tabChoice;
+		print ( ( $tab == $tabChoice ) ?  '" class="current"' : '"');
+		print '>'.l_t($tabChoice).'</a>';
+	}
+	print '</div>';
+	return $tab;
+}
+
 print libHTML::pageTitle(l_t('User account settings'),l_t('Control settings for your account.'));
 
-print '<div class = "settings">';
+print '
+<div class = "settings">
+<div class = "settings">This page allows you to update your profile settings. Your email address will never be spammed or given out, and is only used 
+by the moderator team to contact you. Please ensure your email is updated so that the moderators can contact you. </br></br> 
+If you select "no" for "Hide email address" your email will be displayed to other site users in an image file to protect you from bots. 
+If you leave the default of "yes" it is only visible to moderators.</div></br>
+<form method="post" class = "settings_show" autocomplete="off">
+<ul class="formlist">';
 
-print '<form method="post" class = "settings_show" autocomplete="off"><ul class="formlist">';
+$tab = printAndFindTab();
+print '<br>';
 
-require_once(l_r('locales/English/user.php'));
+switch($tab)
+{
+	case 'Features':
+		require_once(l_r('locales/English/accessability.php'));
+		break;
+	case 'CountrySwitch':
+		require_once(l_r('locales/English/countryswitch.php'));
+		break;
+	case 'IAmap':
+		require_once(l_r('locales/English/IAmap.php'));
+		break;
+	default:
+		require_once(l_r('locales/English/user.php'));
+}
 
+print libAuth::formTokenHTML();
+print '</form></div>';
 print '</div>';
 
 libHTML::$footerIncludes[] = l_j('help.js');

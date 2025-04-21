@@ -62,7 +62,7 @@ function loadBoard()
 		// Load and initialize ConvoyGroups
 		CGs=new Array();
 		Units.values().map(function(f) {
-			if( f.type == 'Fleet' && f.Territory.type=='Sea' )
+			if( f.type == 'Fleet' && (f.Territory.type=='Sea' || f.Territory.type=='Strait') )
 			{
 				var CG=new ConvoyGroupClass();
 				CG.loadFleet(f);

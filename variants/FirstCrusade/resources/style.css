@@ -1,0 +1,18 @@
+@CHARSET "ISO-8859-1";
+	
+.variantFirstCrusade .country0 { color: #bb8c4a ! important; } /* Global  */
+.variantFirstCrusade .country1 { color: #c39e08 ! important; } /* Holy Roman Empire */
+.variantFirstCrusade .country2 { color: #c75858 ! important; } /* England  */
+.variantFirstCrusade .country3 { color: #2020bf ! important; } /* France   */
+.variantFirstCrusade .country4 { color: #4a92d9 ! important; } /* Seljuk Turks */
+.variantFirstCrusade .country5 { color: #dd6210 ! important; } /* Byzantine Empire */
+.variantFirstCrusade .country6 { color: #650505 ! important; } /* Russia  */
+.variantFirstCrusade .country7 { color: #3b6b0d ! important; } /* Almoravids  */
+
+.variantFirstCrusade .occupationBar1 { background-color: #e6bb0d; } /* Holy Roman Empire */
+.variantFirstCrusade .occupationBar2 { background-color: #e16666; } /* England  */
+.variantFirstCrusade .occupationBar3 { background-color: #3b3be3; } /* France   */
+.variantFirstCrusade .occupationBar4 { background-color: #65b0fa; } /* Seljuk Turks */
+.variantFirstCrusade .occupationBar5 { background-color: #fb7821; } /* Byzantine Empire */
+.variantFirstCrusade .occupationBar6 { background-color: #940606; } /* Russia  */
+.variantFirstCrusade .occupationBar7 { background-color: #4b8611; } /* Almoravids  */

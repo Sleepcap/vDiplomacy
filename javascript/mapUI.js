@@ -21,22 +21,21 @@
 // Current turn, -2 is undefined, -1 is pre-game
 var turn=-2;
 
-var noMoves='';
+var noMoves=(useroptions.showMoves =='No'?'&hideMoves':'');
 var preview='';
 
 // Toggle the display of the Move arrows.
 function toggleMoves(gameID, currentTurn) {
 	if (noMoves == '') {
 		noMoves = '&hideMoves';
-		$('NoMoves').src = 'images/historyicons/showmoves.png';
+		$('NoMoves').src = "images/historyicons/showmoves.png";
 	} else {
 		noMoves = '';
-		$('NoMoves').src = 'images/historyicons/hidemoves.png';
+		$('NoMoves').src = "images/historyicons/hidemoves.png";
 	}
 	loadMapStep(gameID, currentTurn, 0)	
 	loadMap(gameID, currentTurn, turn)
 }
-
 // Toggle the display of the Move arrows.
 function togglePreview(gameID, currentTurn) {
 	turn = currentTurn
@@ -135,15 +134,22 @@ function loadMap(gameID, currentTurn, newTurn)
 	// Add the Preview parameter if we have Preview activated
 	newTurn = newTurn + preview
 	
+	// Add the colorCorrect Prameter if set
+	if(window.colorCorrect !== undefined)
+		newTurn = newTurn + colorCorrect
+		
+	// Add the colorCorrect Prameter if set
+	if(window.showCountryNamesMap !== undefined)
+		newTurn = newTurn + "&countryNames"
+	
 	// Update the link to the large map
 	$('LargeMapLink').innerHTML = 
-			' <a href="map.php?gameID='+gameID+'&turn='+newTurn+'&mapType=large'+(useroptions.showMoves =='No'?'&hideMoves':'')+'" target="blank" class="light">'+
-			'<img src="'+l_s('images/historyicons/external.png')+'" alt="'+l_t('Open large map')+'" ' +
-			'title="'+l_t('This button will open the large map in a new window. The large ' +
-			'map shows all the moves, and is useful when the small map isn\'t clear enough.')+'" /><\/a>';
+			'<a id="LargeMapLink" href="map.php?gameID='+gameID+'&turn='+newTurn+'&mapType=large'
+				+'" target="blank" class="light">'+'<div class="button">'
+				+'<img src="images/historyicons/bigmap.png"> Big map</div> </a>';
 	
 	// Update the source for the map image
-	$('mapImage').src = 'map.php?gameID='+gameID+'&turn='+newTurn + (useroptions.showMoves=='No'?'&hideMoves':'');
+	$('mapImage').src = 'map.php?gameID='+gameID+'&turn='+newTurn;
 }
 
 function recolorMap() 
@@ -158,3 +164,13 @@ function recolorMap()
 
 recolorMap();
 Event.observe($('mapImage'),'load',recolorMap);
+
+// Try to relad the map 5 times bevore showing an error.
+$('mapImage').addEventListener("error", loadImgFail);
+function loadImgFail()
+{
+	if (($('mapImage').src.match(/X/g)||[]).length < 5) 
+		$('mapImage').src = $('mapImage').src + 'X';
+	else
+		$('mapImage').src = 'images/icons/alert.png';
+}

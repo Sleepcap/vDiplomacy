@@ -21,8 +21,10 @@
 defined('IN_CODE') or die('This script can not be run by itself.');
 
 require_once(l_r('admin/adminActions.php'));
+require_once(l_r('admin/adminActionsVDip.php'));
 require_once(l_r('admin/adminActionsForum.php'));
 require_once(l_r('admin/adminActionsSeniorMod.php'));
+require_once(l_r('admin/adminActionsRestrictedVDip.php'));
 require_once(l_r('admin/adminActionsRestricted.php'));
 require_once(l_r('admin/adminActionsTD.php'));
 
@@ -189,13 +191,13 @@ class adminActionsForms
 					print '<p>'.l_t('Game link').': <a href="board.php?gameID='.$Game->id.'">'.$Game->name.'</a></p>';
 				}
 
-				if( isset($paramValues['userID']) )
+				if( isset($paramValues['userID']) && $paramValues['userID'] <> null )
 				{
 					$User = new User((int)$paramValues['userID']);
 					print '<p>'.l_t('User link').': '.$User->profile_link().'</p>';
 				}
 
-				if( isset($paramValues['postID']) )
+				if( isset($paramValues['postID']) && $paramValues['postID'] <> null )
 				{
 					print '<p>'.l_t('Post link').': '.libHTML::threadLink($paramValues['postID']).'</p>';
 				}
@@ -224,9 +226,19 @@ class adminActionsForms
 
 					self::save($name, $paramValues, $details);
 
-					$description = '<p class="notice">'.$details.'</p>
-									<p>'.l_t($description).'</p>';
-
+					if (defined("INBOARD"))
+					{
+						global $gameID;
+						$description = '<p class="notice">'.$details.'</p>'.
+										'<p class="notice"><a href="board.php?gameID='.$gameID.'">Click here to update the gamepage.</a></p>'.
+										'<p>'.l_t($description).'</p>';
+					}
+					else
+					{
+						$description = '<p class="notice">'.$details.'</p>
+										<p>'.l_t($description).'</p>';
+					}
+					
 					$Misc->LastModAction = time();
 				}
 
@@ -370,7 +382,7 @@ else
 	elseif ( $User->type['ForumModerator'] )
 		$adminActions = new adminActionsForum();
 	else
-		$adminActions = new adminActions();
+		$adminActions = new adminActionsVDip();
 
 	adminActionsForms::$target = "admincp.php";
 	$adminActions->actionsList = adminActions::$actions;

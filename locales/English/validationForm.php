@@ -20,7 +20,24 @@
 
 defined('IN_CODE') or die('This script can not be run by itself.');
 
-?><h2>Anti-bot Validation</h2>
+?>
+<h2>No Multiaccounting</h2>
+<p>
+	The account registered the first time you were here is <b>permanently</b> yours.<br>
+	You may <b>not change to another under any circumstances</b>, or else you will get <b>banned</b>.
+	<ul>
+		<li>If you forgot your password, use the lost password finder <a href="logon.php?forgotPassword=1">here</a>.</li>
+		<li>If you forgot your username, use the username recovery <a href="logon.php?resendUsername=1">here</a>.</li>
+		<li>If you forgot both, first use the username recovery <a href="logon.php?resendUsername=1">here</a>, and than the lost password finder <a href="logon.php?forgotPassword=1">here</a>.</li>
+		<li>If you are still unable to log in, contact the mods here: <a href="mailto:<?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail)?>"><?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail)?></a></li>
+	</ul>
+</p>
+<h2>No Metagaming</h2>
+<p>
+	You can't make alliances <b>for reasons outside a game</b>, such as because you are friends, relatives or in return for a favour in another game.&nbsp; This is known as metagaming and is against the rules because it gives an unfair advantage to those involved.&nbsp; If you are worried that you can't stab someone because you want to stay friends, then that's fair enough but you can't join a game with them.
+</p>
+
+<h2>Register and Anti-bot Validation</h2>
 
 <form method="post" action="register.php" id="wd-register-form">
 
@@ -173,14 +190,14 @@ libHTML::$footerScript[] = 'initializeAntiBotBoard();';
 		<button type="button" 
 			class="green-Submit" 
 			onClick="onSubmit()"
-			value="Validate me">Submit</button>
+			value="This is my first and only account, please validate me">Submit</button>
 
 	<?php
 	}
 	else
 	{
 	?>
-		<input type="submit" class="green-Submit" value="Validate me">
+		<input type="submit" class="green-Submit" value="This is my first and only account, please validate me">
 	<?php
 	}
 	?>

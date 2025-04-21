@@ -305,6 +305,9 @@ print '<div class="content">';
 $DB->sql_put("COMMIT"); // Unlock our user row, to prevent deadlocks below
 // This means our $User object should only be used for reading from
 
+ini_set('memory_limit',"40M");
+ini_set('max_execution_time','40');
+
 
 /*
  * - Update session table
@@ -415,44 +418,13 @@ $currentProcessTime = time();
 $Misc->LastProcessTime = $currentProcessTime;
 $Misc->write();
 
-# Take member / bot submitted game ID hints for games that may need early processing,
-# and add them to the list of games to be checked
-$gameIDHints = $MC->get('processHint');
-// Set to 1 to ensure there is always a value, so that on startup this key will be reliably created
-if( !$gameIDHints ) $MC->set('processHint','1'); // If memcached is restarted processHint will be unset
-else $MC->replace('processHint','1');
-if( $gameIDHints )
-{
-	$gameIDHints = explode(',',trim(''.$gameIDHints));
-	$ids = array();
-	foreach($gameIDHints as $id)
-	{
-		if ( $id && strlen($id) > 0 )
-		{
-			$ids[] = (int)$id;
-		}
-	}
-	$ids = array_unique($ids, SORT_NUMERIC);
-	$gameIDHints = "";
-	if ( count($ids) > 0 ) {
-		$gameIDHints = " OR id IN ( ".implode(',',$ids)." ) ";
-	}
-}
-else
-{
-	$gameIDHints = "";
-}
+
 
 
 $startTime = $currentProcessTime; // Only do ~30 sec of processing per cycle
 $tabl = $DB->sql_tabl("SELECT * FROM wD_Games
-	WHERE processStatus='Not-processing' AND ( processTime <= ".time()." ".
-	$gameIDHints." ". // Game IDs triggered from memcached
-	( count($readyGames) > 0 ? " OR id IN ( ".implode(',',$readyGames)." ) " : "" ). // Game IDs triggered from ready votes
-	" ) AND gameOver='No'"); // Using gameOver means one index can be used making the query much quicker
-	//" ) AND NOT phase='Finished'");
+	WHERE processStatus='Not-processing' AND processTime <= ".time()." AND NOT phase='Finished'");
 
-$dirtyApiKeys = array(); // Keep track of any api keys with cached data that needs cleansing
 while( (time() - $startTime)<30 && $gameRow=$DB->tabl_hash($tabl) )
 {
 	$MC->set('processing'.$gameRow['id'], time(), 60); // Set a hint that nothing should be saved/cached for this game as it's being processed
@@ -484,11 +456,6 @@ while( (time() - $startTime)<30 && $gameRow=$DB->tabl_hash($tabl) )
 				$DB->sql_put("UPDATE wD_Games SET attempts=0 WHERE id=".$Game->id);
 				$DB->sql_put("COMMIT");
 				print l_t('Processed.');
-				
-				// Flush any memcached data about this game which is may be dirty
-				$stabl = $DB->sql_tabl("SELECT apiKey FROM wD_Members m INNER JOIN wD_ApiKeys a ON m.userID = a.userID WHERE m.gameID = ".$Game->id);
-				while(list($apiKey) = $DB->tabl_row($stabl))
-					$dirtyApiKeys[] = $apiKey;
 			}
 		}
 
@@ -524,31 +491,29 @@ while( (time() - $startTime)<30 && $gameRow=$DB->tabl_hash($tabl) )
 	print '<br />';
 }
 
-$dirtyApiKeys = array_unique($dirtyApiKeys);
-foreach($dirtyApiKeys as $key)
-	$MC->delete(str_replace(' ','_','api'.$key.'players/missing_orders'));
-
-
-if( defined('RUNNINGFROMCLI') ) 
+// Find any turns which have just passed more than one year old, and 
+// If it took over 30 secs there may still be games to process
+if( (time() - $startTime)>=30 )
 {
-	$DB->sql_put("COMMIT");
-	print "Gamemaster script ended successfully.\n";
+	/*
+	 * For when you're developing and just reloaded the DB from a backup,
+	 * you usually have to refresh a few times before it runs out of games
+	 * to process
+	 */
+	header('refresh: 4; url=gamemaster.php');
+	print '<p class="notice">'.l_t('Timed-out; re-running').'</p>';
 }
 else
 {
-	// Find any turns which have just passed more than one year old, and 
-	// If it took over 30 secs there may still be games to process
-	if( (time() - $startTime)>=30 )
-	{
-		/*
-		 * For when you're developing and just reloaded the DB from a backup,
-		 * you usually have to refresh a few times before it runs out of games
-		 * to process
-		 */
-		header('refresh: 4; url=gamemaster.php');
-		print '<p class="notice">'.l_t('Timed-out; re-running').'</p>';
-	}
-	print '</div>';
-
-	libHTML::footer();
+	// Finished all remaining games with time to spare; update the civil disorder and NMR counts
+	//libGameMaster::updateCDNMRCounts();
 }
+
+// Check for ModEmail:
+if (Config::$modEMailLogin != '' && Config::$modEMailPassword != '')
+	require_once(l_r('modforum/checkModEmail.php'));
+
+print '</div>';
+libHTML::footer();
+
+?>

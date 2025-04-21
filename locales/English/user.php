@@ -106,6 +106,26 @@ foreach ($User->options->value as $name=>$val)
  	                               
 if( $User->type['User'] ) 
 {
+	// If the user is registered show the list of muted users/countries:
+
+// Patch to block Users	
+	$BlockedUsers = array();
+	foreach($User->getBlockUsers() as $blockUserID) {
+		$BlockedUsers[] = new User($blockUserID);
+	}
+	if( count($BlockedUsers) > 0 ) {
+		print '<li class="formlisttitle">Blocked users:</li>';
+		print '<li class="formlistdesc">The users which you blocked are unable to join your games and you can\'t join their games.</li>';
+		print '<li class="formlistfield"><ul>';
+		foreach ($BlockedUsers as $BlockedUser) {
+			print '<li>'.$BlockedUser->profile_link().' '.libHTML::blocked("profile.php?userID=".$BlockedUser->id.'&toggleBlock=on&rand='.rand(0,99999).'#block').'</li>';
+		}
+		print '</ul></li>';
+	}
+	
+// End Patch
+	$MutedUsers = array();
+	foreach($User->getMuteUsers() as $muteUserID) 
 	if (!isset(Config::$customForumURL))
 	{
 		// If the user is registered show the list of muted users/countries:
@@ -187,6 +207,7 @@ if( $User->type['User'] )
 		}
 	}
 }
+
 /*
  * This is done in PHP because Eclipse complains about HTML syntax errors otherwise
  * because the starting <form><ul> is elsewhere
@@ -194,8 +215,5 @@ if( $User->type['User'] )
 print '</ul>
 
 <p><input type="submit" class="green-Submit" value="Update"></p>';
-print libAuth::formTokenHTML();
-print '</form>
-</div>';
 
 ?>

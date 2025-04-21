@@ -1,0 +1,485 @@
+<html>
+<body bgcolor="#e6e5df">
+<div style="font-family:'Verdana',sans-serif;">
+<style>
+h2.baron1900 {}
+h3.baron1900 {margin-left:0px;}
+h4.baron1900 {}
+p.baron1900 {
+    text-align:justify;
+    
+    margin-right: 1em;
+}
+pre.baron1900 {
+    font-family: courier, monospace;
+    white-space: pre;
+    padding-right:0.5em;
+}
+table.credits{margin-left:2em;margin-right:auto;}
+td.creditsby{font-style: italic;text-align:left;padding-right:1em}
+td.creditsname{padding-left: 0.5em}
+td.creditshandle{padding-left:1em; font-size:95%;}
+
+table.baron1900 {
+    text-align:left;
+    border:1px solid #dddddd;
+    border-spacing:5px;
+    border-collapse:collapse;
+    margin-left: 1em;
+    margin-right: 1em;
+}
+th.baron1900 {padding:2px;border:1px solid;}
+td.imagecell {padding:2px;border:1px solid;}
+td.powername {padding:2px;border:1px solid;padding-left:0.5em;}
+td.units {padding:2px;border:1px solid;font-family:courier;white-space:nowrap;font-size:75%;}
+td.abbrev {padding:2px;border:1px solid;font-family:courier;font-size:75%;vertical-align:top;}
+td.generic {padding:2px;border:1px solid;padding-left:0.5em;}
+blockquote.commentary {
+    background-color:#fafafa;
+    font-family:'Times New Roman', Times, serif;
+    padding-left:1em;
+    padding-right:0.5em;
+    text-align:justify;
+    padding-top:0.25em;
+    padding-bottom:0.25em;
+    margin-right:1em;
+}
+blockquote.impchange {
+    background-color:lightcyan;
+    font-size:95%;
+    padding-left:1em;
+    padding-right:0.5em;
+    padding-top:0.25em;
+    padding-bottom:0.25em;
+    text-align:justify;
+    margin-right:1em;
+}
+ul.baron1900 { }
+ul.baron1900 > li {
+    text-align:justify;
+    margin-right:1em;
+    padding-top:0.5em;
+}
+
+ul.baron1900 > li:before {
+    padding-right: 0.4em;
+    text-align: right;
+}
+
+ol.baron1900 {
+    list-style-type: decimal;
+    counter-reset: item;
+}
+
+ol.baron1900 ol.baron1900{
+    list-style-type:lower-alpha;
+}
+
+ol.baron1900 ol.baron1900 ol.baron1900{
+    list-style-type:lower-roman;
+}
+
+ol.baron1900 > li {
+    counter-increment: item;
+    padding-top:0.5em;
+    text-align:justify;
+    margin-right:1em;
+    
+}
+
+ol.baron1900 ol.baron1900 > li {
+    font-size:90%;
+    padding-top:0.25em;
+    margin-right:1em;
+}
+
+ol.baron1900 > li:before {
+    color:#e6e5df;
+    
+}
+
+ol.baron1900 ol.baron1900 > li:before {
+    color:#e6e5df;
+}
+
+li blockquote.commentary {
+    margin-left:0em;
+    margin-right:0em;
+}
+
+li blockquote.impchange {
+    margin-right:0em;
+    margin-left:0em;
+}
+
+
+</style>
+<p class="baron1900">Baron VonPowell's <em>1900</em> is a variant that intends to capture the spirit of conventional <em>Diplomacy</em> while increasing both the historicity of the map and the likelihood of interaction between all seven powers.  The original full rules are hosted at the <a href="http://uk.diplom.org/pouch//Online/variants/1900.html">Diplomatic Pouch</a>.  You may find the <a href="http://uk.diplom.org/pouch//Online/variants/1900-061119.pdf">Gamer's Guide to 1900</a> useful to understand how the changes to the standard <em>Diplomacy</em> map yield a fairly different balance of power.</p>
+<table class="credits">
+<tr>
+<td class="creditsby">Variant designed by</td>
+<td class="creditsname">Baron M. Powell</td>
+</tr>
+<tr>
+<td class="creditsby">Variant Adapted to vDiplomacy by</td>
+<td class="creditsname">W. Alex Ronke</td>
+</tr>
+<tr>
+<td class="creditsby">Code for the Suez Canal Rules by</td>
+<td class="creditsname">Tobias Florin</td>
+</tr>
+<tr>
+<td class="creditsby">Rules Edited &amp; Transcribed by</td>
+<td class="creditsname">W. Alex Ronke </td>
+</tr>
+</table>
+<h3 class="baron1900">Contents</h2>
+<ol class="baron1900">
+<li>The Short Rules
+    <ol class="baron1900">
+    <li>Basics</li>
+    <li>Powers, Colors, &amp; Units</li>
+    <li>List of Names &amp; Abbreviations</li>
+    </ol>
+</li>
+<li>The Verbose Transcribed Rules
+    <ol class="baron1900">
+    <li>Introduction</li>
+    <li>Map Changes</li>
+    <li>Unit Changes</li>
+    <li>Rule Changes
+        <ol class="baron1900">
+        <li>Victory Conditions</li>
+        <li>Egypt &amp; Algeria</li>
+        <li>Geography</li>
+        <li>The Suez Canal Rules</li>
+        <li>The Russian Emergency Measures Rule (EMR)</li>
+        </ol>
+    </li>
+    <li>Conclusion</li>
+    </ol>
+</li>
+</ol>
+<h2 class="baron1900">The Short Rules</h2>
+<h3 class="baron1900">Basics</h3>
+<ol class="baron1900"><li>18+ SCs to solo.
+<ol class="baron1900"><li>The player must also have a higher number of SCs than any other player.  
+<li>If two players tie at 18+ SCs, the game goes on.</ol>
+<li>Britain &amp; France start with Egypt &amp; Algeria, respectively, but can't build there.
+<li>Britain starts with Liverpool vacant.
+<li>Gibraltar connects Spain and Morocco for fleets and armies.
+<ol class="baron1900"><li>It's like any other canal except it <u>can</u> be convoyed through.
+<li>Gibraltar breaks up the coast of Spain, but not the coast of Morocco.
+<li>Gibraltar is not an SC, but Britain starts with a fleet there.</ol>
+<li>Mid-Atlantic Ocean (Mid) connects to Egypt &amp; Hejaz (going around the cape).
+<ol class="baron1900"><li>Movement around the cape is at half-strength.
+<li>Mid can't support Egypt or Hejaz to hold, and Mid can't support moves to Egypt or Hejaz.
+<li>Egypt and Hejaz can't support Mid to hold, and they can't support moves to Mid.
+<li>Read more details in the <a href="#SuezCanalRules">Suez Canal Rules</a>.</ol>
+<li>When Russia has control of one, but not all, of its home SCs, the Emergency Measures Rule (EMR) goes into effect. <ol class="baron1900"><li>Russia can keep one extra unit while the EMR is in effect.<li>Russia can also build in Siberia.<li>Siberia isn't an SC.<li>It doesn't matter if Siberia changes color.
+<li>Read more details in the <a href="#RussianEMR">Russian EMR</a> section.</ol>
+</ol>
+<h3 class="baron1900">Powers, Colors, &amp; Units</h3>
+<p class="baron1900">This section shows the units in a higher level of detail and describes the reasoning behind their colors.  Armies are displayed as hexes, while fleets are shown as triangular sails.</p>
+<table class="baron1900">
+<tr>
+<th class="baron1900">Unit Image</th>
+<th class="baron1900">Power</th>
+<th class="baron1900">Starting Units</th>
+<th class="baron1900">Color &amp; Historical Background</th>
+</tr>
+<tr><td class="imagecell"><img src="variants/Baron1900/resources/units_Austria.png" alt="Austria-Hungary Units"></td>
+<td class="powername">Austria-Hungary</td>
+<td class="units">A Budapest<br>A Trieste<br>A Vienna</td>
+<td class="generic">Yellow, a color in the Habsburg flag</td>
+</tr>
+<tr><td class="imagecell"><img src="variants/Baron1900/resources/units_Britain.png" alt="Britain Units"></td>
+<td class="powername">Britain</td>
+<td class="units">F Edinburgh<br>F Egypt<br>F Gibraltar<br>F London</td>
+<td class="generic">Navy Blue, a color present in the flag of the UK and in British navy uniforms</td>
+</tr>
+<tr><td class="imagecell"><img src="variants/Baron1900/resources/units_France.png" alt="France Units"></td>
+<td class="powername">France</td>
+<td class="units">A Algeria<br>F Brest<br>A Paris<br>A Marseilles</td>
+<td class="generic">Teal Blue, the shade of blue used in the insignia of the French Air Force</td>
+</tr>
+<tr><td class="imagecell"><img src="variants/Baron1900/resources/units_Germany.png" alt="Germany Units"></td>
+<td class="powername">Germany</td>
+<td class="units">A Berlin<br>A Cologne<br>F Kiel<br>A Munich</td>
+<td class="generic">Black, a color in the German flag of the second Reich</td>
+</tr>
+<tr><td class="imagecell"><img src="variants/Baron1900/resources/units_Italy.png" alt="Italy Units"></td>
+<td class="powername">Italy</td>
+<td class="units">A Milan<br>F Naples<br>A Rome</td>
+<td class="generic">Bright Green, a color in the Italian flag</td>
+</tr>
+<tr><td class="imagecell"><img src="variants/Baron1900/resources/units_Russia.png" alt="Russia Units"></td>
+<td class="powername">Russia</td>
+<td class="units">A Moscow<br>F St. Petersburg (sc)<br>F Sevastapol<br>A Warsaw</td>
+<td class="generic">Drab Green, also known as Russian Green, used in Russian military uniforms of the period</td>
+</tr>
+<tr><td class="imagecell"><img src="variants/Baron1900/resources/units_Turkey.png" alt="Turkey Units"></td>
+<td class="powername">Turkey</td>
+<td class="units">F Ankara<br>A Constantinople<br>A Damascus</td>
+<td class="generic">Red, the primary color of the Ottoman flag</td>
+</tr>
+</table>
+<h3 class="baron1900">List of Names &amp; Abbreviations</h3>
+<p class="baron1900">Supply Centers are marked with an asterisk (*).</p>
+<table class="baron1900">
+<tr>
+<th class="baron1900">A-L</th>
+<th class="baron1900">M-Y</th>
+</tr>
+<tr>
+<td class="abbrev">
+<pre class="baron1900">
+Adr     Adriatic Sea
+Aeg     Aegean Sea
+Alg     Algeria*
+Als     Alsace
+Ank     Ankara*
+Apu     Apulia
+Ara     Arabia
+Arm     Armenia
+Bal     Baltic Sea
+Bar     Barents Sea
+Bel     Belgium*
+Ber     Berlin*
+Bla     Black Sea
+Boh     Bohemia	
+Bos     Bosnia
+Bre     Brest*
+Bud     Budapest*
+Bul     Bulgaria*
+Bur     Burgundy
+Cly     Clyde
+Col     Cologne*
+Con     Constantinople*
+Cyr     Cyrenaica
+Dam     Damascus*
+Den     Denmark*
+Eas     Eastern Mediterranean Sea
+Edi     Edinburgh*
+Egy     Egypt*
+Eng     English Channel
+Fin     Finland
+Gal     Galicia
+Gas     Gascony
+GBo     Gulf of Bothnia
+Gib     Gibraltar
+GLy     Gulf of Lyon
+Gre     Greece*
+Hej     Hejaz
+Hel     Helgoland Bight
+Ice     Iceland
+Ion     Ionian Sea
+Ire     Ireland
+Iri     Irish Sea
+Kie     Kiel*
+Kon     Konya
+Lon     London*
+Lvo     Livonia
+Lvp     Liverpool*
+</pre>
+</td>
+<td class="abbrev">
+<pre class="baron1900">
+Mac     Macedonia
+Mar     Marseilles*
+Mid     Mid-Atlantic Ocean
+Mil     Milan*
+Mor     Morocco*
+Mos     Moscow*
+Mun     Munich*
+Nap     Naples*
+NAt     North Atlantic Ocean
+Net     Netherlands*
+Nth     North Sea
+Nwg     Norwegian Sea
+Nwy     Norway*
+Pal     Palestine
+Par     Paris*
+Pic     Picardy
+Pie     Piedmont
+Por     Portugal*
+Pru     Prussia
+Rom     Rome*
+Rum     Rumania*
+Ser     Serbia*
+Sev     Sevastapol*
+Sib     Siberia
+Sil     Silesia
+Ska     Skagerrak
+Sou     Southern Algeria
+Spa     Spain*
+StP     St. Petersburg*
+Swe     Sweden*
+Swi     Switzerland*
+Tri     Trieste*
+Trp     Tripolitania*
+Tun     Tunisia
+Tyr     Tyrolia
+TyS     Tyrrhenian Sea
+Ukr     Ukraine
+Ven     Venetia
+Vie     Vienna*
+Wal     Wales
+War     Warsaw*
+Wes     Western Mediterranean Sea
+Yor     Yorkshire
+</pre>
+</td>
+</tr>
+</table>
+<h2 class="baron1900">The Verbose Transcribed Rules</h2>
+<p class="baron1900">In this transcribed copy of Baron VonPowell's official variant description, the editor has made an effort to distinguish Baron VonPowell's commentary from the actual rules.  Commentary text from Baron is shown as blockquotes with a gray background.  Editor's notes are shown as blockquotes with a light blue background.</p>
+<h3 class="baron1900">INTRODUCTION</h3>
+<blockquote class="commentary">
+<div>My name is Baron Powell and I'm the designer of 1900. 1900 is very similar to conventional Diplomacy, only better, if I do say so myself. What primarily distinguishes 1900 from Diplomacy is the map, which shows Europe and the entire northern coast of Africa at the turn of the century. There are also some unit changes and two major rule changes. These are discussed below.</div>
+</blockquote>
+<h3 class="baron1900">MAP CHANGES</h3>
+<ol class="baron1900">
+<li>There are thirty-nine SCs. The Great Powers control twenty-five at game-start: Britain, France, Germany, and Russia have four SCs each and Austria-Hungary, Italy, and Turkey have three SCs each. The remaining fourteen SCs are neutral at game-start.</li>
+<li>Morocco is separated from North Africa and is a neutral SC.<br>
+<blockquote class="commentary">
+<div>This reflects the fact that Morocco was independent in 1900 and also a tremendous source of friction between the Great Powers.</div>
+</blockquote>
+</li>
+<li>What's left of North Africa is split into two spaces: Algeria and Southern Algeria. Algeria is a French SC. <br>
+<blockquote class="commentary">
+<div>This represents France's dominant presence in the area.</div>
+</blockquote>
+</li>
+<li>The Tyrrhenian Sea touches Algeria, where it doesn't touch North Africa in Diplomacy. <br>
+<blockquote class="commentary">
+<div>This makes it easier for Italy to stake a claim on French territory.</div>
+</blockquote>
+</li>
+<li>Tunisia is no longer a SC. It is now simply a buffer between two SCs - French Algeria and neutral Tripolitania.</li>
+<li>Libya appears on the map and is represented by two spaces:</li>
+<li>Tripolitania, a neutral SC, and Cyrenaica, which serves as a buffer between Tripolitania and British Egypt. <br>
+<blockquote class="commentary">
+<div>Though Turkey controlled Tripolitania and Cyrenaica in 1900, the fact that the former is a neutral SC rather than Turkish reflects the Ottoman Empire's increasingly loose hold on the area.</div>
+</blockquote>
+</li>
+<li>Egypt appears on the map and is a British SC. <br>
+<blockquote class="commentary">
+<div>The British undeniably felt Egypt was a key territory in their vast empire. Never mind that the Turks felt Egypt belonged to them. Having a British SC within arms reach of Turkish territory dramatically increases the need for British, and therefore French and German, interaction with not only Turkey, but also Austria-Hungary, Italy, and Russia.</div>
+</blockquote>
+</li>
+<li>Syria has been renamed Damascus and is a Turkish SC. At the same time, Smyrna has been renamed Konya and is no longer a Turkish SC. <br>
+<blockquote class="commentary">
+<div>This flip-flop makes it more difficult for Turkey to establish a dominant position in the southeast corner of the map.</div>
+</blockquote>
+</li>
+<li>Two additional Turkish spaces appear on the map, Palestine and Hejaz. <blockquote class="commentary">
+<div>Palestine's primary purpose is to serve as a buffer between Turkish Damascus and British Egypt.</div>
+</blockquote>
+<blockquote class="impchange"><strong>Aesthetic Note:</strong><br>Palestine has a tiny southern coast, but this is only displayed on the map for geographic accuracy. Only Palestine's primary coast along the Mediterranean is playable.</blockquote>
+</li>
+<li>A new neutral space, Arabia, is sandwiched in between Damascus, Palestine, and Hejaz.</li>
+<li>Turkey controls a large territory in the Balkans called Macedonia. Macedonia has two coasts, east and west, and touches no less than eight other spaces. Albania, which came into existence in 1912 after the Balkan Wars, no longer exists.</li>
+<li>Moscow is split into two spaces: Moscow and Siberia. This division frustrates the formation of stalemate lines.</li>
+<li>Trieste is split into two spaces: Trieste and Bosnia. <br>
+<blockquote class="commentary">
+<div>In 1900, Bosnia was under Austro-Hungarian administration, but was not technically a part of the Dual Monarchy. The Dual Monarchy's annexation of nominally Turkish Bosnia in 1908 nearly resulted in WWI erupting six years early.</div>
+</blockquote>
+</li>
+<li>Vienna no longer touches Galicia. Instead, Budapest now touches Bohemia. <br>
+<blockquote class="commentary">
+<div>Not only is this geographically correct, as a look at a map of the Czech Republic today will confirm, it also prevents a particularly nasty tactic that Austria-Hungary and Germany could use against Russia given the new unit at-start positions discussed shortly.</div>
+</blockquote>
+</li>
+<li>Venice is no longer a SC. This diffuses the tension between Diplomacy's weak sisters, Austria-Hungary and Italy. Venice is also renamed Venetia.</li>
+<li>A new space, Milan, is an Italian SC.</li>
+<li>Tuscany no longer exists. Rome now borders the Gulf of Lyon, Piedmont, and Milan. This helps Italy reinforce its northern position.</li>
+<li>A Gibraltar space is added. Gibraltar divides the south coast of Spain in two (i.e., Spain now has three coasts: north, east, and west). Gibraltar is a sea space for convoy purposes, but an army can move there from either Morocco (via the crossing arrow) or Spain, and prevent a fleet from entering.</li>
+<li>Ruhr is renamed Cologne and is a German SC. <br>
+<blockquote class="commentary">
+<div>This additional SC makes the Reich more formidable and allows it to serve as more of a counterweight to Diplomacy's Big Boys, France and Russia.</div>
+</blockquote>
+</li>
+<li>A new space, Alsace, separates French Burgundy from German Cologne and Munich. <br>
+<blockquote class="commentary">
+<div>This prevents the Kaiser from taking advantage of the new German unit at-start position to perpetrate evil on France during the first game-turn.</div>
+</blockquote>
+</li>
+<li>Holland is renamed Netherlands.</li>
+<li>Switzerland is a neutral SC. <br>
+<blockquote class="commentary">
+<div>This makes for some very interesting dynamics between Austria-Hungary, France, Germany, and Italy.</div>
+</blockquote>
+</li>
+<li>Ireland borders the Mid-Atlantic Ocean. There is a crossing arrow between Ireland and Clyde.</li>
+</ol>
+<h3 class="baron1900">UNIT CHANGES</h3>
+<ol class="baron1900">
+<li>Austria-Hungary starts with an army in Trieste instead of a fleet. <br>
+<blockquote class="commentary">
+<div>The Imperial and Royal Army was the glue that held the Empire together. The undernourished Austro-Hungarian Navy was little more than an afterthought. This third army greatly enhances the Dual Monarchy's flexibility and options.</div>
+</blockquote>
+</li>
+<li>Britain starts with four units: F London, F Edinburgh, F Gibraltar, and F Egypt. Note that Liverpool is still a SC, but the army that starts there in Diplomacy is gone. At the same time, note that Gibraltar is not a SC. <br>
+<blockquote class="commentary">
+<div>Britain was the premier sea power at the turn of the century, but its puny army was almost embarrassing for a nation of Britain's stature. The vaunted, and diminutive, British Expeditionary Force wasn't formed until just before WWI.</div>
+</blockquote>
+</li>
+<li>France starts with four units: A Paris, F Brest, A Marseilles, and A Algeria. <br>
+<blockquote class="commentary">
+<div>The last unit reflects the military presence France maintained in its African territories. The strong French garrison was no doubt a prudent deterrent given Italian ambitions to establish an African empire that the Romans themselves would have been proud of.</div>
+</blockquote>
+</li>
+<li>Germany starts with four units: A Berlin, A Cologne, F Kiel, and A Munich. <br>
+<blockquote class="commentary">
+<div>The supremacy of the German army was acknowledged, grudgingly, by all of the Great Powers. In Diplomacy, however, Germany seems pathetically weak when compared to the actual colossus that was the Second Reich. The additional army gives the Kaiser real options to conduct a two-front war if necessary or desired.</div>
+</blockquote>
+</li>
+<li>The Italian army that started in Venice now starts in Milan.</li>
+<li>The Turkish army that started in Smyrna now starts in Damascus.</li>
+</ol>
+<h3 class="baron1900">RULE CHANGES</h3>
+<blockquote class="commentary">
+<div>I did not want to make dramatic changes to Diplomacy's basic rules. With the few exceptions discussed below, all rules for Diplomacy apply to 1900 as  well. In all but two cases, the rule changes represent little more than minor revisions to account for the new map. The two major exceptions are the Suez Canal Rules and the Russian Emergency Measure Rule. The Suez Canal Rules are a series of rules governing movement and combat between the Mid-Atlantic Ocean space and the Egypt/Hejaz spaces. These rules serve to give 1900 a distinct character primarily because they dramatically increase the need for all of the Great Powers to talk to each other from the beginning of the game, an end state I definitely hoped to achieve. The Russian Emergency Measures Rule (hereafter simply REM) was a late addition to the variant rules that was inserted to enhance play balance when repeated game play showed that Russia's offensive potential was satisfactory, but its defensive prospects needed to be enhanced given greater Austro-Hungarian and German strength.</div>
+</blockquote>
+<h4 class="baron1900">Victory Conditions</h4>
+<p class="baron1900">Victory conditions have not changed. If a Great Power gains control of eighteen supply centers, the game ends and the player controlling that Great Power is declared the winner. With thirty-nine supply centers, though, it is now possible for two Great Powers to get eighteen supply centers on the same game-turn. Should this happen, the player representing the Great Power with the most supply centers is the winner. If the two Great Powers each control the same number of supply centers, play continues until one Great Power controls at least eighteen supply centers and that Great Power controls more supply centers than any other Great Power.</p>
+<h4 class="baron1900">Egypt &amp; Algeria</h4>
+<p class="baron1900">Egypt and Algeria, while controlled by Britain and France respectively at game-start, are not considered home supply centers. This means that Britain may not build in Egypt and France may not build in Algeria. This also explains why Egypt is not called Cairo and Algeria not called Algiers.</p>
+<blockquote class="impchange"><strong>Minor Rules Change for vDip:</strong><br>For the vDiplomacy implementation, Algeria and Egypt are not build locations (as intended). However, they <em>are</em> treated as "home" centers when calculating default destroy orders under civil disorder (NMR).</blockquote>
+<h4 class="baron1900">Geography</h4>
+<ul class="baron1900"><li>Iceland, Ireland, and Switzerland are now passable.
+<li>Movement between Clyde and Ireland is allowed. This is true even if an enemy fleet is in the North Atlantic Ocean. A convoy is not required to move an army back and forth between Clyde and Ireland.
+<li>Army movement is allowed between Gibraltar and Morocco. No convoy is required in this case. Gibraltar is considered a sea space for convoy purposes.
+<blockquote class="impchange"><strong>Clarification:</strong><br>The verbage "sea space for convoy purposes" can be a bit misleading.  It is intended to mean that a fleet in Gibraltar can convoy armies.  Baron has confirmed that Gibraltar can <u>also</u> be a convoyed army's origin or final destination (like any other coastal space).</blockquote>
+</li>
+</ul>
+<h4 id="SuezCanalRules">The Suez Canal Rules</h4>
+<ol class="baron1900">
+<li>A fleet may move back and forth between Egypt and Hejaz.</li>
+<li>Movement between Egypt or Hejaz and the Mid-Atlantic Ocean is allowed. It is assumed the unit travels around the southern tip of Africa. </li>
+<li>A unit that moves in this manner does so at <span style="text-decoration: underline">half strength</span>. This means that a unit adjacent Egypt or Hejaz succeeds in moving there if opposed only by a fleet moving from the Mid-Atlantic Ocean and a fleet adjacent to the Mid-Atlantic Ocean succeeds in moving there if opposed only by a fleet moving from Egypt or Hejaz.</li>
+<li>A fleet in Egypt or Hejaz cannot support a unit holding in or moving to the Mid-Atlantic Ocean. This is true even though the fleet in Egypt or Hejaz can itself move to the Mid-Atlantic Ocean.</li>
+<li>Likewise, a fleet in the Mid-Atlantic Ocean cannot support a unit holding in or moving to Egypt or Hejaz.</li>
+<li>A fleet moving from Egypt or Hejaz to the Mid-Atlantic Ocean does not cut support being provided by a fleet already in the Mid-Atlantic Ocean unless the attack results in F Mid-Atlantic Ocean being dislodged. The opposite is equally true. A fleet moving from the Mid-Atlantic Ocean to Egypt or Hejaz does not cut support being provided by a unit already in Egypt or Hejaz unless the attack results in the unit being dislodged.</li>
+<li>F Mid-Atlantic Ocean can convoy an army from or to Egypt or Hejaz. An army convoyed from Egypt or Hejaz attacks its destination space at full strength. An army convoyed to Egypt or Hejaz attacks at half strength.</li>
+<li>If two units are retreating to Egypt or Hejaz, or the Mid-Atlantic Ocean, and one of them must travel around the southern tip of Africa, the unit that does not travel around southern Africa may retreat while the other unit is disbanded.</li>
+</ol>
+<h4 id="RussianEMR">The Russian Emergency Measures Rule</h4>
+<p class="baron1900">Whenever Russia possesses at least one, BUT NOT ALL FOUR, of its original home supply centers, it is entitled to maintain one extra unit on the map (i.e., one more than the number of supply centers it currently controls). Additionally, while Russia is in this condition, the Russian player may use Siberia as a build site during the adjustment phase, if Siberia is unoccupied. Should Russia fail to possess at least one home supply center OR should it regain possession of all four of its home supply centers, the ability to maintain an extra unit is lost and any excess units must be disbanded during the subsequent adjustment phase. Further, Siberia reverts too its normal status (i.e., it is no longer a build site)</p>
+<p class="baron1900">Note that Siberia, while it may become a build site, NEVER attains supply center status.</p>
+<blockquote class="commentary">
+<div>The REM Rule reflects the fact that Russia's greatest military assets at the dawn of the 20th century were its seemingly endless supply of manpower and its vast resources. Unfortunately, terrible mismanagement and a weak economy prevented Russia from successfully exploiting these assets. If Russia were to suffer a severe setback, such as is implied by the loss of a home supply center, it seems reasonable to assume the Russian government would be shocked into taking drastic measures to overcome the situation, to include stripping the many garrisons stationed throughout the Asiatic portions of the Empire and better managing its limited industrial capability.</div>
+</blockquote>
+<h3 class="baron1900">Conclusion</h3>
+<blockquote class="commentary">
+<div>So, there you have it. As you can see, 1900 is, at heart, just like the game of Diplomacy that we have all come to know and love. The map, unit, and rule changes do, however, alter the dynamics of how the Great Powers interact with each other. Once you've played, I think you'll agree that it was well worth your time. In fact, I expect you'll be so impressed with 1900 that you may have a tough time going back to conventional Diplomacy.<br>
+<br>A Gamers' Guide to 1900 (PDF format) is also available to help players understand the variant.<br>
+<br>I look forward to hearing from you. Please feel free to contact me at <!-- e -->
+<a href="mailto:VonPowell@aol.com">VonPowell@aol.com</a>
+</div>
+</blockquote>
+</div>
+		
+</body>
+</html>

@@ -19,6 +19,7 @@
  */
 
 require_once(l_r('objects/basic/set.php'));
+require_once('lib/reliability.php');
 
 /**
  * An object representing a relationship between a user and a game. Mostly contains
@@ -77,7 +78,7 @@ class Member
 	 * @var int
 	 */
 	var $points;
-
+	var $vpoints;
 	/**
 	 * The amount the user bet into the game
 	 * @var int
@@ -168,6 +169,24 @@ class Member
 	var $hideNotifications;
 
 	/**
+	 * rlGroup of the player
+	 * @var int
+	 */
+	public $rlGroup;
+	
+	/**
+	 * CC and IP macthes of the Member
+	 * @var int
+	 */
+	public $ccMatch;
+	public $ipMatch;
+	
+	/**
+	 * ChessTimer (Countdown timer)
+	 */
+	public $chessTime;
+	
+	/**
 	 * Create a Member object from a database Member record row
 	 * @param array $row Member record
 	 */
@@ -210,7 +229,7 @@ class Member
 	{
 		if ( $this->Game->phase == 'Pre-game' )
 		{
-			$output = '<a href="userprofile.php?userID='.$this->userID.'">'.$this->username;
+			$output = '<a href="profile.php?userID='.$this->userID.'">'.$this->username;
 		}
 		else
 		{
@@ -221,9 +240,18 @@ class Member
 				$output .= 'style="text-decoration: line-through" ';
 			}
 
-			$output .= 'href="userprofile.php?userID='.$this->userID.'">'.$this->username;
+			$output .= 'href="profile.php?userID='.$this->userID.'">'.$this->username;
 		}
-		return $output.' ('.$this->points.User::typeIcon($this->userType).')</a>';
+		return $output.' ('.$this->vpoints.User::typeIcon($this->userType).')</a>';
+	}
+
+	/**
+	 * How much is this position worth if this game were PPSC?
+	 * @return int
+	 */
+	function pointsValue()
+	{
+		return round($this->supplyCenterNo * $this->Game->Members->pointsPerSupplyCenter());
 	}
 
 	/**
@@ -233,6 +261,11 @@ class Member
 	function pointsValueInTakeover() 
 	{
 		return 0;
+		
+		if ($this->pointsValue() == 0) return 0;
+		$bet = ceil($this->pointsValue() / 2);
+		if ($bet == 0) $bet=1;
+		return  $bet;
 	}	
 
 	/**

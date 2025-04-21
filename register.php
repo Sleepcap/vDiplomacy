@@ -51,7 +51,7 @@ $page = 'firstValidationForm';
 
 $exception = null;
 
-if ( ((isset($_COOKIE['imageToken']) && isset($_REQUEST['imageText'])) || isset($_REQUEST['recaptchaToken'])) && isset($_REQUEST['emailValidate']) )
+if ( ((isset($_COOKIE['imageToken']) && isset($_REQUEST['imageText'])) || isset($_REQUEST['recaptchaToken'])) && isset($_REQUEST['emailValidate']) && isset($_REQUEST['rulesValidate']) )
 {
 	try
 	{
@@ -135,6 +135,12 @@ if ( ((isset($_COOKIE['imageToken']) && isset($_REQUEST['imageText'])) || isset(
 			throw new Exception(l_t("No anti-bot token provided"));
 		}
 
+		// Did he enter the two basic rules?
+		$rules = strtolower(preg_replace ("[^A-Za-z]", "", $_REQUEST['rulesValidate'] ));
+		if ( (strpos($rules, 'multiaccounting') === false) || (strpos($rules, 'metagaming') === false) )
+			throw new Exception(
+				l_t("You did not enter the two rules. Please read and try again."));
+
 		if( !isset($_REQUEST['antiBotCountryID']) || !isset($_REQUEST['antiBotTerritoryIDs']) )
 		{
 			throw new Exception(l_t("No anti-bot country selection provided."));
@@ -150,6 +156,11 @@ if ( ((isset($_COOKIE['imageToken']) && isset($_REQUEST['imageText'])) || isset(
 		{
 			throw new Exception(l_t("The selected territories (".$antiBotTerritoryIDs.") do not match the expected values (".$validTerritoryIDs."). Please click on the supply center territories requested."));
 		}
+		// Did he enter the two basic rules?
+		$rules = strtolower(preg_replace ("[^A-Za-z]", "", $_REQUEST['rulesValidate'] ));
+		if ( (strpos($rules, 'multiaccounting') === false) || (strpos($rules, 'metagaming') === false) )
+			throw new Exception(
+				l_t("You did not enter the two rules. Please read and try again."));
 
 		// The user's imageText is validated; he's not a robot. But does he have a real email address?
 		$email = trim($DB->escape($_REQUEST['emailValidate']));
@@ -162,20 +173,19 @@ if ( ((isset($_COOKIE['imageToken']) && isset($_REQUEST['imageText'])) || isset(
 			throw new Exception(l_t("A first check of this email is finding it invalid. Remember you need one to ".
 				"play, and it will not be spammed or released."));
 
-		// Prelim checks look okay, lets send the email
-		$Mailer->Send(array($email=>$email), l_t('Your new webDiplomacy account'),
-			l_t("Hello and welcome!")."<br><br>
-
-			".l_t("Thanks for validating your email! Use this link to create your webDiplomacy account: ").libAuth::email_validateURL($email)."<br><br>
+		// Prelim checks look okay, lets send the e-mail
+		$Mailer->Send(array($email=>$email), l_t('Your new vDiplomacy account'),
+			l_t("Thanks for validating your e-mail address; just use this link to create your new vDiplomacy account:")."<br>
+			".libAuth::email_validateURL($email)."<br><br>
 
 			".l_t("There are two main rules to keep in mind:")."<br>
 			".l_t("1. You may only have one account.")."<br>
 			".l_t("2. You need to have an invitation code on any game you play with people you know from outside the site to keep games fair.")."<br>
-			".l_t("The rest of the rules can be found here: http://www.webdiplomacy.net/rules.php")."<br><br>
+			".l_t("The rest of the rules can be found here: https://".$_SERVER['SERVER_NAME']."/rules.php")."<br><br>
 
 			".l_t("Join the webDiplomacy community on Discord at https://discord.gg/dPm4QnY")."<br><br>
 
-			".l_t("If you forgot your password, use the lost password finder here: http://www.webdiplomacy.net/logon.php?forgotPassword=1")."<br><br>
+			".l_t("If you forgot your password, use the lost password finder here: https://".$_SERVER['SERVER_NAME']."/logon.php?forgotPassword=1")."<br><br>
 			".l_t("If you have any further problems contact the server's admin at %s.",Config::$adminEMail)."<br><br>
 
 			".l_t("Enjoy your new account!")."<br>"
@@ -228,29 +238,21 @@ switch($page)
 {
 	case 'firstValidationForm':
 	case 'validationForm':
-		print libHTML::pageTitle(l_t('Register a webDiplomacy account'),l_t('<strong>Validate your email address</strong> -&gt; Enter your account settings -&gt; Play webDiplomacy!'));
+		print libHTML::pageTitle(l_t('Register a vDiplomacy account'),l_t('<strong>Validate your e-mail address</strong> -&gt; Enter your account settings -&gt; Play vDiplomacy!'));
 		break;
 
 	case 'emailSent':
 	case 'emailTokenFailed':
 	case 'firstUserForm':
 	case 'userForm':
-		print libHTML::pageTitle(l_t('Register a webDiplomacy account'),l_t('Validate your email address -&gt; <strong>Enter your account settings</strong> -&gt; Play webDiplomacy!'));
-}
-
-// The exception is printed here so that it's below the title and easier to spot
-if( !is_null($exception) )
-{
-	print '<p class="notice">'.$e->getMessage().'</p>';
-	print '<p class="notice">Please contact <a href="mailto:admin@webdiplomacy.net">admin@webdiplomacy.net</a> if you are experiencing continuous issues registering an account.</p>';
-	print '<div class="hr"></div>';
+		print libHTML::pageTitle(l_t('Register a vDiplomacy account'),l_t('Validate your e-mail address -&gt; <strong>Enter your account settings</strong> -&gt; Play vDiplomacy!'));
 }
 
 switch($page)
 {
 	case 'firstValidationForm':
 
-		print '<h2>'.l_t('Welcome to webDiplomacy!').'</h2>';
+		print '<h2>'.l_t('Welcome to vDiplomacy!').'</h2>';
 		print '<p>'.l_t('We are a competitive community looking for fair and fun games; to ensure you are a human with a working email address, please fill out the registration form below. Help us keep the server free of spam and cheaters!').'</p>';
 
 		/*
@@ -302,9 +304,11 @@ switch($page)
 
 		print "<p>".l_t("Thank you for verifying your email address!</p>
 			<p>Enter the username, password, and any of the optional settings you want into the screen below to
-			complete the registration process.")."</p>";
-			//" </br></br><font color='darkred'>Your username is visible to other members and cannot be changed, so please make sure you're sure about it. Keep it appropriate and 
-			//and avoid using your full name if you are concerned about privacy.</font>
+			complete the registration process.")." </br></br><font color='red'>Your username is visible to other members and cannot be changed, so please make sure you're sure about it. Keep it appropriate and 
+			and avoid using your full name if you are concerned about privacy.</font></p>";
+
+			print "<p><b>".l_t("Attention:")."</b> ".
+				l_t("Changing your username is not possible. If you want a different username, you need to contact the mods. So choose carefully.")."</p>";
 
 	case 'userForm':
 		print '<form method="post" class = "settings_show" autocomplete="off"><ul class="formlist">';
@@ -316,9 +320,9 @@ switch($page)
 		print '</div>';
 
 		break;
+
 }
 
 print '</div>';
 libHTML::footer();
-
 ?>

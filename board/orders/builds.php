@@ -95,7 +95,7 @@ class userOrderBuilds extends userOrder
 					AND t.countryID = ".$this->countryID."
 					AND ts.occupyingUnitID IS NULL
 					AND t.supply = 'Yes'
-					AND t.type = 'Coast'
+					AND ( t.type = 'Coast' OR t.type = 'Strait' )
 					AND ( t.coast='No' OR ( t.coast='Parent' AND NOT coast.id IS NULL ) )
 					AND (
 						(t.coast='Parent' AND coast.id=".$this->toTerrID.")

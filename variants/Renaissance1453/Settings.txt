@@ -1,0 +1,39 @@
+name = '1453'
+fullName = 'Renaissance - 1453'
+description= 'Diplomacy and war during the Renaissance'
+author = 'Enriador (original design by Earle Ratcliffe and Michael Cuffaro)'
+adapter = 'Enriador & Oli'
+homepage = 'http://www.dipwiki.com/index.php?title=Renaissance'
+
+starting year = '1453'
+target SCs = '18'
+
+Countries:
+
+1) Venice
+color: 'Austria' (Classic)
+starting units: A Venice, A Trieste, F Athens
+2) Spain
+color: 'Italy' (Classic)
+starting units: F Madrid (South Coast), A Portugal, F Naples
+3) France
+color: 'France' (Classic)
+starting units: A Paris, A Marseilles, F Brussels
+4) England
+color: 'England' (Classic)
+starting units: A Chester, F London, F Brest
+5) Poland-Lithuania
+color: 'Russia' (Classic)
+starting units: A Novgorod, A Warsaw, F Belgorod
+6) Holy Roman Empire
+color: 'Germany' (Classic)
+starting units: A Vienna, A Munich, F Berlin
+7) Turkey
+color: 'Turkey' (Classic)
+starting units: F Bulgaria (North Coast), F Smyrna, A Ankara
+ 
+Special rules: Constantinople, Hannover and Denmark are canals.
+
+Maps and mapNames: None of them has "indexed color palette".
+
+Link to maps: https://www.dropbox.com/sh/ncseheer2w52nu7/AADfj3duNAbRA2qYZLxGOKx2a?dl=0

@@ -1,6 +1,6 @@
 <?php
 /*
-	Copyright (C) 2010 Oliver Auth
+	Copyright (C) 2010 Oliver Auth / 2014 Tobias Florin
 
 	This file is part of the Colonial variant for webDiplomacy
 
@@ -22,13 +22,6 @@
 	Rules for the The Colonial Variant by Peter Hawes:
 	http://www.dipwiki.com/index.php?title=Colonial
 
-	There are 2 unimplementet rules:
-	 - the suez canal -> Egyp is just a canal (like constantinople in the original game)
-	 - the transsibirian railroad
-	If you have some time and programming knowledge feel free to contact me.
-
-	This is Version: 1.7.5
-
 	Changelog:
 	1.0: initial release
 	1.1: corrected some spelling mistake
@@ -44,7 +37,21 @@
 	1.7.2: New places for some units on the smallmap to improve readability
 	1.7.3: New places for some units on the smallmap to improve readability
 	1.7.5: Adjustments for the new variant.php code
+	1.7.6: Fixed absolute-link in rules.html
+	1.7.7: missing Borders added, land bridges allow movement for fleets too
+	1.7.8: missing Borders added
+        
+	2.0: implemented special-rules "Trans-Siberian Railroad", "Suez Canal" (new variant: "Colonial Diplomacy - Original Rules")
+	2.1: adjustments for the new interactive map directory structure
+	2.1.2: Errorfix standoffs now working again.
+	2.1.5: Errorfix Suez canal now do not give Support-Hold...
+	2.1.5: Coast-Childs have no SC
 
+	2.2: Rules revision: Adjusted rules for TSR to be more intuitive in corner cases
+		+ several stuff overworked (fixed TSR with test cases, overworked map output, overworked rules)
+	2.2.1: Fixed Suez being incorrectly counted as unit
+	2.2.2: Updated js code and fixed datc test for stricter order interface
+	
 */
 
 defined('IN_CODE') or die('This script can not be run by itself.');
@@ -56,18 +63,47 @@ class ColonialVariant extends WDVariant {
 	public $fullName='Colonial Diplomacy';
 	public $description='Diplomacy with the colonial countries sparring over the lands and riches of the Far East.';
 	public $author='Peter Hawes';
-	public $adapter='Oliver Auth';
-	public $version='1.7.5';
+	public $adapter='Oliver Auth, Tobias Florin (Trans-Siberian Railroad, Suez Canal)';
+	public $version='2.2';
+	public $codeVersion='2.2.2';
 	public $homepage='http://www.dipwiki.com/index.php?title=Colonial';
-	public $supplyCenterTarget=30;
 
 	public $countries=array('Britain','China','France','Holland','Japan','Russia','Turkey');
 
+	static $transSibTerritories = array('28','35','29','39','40','30');
+        
 	public function __construct() {
 		parent::__construct();
-		$this->variantClasses['drawMap'] = 'Colonial';
-		$this->variantClasses['adjudicatorPreGame'] = 'Colonial';
-		$this->variantClasses['processMembers'] = 'Colonial';
+		$this->variantClasses['drawMap']               = 'Colonial';
+		$this->variantClasses['adjudicatorPreGame']    = 'Colonial';
+		$this->variantClasses['processMembers']        = 'Colonial';
+                
+		//Trans-Sib Railroad
+		$this->variantClasses['drawMap']               = 'Colonial';
+		$this->variantClasses['OrderArchiv']           = 'Colonial';
+		$this->variantClasses['OrderInterface']        = 'Colonial';
+		$this->variantClasses['adjudicatorDiplomacy']  = 'Colonial';
+		$this->variantClasses['processOrderDiplomacy'] = 'Colonial';
+		$this->variantClasses['userOrderDiplomacy']    = 'Colonial';
+                
+		//Suez Canal                       
+		$this->variantClasses['drawMap']               = 'Colonial';
+		$this->variantClasses['OrderArchiv']           = 'Colonial';
+                
+		$this->variantClasses['adjudicatorPreGame']    = 'Colonial';
+                
+		$this->variantClasses['processMembers']        = 'Colonial';
+                
+		$this->variantClasses['OrderInterface']        = 'Colonial'; 
+		$this->variantClasses['adjudicatorDiplomacy']  = 'Colonial';
+	}
+        
+        public function countryID($countryName)
+	{
+		if ($countryName == 'Neutral Suez')
+			return count($this->countries)+1;
+		
+		return parent::countryID($countryName);
 	}
 
 	public function initialize() {
@@ -76,14 +112,14 @@ class ColonialVariant extends WDVariant {
 	}
 
 	public function turnAsDate($turn) {
-		if ( $turn==-1 ) return l_t("Pre-game");
-		else return ( $turn % 2 ? l_t("Autumn").", " : l_t("Spring").", " ).(floor($turn/2) + 1870);
+		if ( $turn==-1 ) return "Pre-game";
+		else return ( $turn % 2 ? "Autumn, " : "Spring, " ).(floor($turn/2) + 1870);
 	}
 
 	public function turnAsDateJS() {
 		return 'function(turn) {
-			if( turn==-1 ) return l_t("Pre-game");
-			else return ( turn%2 ? l_t("Autumn")+", " : l_t("Spring")+", " )+(Math.floor(turn/2) + 1870);
+			if( turn==-1 ) return "Pre-game";
+			else return ( turn%2 ? "Autumn, " : "Spring, " )+(Math.floor(turn/2) + 1870);
 		};';
 	}
 }

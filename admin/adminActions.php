@@ -127,14 +127,30 @@ class adminActions extends adminActionsForms
 					Also the next process time is reset to the new phase length.',
 				'params' => array('gameID'=>'Game ID','phaseMinutes'=>'Minutes per phase'),
 			),
-			
+			'countryReallocate' => array(
+				'name' => 'Reallocate countries',
+				'description' => 'Alter which player has which country. Enter a list like so:
+					"<em>R,T,A,G,I,F,E</em>".<br />
+					The result will be that England will be set to Russia, France to Turkey, etc.<br /><br />
+					Changing the countries of a variant for which the first letter of the countries are not distinct countryID numbers must be used instead.<br /><br />
+					If you aren\'t sure about the order of each country just enter the gameID without anything else and the list of
+					countries in the order will be output.<br /><br />
+					To prevent people sharing invalid info before the countries have been reallocated only no-message games
+					can have their countries reallocated; messages should be enabled only after the countries have been reallocated.<br /><br />
+					The substitution string to reverse the reallocation will be generated, in case you need to reverse the reallocation.<br />
+					(Alternatively you can enter [userID1]=[countryLetter1],[userID2]=[countryLetter2],etc)',
+				'params' => array(
+					'gameID'=>'Game ID',
+					'reallocations'=>'Reallocations list (e.g "<em>R,T,A,G,I,F,E</em>")'
+				)
+			),
 	        'drawType' => array(
 				'name' => 'Change the draw visibility',
 				'description' => 'Change a game\'s draw visibility (public or hidden).',
 				'params' => array(
 					'gameID'=>'Game ID',
 					'newSetting'=>'Enter a number for the desired setting: 1=Public, 2=Hidden'
-				),
+				)
 			),
 			'alterMessaging' => array(
 				'name' => 'Alter game messaging',
@@ -142,7 +158,7 @@ class adminActions extends adminActionsForms
 				'params' => array(
 					'gameID'=>'Game ID',
 					'newSetting'=>'Enter a number for the desired setting: 1=Regular, 2=PublicPressOnly, 3=NoPress, 4=RuleBookPress'
-					),
+				)
 			),
 			
 			'excusedMissedTurnsIncreaseAll' => array(
@@ -189,6 +205,137 @@ class adminActions extends adminActionsForms
 		$Game = $Variant->processGame($params['gameID']);
 		$Game->resetMinimumBet();
 		return l_t("The minimum bet has been reset.");
+	}
+
+	public function countryReallocate(array $params)
+	{
+		global $DB;
+
+		$gameID=(int)$params['gameID'];
+
+		$Variant=libVariant::loadFromGameID($gameID);
+		$Game = $Variant->Game($gameID);
+
+		if( strlen($params['reallocations'])==0 )
+		{
+			$c=array();
+			foreach($Variant->countries as $index=>$country)
+			{
+				$index++;
+				$countryLetter=strtoupper(substr($country,0,1));
+				$cl[$countryLetter] = '#'.$index.": ".$country;
+				$ci[$index] = '#'.$index.": ".$country." (".$Game->Members->ByCountryID[$index]->username.")";
+			}
+			$ids=array_keys($cl);
+			
+			if (count($cl) < count($Variant->countries))
+				$example = "<br>".l_t("The first letter of the countries are not distinct. CountryID numbers must be used instead.");
+			else
+				$example = l_t("e.g. \"%s\"\" would change nothing",implode(',',$ids));
+
+			return implode('<br />',$ci)."<br />".$example;
+		}
+
+		$reallocations=explode(',',$params['reallocations']);
+
+		if ( $Game->pressType != 'NoPress' )
+			throw new Exception(l_t("Only games with no messages allowed can have their countries reordered, ".
+				"otherwise information may already have been communicated while believing countries were already allocated."));
+
+		if ( $Game->phase == 'Pre-game' )
+			throw new Exception(l_t("This game hasn't yet started; countries can only be reallocated after they have been allocated already."));
+
+		if ( $Game->phase == 'Finished' )
+			throw new Exception(l_t("This game has finished, countries can't be reallocated."));
+
+		if( count($reallocations) != count($Variant->countries) )
+			throw new Exception(l_t("The number of inputted reallocations (%s) aren't equal to the number of countries (%s).",count($reallocations),count($Variant->countries)));
+
+		if( !is_numeric(implode('', $reallocations)) )
+		{
+			$countryIDsByLetter=array();
+			foreach($Variant->countries as $countryID=>$countryName)
+			{
+				$countryID++;
+				$countryLetter=strtoupper(substr($countryName,0,1));
+				if( isset($countryIDsByLetter[$countryLetter]) )
+					throw new Exception(l_t("For the given variant two countries have the same start letter: '%s (one is '%s'), you must give countryIDs instead of letters.",$countryLetter,$countryName));
+
+				$countryIDsByLetter[$countryLetter]=$countryID;
+			}
+
+			if( count(explode('=',$reallocations[0]))==2 )
+			{
+				$newCountryIDsByOldCountryID=array();
+				foreach($reallocations as $r)
+				{
+					list($userID,$countryLetter)=explode('=', $r);
+					$countryID=$countryIDsByLetter[$countryLetter];
+
+					$oldCountryID=false;
+					list($oldCountryID)=$DB->sql_row("SELECT countryID FROM wD_Members WHERE userID=".$userID." AND gameID = ".$Game->id);
+					if( !$oldCountryID )
+						throw new Exception(l_t("User %s not found in this game.",$userID));
+
+					$newCountryIDsByOldCountryID[$oldCountryID]=$countryID;
+				}
+			}
+			else
+			{
+				$newCountryIDsByOldCountryID=array();
+				for($oldCountryID=1; $oldCountryID<=count($reallocations); $oldCountryID++)
+				{
+					$countryLetter=$reallocations[$oldCountryID-1];
+
+					if( !isset($countryIDsByLetter[$countryLetter]) )
+						throw new Exception(l_t("No country name starts with letter '%s'",$countryLetter));
+
+					$newCountryIDsByOldCountryID[$oldCountryID]=$countryIDsByLetter[$countryLetter];
+				}
+			}
+		}
+		else
+		{
+			$newCountryIDsByOldCountryID=array();
+			for($oldCountryID=1; $oldCountryID<=count($reallocations); $oldCountryID++)
+			{
+				$newCountryID=$reallocations[$oldCountryID-1];
+				$newCountryIDsByOldCountryID[$oldCountryID]=(int)$newCountryID;
+			}
+		}
+
+		$changes=array();
+		$newUserIDByNewCountryID=array();
+		$changeBack=array();
+
+		foreach($newCountryIDsByOldCountryID as $oldCountryID=>$newCountryID)
+		{
+			list($userID)=$DB->sql_row("SELECT userID FROM wD_Members WHERE gameID=".$Game->id." AND countryID=".$oldCountryID." FOR UPDATE");
+			$newUserIDByNewCountryID[$newCountryID]=$userID;
+
+			$changes[] = l_t("Changed %s from %s (#%s) to %s (#%s).",$Game->Members->ByCountryID[$oldCountryID]->username,$Variant->countries[$oldCountryID-1],$oldCountryID,$Variant->countries[$newCountryID-1],$newCountryID);
+			$changeBack[$newCountryID]=$oldCountryID;
+		}
+
+		$changeBackStr=array();
+
+		for($i=1; $i<=count($Variant->countries); $i++)
+			$changeBackStr[] = $changeBack[$i];
+
+		$changeBackStr=implode(',', $changeBackStr);
+
+		// Foreach member set the new owners' userID
+		// The member isn't given a new countryID, instead the user in control of the countryID is moved into the other countryID:
+		// userID is what gets changed, not countryID (if it's not done this way all sorts of problems e.g. supplyCenterNo crop up)
+		$DB->sql_put("BEGIN");
+
+		foreach($newUserIDByNewCountryID as $newCountryID=>$userID)
+			$DB->sql_put("UPDATE wD_Members SET userID=".$userID." WHERE gameID=".$Game->id." AND countryID=".$newCountryID);
+
+		$DB->sql_put("COMMIT");
+
+		return l_t('In this game these countries were successfully swapped:').'<br /><br />'.implode(',<br />', $changes).'.<br /><br />
+			'.l_t('These changes can be reversed with "%s"',$changeBackStr);
 	}
 
 	public function drawType(array $params)
@@ -611,6 +758,13 @@ class adminActions extends adminActionsForms
 						'to give an opportunity to replace the player.')."\n".
 						l_t('Remember to finalize your orders if you don\'t want to wait, so the game isn\'t held up unnecessarily!');
 				}
+			}
+			
+			// IF the game is still running first remove the player from the game and reset the minimum bet so other can join.
+			if( $Game->phase != 'Finished' && $Game->phase != 'Pre-game')
+			{
+				$Game->Members->ByUserID[$userID]->setLeft();
+				$Game->resetMinimumBet();
 			}
 
 			// If the game is still running first remove the player from the game and reset the minimum bet so other can join.

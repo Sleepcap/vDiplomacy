@@ -1,0 +1,28 @@
+@CHARSET "ISO-8859-1";
+
+.variantWorldAtWar1937 .country0 { color: #CE7800 ! important; }  /* Global    */
+.variantWorldAtWar1937 .country1 { color: #ff00ff ! important; }  /* Britain  */
+.variantWorldAtWar1937 .country2 { color: #3551db ! important; }  /* America  */
+.variantWorldAtWar1937 .country3 { color: #00126a ! important; }  /* France  */
+.variantWorldAtWar1937 .country4 { color: #655153 ! important; }  /* Germany  */
+.variantWorldAtWar1937 .country5 { color: #39ff00 ! important; }  /* Italy  */
+.variantWorldAtWar1937 .country6 { color: #007f00 ! important; }  /* Portugal  */
+.variantWorldAtWar1937 .country7 { color: #ff6800 ! important; }  /* Mexico  */
+.variantWorldAtWar1937 .country8 { color: #ec3c3c ! important; }  /* Russia  */
+.variantWorldAtWar1937 .country9 { color: #9c3939 ! important; }  /* Turkey  */
+.variantWorldAtWar1937 .country10 { color: #73a068 ! important; } /* China */
+.variantWorldAtWar1937 .country11 { color: #808000 ! important; } /* Japan */
+.variantWorldAtWar1937 .country12 { color: #701058 ! important; } /* Thailand */
+
+.variantWorldAtWar1937 .occupationBar1 { background-color: #ff00ff; }  /* Britain  */
+.variantWorldAtWar1937 .occupationBar2 { background-color: #3551db; }  /* America  */
+.variantWorldAtWar1937 .occupationBar3 { background-color: #00126a; }  /* France  */
+.variantWorldAtWar1937 .occupationBar4 { background-color: #655153; }  /* Germany  */
+.variantWorldAtWar1937 .occupationBar5 { background-color: #39ff00; }  /* Italy  */
+.variantWorldAtWar1937 .occupationBar6 { background-color: #007f00; }  /* Portugal  */
+.variantWorldAtWar1937 .occupationBar7 { background-color: #ff6800; }  /* Mexico  */
+.variantWorldAtWar1937 .occupationBar8 { background-color: #ec3c3c; }  /* Russia  */
+.variantWorldAtWar1937 .occupationBar9 { background-color: #9c3939; }  /* Turkey  */
+.variantWorldAtWar1937 .occupationBar10 { background-color: #73a068; } /* China */
+.variantWorldAtWar1937 .occupationBar11 { background-color: #808000; } /* Japan */
+.variantWorldAtWar1937 .occupationBar12 { background-color: #701058; } /* Thailand */

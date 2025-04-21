@@ -45,7 +45,7 @@ class InstallCache {
 
 		$territories = array();
 		$tabl=$DB->sql_tabl(
-			"SELECT id, name, type, supply, countryID, coast, coastParentID, smallMapX, smallMapY
+			"SELECT id, name, type, supply, countryID, coast, coastParentID, smallMapX, smallMapY, buildEligibilityFlags
 			FROM wD_Territories
 			WHERE mapID=".$mapID."
 			ORDER BY id ASC"
@@ -92,6 +92,14 @@ class InstallCache {
 		$javascript = "function loadTerritories() {\n".'Territories = $H('.json_encode(self::terrJSONData($mapID)).');'."\n}\n";
 
 		file_put_contents($jsonFileLocation, $javascript);
+		
+		// Small patch for global variant-css (delete the file so it's created new after installation of a variant)
+		$dir_handle=opendir(libCache::Dirname("css")); 
+		while (false !== ($file=readdir($dir_handle)))
+			if($file!="." && $file!="..") 
+				unlink (libCache::Dirname("css")."/".$file);
+		closedir($dir_handle); 
+		// End patch
 	}
 }
 
@@ -172,9 +180,17 @@ class InstallTerritory {
 
 
 		// Unit destroy SQL (may take a long time and require a deep recursion depth)
-		$sql[] = self::unitDestroyIndexSQL($mapID);
+//		$sql[] = self::unitDestroyIndexSQL($mapID);
 
+//		$unitDestroyIndexCountrySQL = array();
+//		$unitDestroyIndexCountrySQL = self::unitDestroyIndexSQL($mapID);
+//		foreach ($unitDestroyIndexCountrySQL as $countryID => $unitDestroyIndexArray)
+//			$sql[] = $unitDestroyIndexArray;
 
+		// VDip change: istead of one large SQL to insert the index all at once (for one large variant about 50.000 values)
+		// make a SQL for each country.
+		$sql = array_merge ( $sql, self::unitDestroyIndexSQL($mapID) );
+		
 		return $sql;
 	}
 
@@ -206,8 +222,8 @@ class InstallTerritory {
 				$HomeSCs[$Territory->countryID][] = $Territory;
 			}
 		}
-
-		$UnitDestroyIndexRows=array();
+		
+		$UnitDestroyIndexSQLArray = array();
 		$unitTypes=array('Army','Fleet');
 		foreach($HomeSCs as $countryID=>$countryHomeSCs)
 		{
@@ -309,6 +325,7 @@ class InstallTerritory {
 			sort($sortBuffer);
 			//if( $countryID == 7 ) die(implode('<br />',$sortBuffer)); // For debugging
 			
+			$UnitDestroyIndexRows=array();
 			$destroyIndex=1; // First means first chosen to disband
 			foreach($sortBuffer as $sortKey)
 			{
@@ -316,9 +333,11 @@ class InstallTerritory {
 				$UnitDestroyIndexRows[]="(".$mapID.",".$countryID.",".$terrID.",'".$unitType."',".$destroyIndex.")";
 				$destroyIndex++;
 			}
+			$UnitDestroyIndexSQLArray[] = 'INSERT INTO wD_UnitDestroyIndex (mapID, countryID, terrID, unitType, destroyIndex) VALUES '.implode(',',$UnitDestroyIndexRows);
+			
 		}
 
-		return 'INSERT INTO wD_UnitDestroyIndex (mapID, countryID, terrID, unitType, destroyIndex) VALUES '.implode(',',$UnitDestroyIndexRows);
+		return $UnitDestroyIndexSQLArray;
 	}
 	
 	/**
@@ -334,10 +353,15 @@ class InstallTerritory {
 		InstallTerritory::$Territories=array();
 		$TerritoriesByID = array();
 		
-		$tabl = $DB->sql_tabl("SELECT id, name, type, supply, countryID, mapX, mapY, smallMapX, smallMapY FROM wD_Territories WHERE mapID = ".$mapID);
+		$tabl = $DB->sql_tabl("SELECT id, name, type, supply, countryID, "
+                        . "mapX, mapY, smallMapX, smallMapY, buildEligibilityFlags "
+                        . "FROM wD_Territories WHERE mapID = ".$mapID);
 		while($row = $DB->tabl_hash($tabl))
 		{
-			$terr = new InstallTerritory($row['name'], $row['type'], $row['supply'], $row['countryID'], $row['mapX'], $row['mapY'], $row['smallMapX'], $row['smallMapY']);
+			$terr = new InstallTerritory($row['name'], $row['type'], 
+                                $row['supply'], $row['countryID'], $row['mapX'], 
+                                $row['mapY'], $row['smallMapX'], $row['smallMapY'], 
+                                $row['buildEligibilityFlags']);
 			$terr->id = $row['id'];
 			$terr->mapID = $mapID;
 			
@@ -386,7 +410,7 @@ class InstallTerritory {
 	/**
 	 * Basic territory data, more or less as given
 	 */
-	public $mapID, $name, $type, $supply, $countryID, $mapX, $mapY, $smallMapX, $smallMapY, $coastParentID;
+	public $mapID, $name, $type, $supply, $countryID, $mapX, $mapY, $smallMapX, $smallMapY, $coastParentID, $buildEligibilityFlags;
 
 	/**
 	 * The coastParent object ($this if not a child-coast). Used for coastParentID after ID allocation.
@@ -412,7 +436,7 @@ class InstallTerritory {
 	 * coast territories will always come after their parent coasts, and it is assumed they will have a name
 	 * of the form "[coastParentName] ([Something unimportant] Coast)".
 	 */
-	public function __construct($name, $type, $supply, $countryID, $mapX, $mapY, $smallMapX, $smallMapY) {
+	public function __construct($name, $type, $supply, $countryID, $mapX, $mapY, $smallMapX, $smallMapY, $buildEligibilityFlags = 0) {
 
 		if( $supply!='Yes' && $supply!='No' )
 			throw new Exception("Invalid value for supply '".$supply."', should be Yes/No.");
@@ -428,6 +452,7 @@ class InstallTerritory {
 		$this->mapY=$mapY;
 		$this->smallMapX=$smallMapX;
 		$this->smallMapY=$smallMapY;
+                $this->buildEligibilityFlags=$buildEligibilityFlags;
 
 		$this->coast='No';
 		$this->coastParent=$this;
@@ -477,7 +502,9 @@ class InstallTerritory {
 	 * Things to write to the territories table, used by sqlTerritoryRow
 	 * @var array[]=$colName
 	 */
-	private static $territoryRowInclude=array('mapID', 'id', 'name', 'type', 'supply', 'mapX', 'mapY', 'smallMapX', 'smallMapY', 'countryID', 'coast', 'coastParentID');
+	private static $territoryRowInclude=array('mapID', 'id', 'name', 'type', 'supply', 
+            'mapX', 'mapY', 'smallMapX', 'smallMapY', 'countryID', 'coast', 
+            'coastParentID', 'buildEligibilityFlags');
 	/**
 	 * Returns a wD_Territories VALUE row, to be combined and inserted in bulk.
 	 * @return string

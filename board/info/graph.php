@@ -1,6 +1,6 @@
 <?php
 /*
-    Copyright (C) 2004-2010 Kestas J. Kuliukas
+    Copyright (C) 2004-2010 Kestas J. Kuliukas & Yuri Hryniv aka Flame
 
 	This file is part of webDiplomacy.
 
@@ -27,25 +27,25 @@ defined('IN_CODE') or die('This script can not be run by itself.');
  */
 
 print '<h3>Graph</h3>';
+print '<br />'.l_t('Occupied territory by game years as a percentage:<br /><br />');
 
 $scCountsByTurn=array();
-for($i=1;$i<$Game->turn;$i++)
+for($i=1;$i<$Game->turn+1;$i=$i+2)
 {
 	$tabl=$DB->sql_tabl("SELECT ts.countryID, COUNT(ts.countryID) FROM wD_TerrStatusArchive ts INNER JOIN wD_Territories t ON ( t.id=ts.terrID AND t.supply='Yes' AND t.coastParentID=t.id AND t.mapID=".$Variant->mapID." ) WHERE ts.gameID=".$Game->id." AND ts.turn=".$i." GROUP BY ts.countryID");
 	$scCountsByCountryID=array();
 	while(list($countryID,$scCount)=$DB->tabl_row($tabl))
-		$scCountsByCountryID[$countryID]=$scCount;
+		if (($countryID <= count($Variant->countries) && $countryID <> 0))
+			$scCountsByCountryID[$countryID]=$scCount;
 
 	$scCountsByTurn[$i]=$scCountsByCountryID;
 }
 
-foreach( $scCountsByTurn as $turn=>$scCountsByCountryID) {
+foreach( $scCountsByTurn as $turn=>$scCountsByCountryID)
+{
 	$turnSCTotal=0;
 	foreach($scCountsByCountryID as $countryID=>$scCount)
-	{
-		//if($countryID<) continue;
 		$turnSCTotal+=$scCount;
-	}
 
 	if( $turnSCTotal==0 )
 	{
@@ -56,52 +56,52 @@ foreach( $scCountsByTurn as $turn=>$scCountsByCountryID) {
 	$percentLeft=100;
 	foreach($scCountsByCountryID as $countryID=>$scCount)
 	{
-		$percent=floor(100.0*($scCount/$turnSCTotal));
-
-		//$taken=$percentLeft*($percent/100.0)
-
-		if( $percent==0 ) {
-			if( $percentLeft>0 ) {
-				$percentLeft--;
-				$percent=1;
-				continue;
-			}
-			else
-				break;
-		}
-
+		$percent=100.0*($scCount/$turnSCTotal);
 		$percentLeft-=$percent;
 
 		$scCountsByTurn[$turn][$countryID] = $percent;
 	}
+
+	// if there is any percents left distribute even between all countries still playing.
+	if ($percentLeft > 0)
+		foreach($scCountsByCountryID as $countryID=>$scCount)
+			$scCountsByTurn[$turn][$countryID] += ($percentLeft / count($scCountsByCountryID));
 }
 
 $scRatiosByTurn=$scCountsByTurn;
 unset($scCountsByTurn);
 
-if( count($scRatiosByTurn)<3 ) {
-	print l_t('Game too new to graph.');
+if( $Game->phase != 'Finished' ){
+	print l_t('Only available for finished games..');
 	return;
 }
 
-print '<div class="variant'.$Variant->name.' boardGraph" style="width:auto">';
-foreach( $scRatiosByTurn as $turn=>$scRatiosByCountryID)
+if( count($scRatiosByTurn)<2 ) {
+	print l_t('Too few moves to plot.');
+	return;
+}
+
+print '<table border=0 cellspacing=0 cellpadding=0>
+		<tr>
+			<td class="mapshadow" bgcolor="#D8D8D8" width="100%" style="padding: 0px;">
+			<div class="variant'.$Variant->name.' boardGraph" style="width:auto">';
+
+foreach ($scRatiosByTurn as $turn=>$scRatiosByCountryID)
 {
-	print '<div class="boardGraphTurn" style="width:auto">';//500px">';
+	print '<div class="boardGraphTurn" style="width:auto">';
 	foreach($scRatiosByCountryID as $countryID=>$scRatio)
 	{
-		if( $scRatio<1 ) continue;
-
+		$countryName=mb_strtoupper(substr($Variant->countries[$countryID-1],0,2));
 		print '<div class="boardGraphTurnCountry occupationBar'.$countryID.'" '.
 			'style="text-align:center; font-size:10pt; font-weight:bold; overflow:hidden;'.
-			'float:left;width:'.$scRatio.'%">'.$scRatio.'%</div>';
-
+			'float:left;width:'.$scRatio.'%">'.$countryName.'~'.floor($scRatio).'%</div>';
 	}
 	print '<div style="clear:both"></div>';
 	print '</div>';
 }
 
 print '</div>';
+print '</table>';
 
 
 ?>

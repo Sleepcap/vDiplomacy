@@ -38,7 +38,7 @@ class UserOptions
 	public static $defaults = array(
 		'mapUI' => 'Point and click',
         'colourblind' => 'No',
-        'darkMode' => 'No',
+        //'darkMode' => 'No',
 		'displayUpcomingLive' => 'No',
 		'showMoves' => 'Yes',
 		'orderSort' => 'Convoys Last'
@@ -47,7 +47,7 @@ class UserOptions
 	public static $titles = array(
 		'mapUI' => 'Default map UI',
 		'colourblind' => 'Colourblindness',
-		'darkMode' => 'Dark Theme',
+		//'darkMode' => 'Dark Theme',
 		'displayUpcomingLive' => 'Display upcoming live games',
 		'showMoves' => 'Show move arrows on the game map',
 		'orderSort' => 'Sort possible orders'
@@ -56,7 +56,7 @@ class UserOptions
 	public static $possibleValues = array(
 		'mapUI' => array('Point and click','Dropdown menus'),
 		'colourblind' => array('No','Protanope','Deuteranope','Tritanope'),
-		'darkMode' => array('Yes', 'No'),
+		//'darkMode' => array('Yes', 'No'),
 		'displayUpcomingLive' => array('Yes','No'),
 		'showMoves' => array('Yes','No'),
 		'orderSort' => array('No Sort','Alphabetical','Convoys Last')

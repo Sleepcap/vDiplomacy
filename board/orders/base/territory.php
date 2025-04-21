@@ -50,7 +50,7 @@ class Territory {
 	var $coast;
 
 	/**
-	 * 'Coast','Land','Sea'
+	 * 'Coast','Land','Sea','Strait'
 	 * @var string
 	 */
 	var $type;

@@ -57,7 +57,9 @@ $sections=array(
 	6=>array('6.F.','TEST CASES, CONVOYS'),
 	7=>array('6.G.','TEST CASES, CONVOYING TO ADJACENT PLACES'),
 	8=>array('webDip intro',l_t('webDiplomacy introduction image generating tests')),
-	9=>array('webDip tests',l_t('webDiplomacy specific test cases'))
+	9=>array('webDip tests',l_t('webDiplomacy specific test cases')),
+	
+	99=>array('variant specific tests',l_t('Variant specific test cases'))
 );
 print '<ul>';
 foreach( $sections as $sectionID=>$section )
@@ -121,6 +123,10 @@ $lastSectionID=-1;
 while ( list($id, $name, $status, $description) = $DB->tabl_row($tabl) )
 {
 	$sectionID = floor($id/100);
+	
+	if($sectionID >= 10)
+		$sectionID = 99; //variant specific test cases
+		
 	if( $sectionID != $lastSectionID )
 	{
 		print '<tr class="datc">

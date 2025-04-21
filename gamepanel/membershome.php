@@ -51,8 +51,16 @@ class panelMembersHome extends panelMembers
 		{
 			for($countryID = 1; $countryID <= count($this->Game->Variant->countries); $countryID++)
 			{
-				$Member = $this->ByCountryID[$countryID];
-				$membersList[] = $Member->memberColumn();
+				if (isset($this->ByCountryID[$countryID])) {
+					$Member = $this->ByCountryID[$countryID];
+
+					//if ( $User->id == $this->ByCountryID[$countryID]->userID )
+					//	continue;
+					//elseif( $Member->status != 'Playing' && $Member->status != 'Left' )
+					//	continue;
+
+					$membersList[] = $Member->memberColumn();
+				}
 			}
 		}
 		// print countries with members > $maxPerRow on multiple rows on home page

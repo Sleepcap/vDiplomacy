@@ -1,0 +1,18 @@
+@CHARSET "ISO-8859-1";
+
+.variantClassicBrazilian .country0 { color: #CE7800 ! important; } /* Neutral */
+.variantClassicBrazilian .country1 { color: #0B3E60 ! important; } /* England */
+.variantClassicBrazilian .country2 { color: #0083AF ! important; } /* France */
+.variantClassicBrazilian .country3 { color: #259901 ! important; } /* Italy */
+.variantClassicBrazilian .country4 { color: #111111 ! important; } /* Germany */
+.variantClassicBrazilian .country5 { color: #D62929 ! important; } /* Austria */
+.variantClassicBrazilian .country6 { color: #A09500 ! important; } /* Turkey */
+.variantClassicBrazilian .country7 { color: #605D59 ! important; } /* Russia */
+
+.variantClassicBrazilian .occupationBar1 { background-color: #1677BC; } /* England */
+.variantClassicBrazilian .occupationBar2 { background-color: #9BC2E6; } /* France */
+.variantClassicBrazilian .occupationBar3 { background-color: #94D354; } /* Italy */
+.variantClassicBrazilian .occupationBar4 { background-color: #565656; } /* Germany */
+.variantClassicBrazilian .occupationBar5 { background-color: #E7343F; } /* Austria */
+.variantClassicBrazilian .occupationBar6 { background-color: #FFCD3A; } /* Turkey */
+.variantClassicBrazilian .occupationBar7 { background-color: #FFF5E7; } /* Russia */

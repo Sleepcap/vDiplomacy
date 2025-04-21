@@ -1,0 +1,14 @@
+@CHARSET "ISO-8859-1";
+
+.variantSengoku6 .country0 { color: #CE7800 ! important; } /* Global  */
+.variantSengoku6 .country1 { color: #556d4d ! important; } /* Shimazu */
+.variantSengoku6 .country2 { color: #315261 ! important; } /* Mori    */
+.variantSengoku6 .country3 { color: #b44a4a ! important; } /* Oda     */
+.variantSengoku6 .country4 { color: #a1756d ! important; } /* Hojo    */
+.variantSengoku6 .country5 { color: #8c6984 ! important; } /* Uesugi  */
+
+.variantSengoku6 .occupationBar1 { background-color: #729267; } /* Shimazu */
+.variantSengoku6 .occupationBar2 { background-color: #406c80; } /* Mori    */
+.variantSengoku6 .occupationBar3 { background-color: #de5b5b; } /* Oda     */
+.variantSengoku6 .occupationBar4 { background-color: #c48f85; } /* Hojo    */
+.variantSengoku6 .occupationBar5 { background-color: #a87e9f; } /* Uesugi  */

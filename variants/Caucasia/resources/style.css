@@ -1,0 +1,14 @@
+@CHARSET "ISO-8859-1";
+
+.variantCaucasia .country0 { color: #000000 ! important; } /* Neutral */
+.variantCaucasia .country1 { color: #F4973F ! important; } /* Armenia */
+.variantCaucasia .country2 { color: #047729 ! important; } /* Chechnya */
+.variantCaucasia .country3 { color: #EA0756 ! important; } /* Georgia */
+.variantCaucasia .country4 { color: #2929AA ! important; } /* Russia */
+.variantCaucasia .country5 { color: #429180 ! important; } /* Azerbaijan */
+
+.variantCaucasia .occupationBar1 { background-color: #F4973F; } /* Armenia */
+.variantCaucasia .occupationBar2 { background-color: #047729; } /* Chechnya */
+.variantCaucasia .occupationBar3 { background-color: #EA0756; } /* Georgia */
+.variantCaucasia .occupationBar4 { background-color: #235ED3; } /* Russia */
+.variantCaucasia .occupationBar5 { background-color: #54B7A2; } /* Azerbaijan */

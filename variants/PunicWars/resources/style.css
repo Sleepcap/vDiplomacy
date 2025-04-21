@@ -1,0 +1,12 @@
+@CHARSET "ISO-8859-1";
+
+.variantPunicWars .country0 { color: #CE7800 ! important; } /* Global */
+.variantPunicWars .country1 { color: #D62929 ! important; } /* Carthago   */
+.variantPunicWars .country2 { color: #b8ad00 ! important; } /* Hellenii  */
+.variantPunicWars .country3 { color: #6F005D ! important; } /* Etruria  */
+.variantPunicWars .country4 { color: #259901 ! important; } /* Roma   */
+
+.variantPunicWars .occupationBar1 { background-color: #C48F85; } /* Carthago  */
+.variantPunicWars .occupationBar2 { background-color: #EAEAAF; } /* Hellenii */
+.variantPunicWars .occupationBar3 { background-color: #A87E9F; } /* Etruria */
+.variantPunicWars .occupationBar4 { background-color: #A4C499; } /* Romae  */

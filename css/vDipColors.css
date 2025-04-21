@@ -1,0 +1,194 @@
+/* ############# Global.css #############*/
+
+/* Set the "old" font global */
+*{
+	font-family: sans-serif !important;
+}
+
+body {
+	background-color: unset; /* #d9d9d9; */
+	color: #2d2c2e; /* #39383A; */
+	font-size: 14px;
+}
+div.pageTitle {
+    color:#472C12; /* #009922; */
+}
+
+/* TopNav bar
+ *************/
+.nav-wrap{
+	background-color: #c0c0c0;
+}
+.nav-tab a {
+	padding: 5px 5px;
+}
+#navSubMenu{
+	color: #6d5238;
+	padding: 5px 5px; 
+}
+#navSubMenu div#nav-drop {
+	background-color: #a0a0a0;
+	padding: 5px 5px; 
+}
+
+/*Hall of fame
+ **************/
+ .hof th {
+	background-color: #8e7054;
+}
+
+/* Input boxes recolor
+ **********************/
+input[type="submit"] {
+	background-color: #f0f0f0; /* #eaffea; */
+	background: #f0f0f0;	   /* #eaffea; */
+	color: #6d5238;             /* #009902 */
+	border: 1px solid #c1c1c1;
+}
+input[type="text"], input[type="password"], select, .buttonIA, #orderLineIA {
+	background-color: #f0f0f0; /* #eaffea; */
+	color:#824916;             /* #009902 */
+	border: 1px solid #c1c1c1;
+}
+
+.form-submit,
+.modToolsform-submit,
+.settings-submit,
+.advancedSearchform-submit {
+	text-align: center;
+	font-weight: bold ! important;
+	color: #7b4e26 ! important;
+	font-size: 14px;
+	border: 1px solid #c1c1c1;
+	background: #f0f0f0 !important;
+	background-color: #f0f0f0;
+	background-image: unset;
+	box-shadow: unset;
+	padding: 2px;
+	text-decoration: unset;
+	text-shadow: unset;
+	text-transform: unset;
+	padding-right: 5px;
+	padding-left: 5px;	
+}	
+.form-submit:hover,
+.modToolsform-submit:hover,
+.settings-submit:hover,
+.advancedSearchform-submit:hover  {
+    background-color: #bca18a !important;
+    background-image: unset;
+	transition: unset;
+}
+
+.gamelistings-tabsNew {
+   background-color: #c0c0c0;
+}
+
+h1, h2, h3, h4 {
+	color: #472C12; /* #009902 */
+}
+a:link {
+	color: #6d5238; /* #006699 */
+}
+a:visited {
+	color: #6d5238; /* #006699 */
+}
+a:active {
+	color: #6d5238; /* #006699 */
+}
+a:hover {
+	color: #233E43 ! important; /* #009902 */
+}
+#bg_image {
+	z-index: -1;
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+	background:url(../images/background.jpg) center top repeat-y #dcbea4;
+}
+#header {
+	background-color: unset; /* #fff; */
+	background:transparent;
+}
+#header-container {
+	background-color: unset; /* #fff; */
+	background:transparent;
+}
+#seperator {
+	background-color: #6898A1; /* #006699 */
+	border-top: unset; /* 1px solid #000;*/
+}
+#seperator-fixed {
+	background-color: #6898A1; /* #006699 */
+	border-top: unset; /* 1px solid #000; */
+}
+
+div.content {
+	background-color: unset; /* #fff; */
+	border: unset; /* 1px solid #aaa; */
+}
+div.content-notice {
+	background-color: unset; /* #fff; */
+	border: unset; /* 1px solid #aaa;*/
+}
+div.content-board-header {
+	border: unset; /* 1px solid #aaa; */
+	background-color: transparent; /* #f5f5f5; */
+}
+div.gamelistings-tabs a {
+	border-bottom:2px solid #6898A1 ! important; /* #006699 */
+}
+TABLE.orders {
+	border: solid #6898A1 1px; /* solid #c1c1c1 1px; */
+}
+
+.topnav {
+	background-color: #ccc;
+  }
+
+/* ############# Gamepanel.css #############*/
+.gamePanel {
+	width:100%;
+}
+.gamePanelHome {
+	border-top: 1px solid #6898A1; /* cecece */
+}
+.bar {
+	background-color: unset; /* #f5f5f5; */
+}
+.barAlt1, .barAltLight1 {
+	background-color: unset !important; /* #f5f5f5 !important; */
+	}
+.barAlt2, .barAltLight2 {
+	background-color: unset !important; /* #f0f0f0 !important; */
+	}
+.gamePanel .bar {
+	border-left: unset; /* 1px solid #cecece; */
+	border-right: unset /* 1px solid #cecece; */
+}
+.barAlt1, .barAltLight1 {
+	background-color:transparent; /* #f5f5f5 !important; */
+}
+.barAlt2, .barAltLight2 {
+	background-color:transparent; /* #f5f5f5 !important; */
+}
+.gameName {
+	color: #524234; /* #009902 */
+}
+.membersFullTable .memberLeftSide {
+	border-right: 1px solid #CECECE; /* c1c1c1 */
+}
+
+/* ############# home.css #############*/
+.homeInfoList {
+	background-color:transparent;
+}
+td.homeMessages, td.homeGameNotices, td.homeGamesStats, td.homeNoticesPMs, td.homeNoticesGame {
+	border: unset;                 /* 1px solid #aaa; */
+	background-color: transparent; /* #fff */
+}
+div.homeHeader {
+	color: #524234; /* #009902 */ 
+}

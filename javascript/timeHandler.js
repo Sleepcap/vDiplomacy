@@ -214,6 +214,11 @@ function remainingText(secondsRemaining)
 	{
 		minutes += Math.round(seconds/60); // Add a minute if the seconds almost give a minute)
 		
+		if ( hours < 2 )
+		{
+			setMinimumTimerInterval(seconds);
+			return l_t('1 hour, %s mins', minutes);
+		}
 		if ( hours < 4 )
 		{
 			setMinimumTimerInterval(seconds);

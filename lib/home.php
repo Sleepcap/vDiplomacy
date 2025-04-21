@@ -295,14 +295,15 @@ class libHome
 	{
 		global $User, $DB;
 
-		$tabl=$DB->sql_tabl("SELECT g.* 
-			FROM wD_Games g
-			INNER JOIN wD_Members m ON ( m.userID = ".$User->id." AND m.gameID = g.id )
+		// Load all active games
+		$tabl=$DB->sql_tabl("SELECT g.* FROM wD_Games g
+			INNER JOIN wD_Members m ON ( (m.userID = ".$User->id." OR g.directorUserID = ".$User->id.") AND m.gameID = g.id )
 			WHERE NOT g.phase = 'Finished' and m.status <> 'Defeated'
-				AND (g.sandboxCreatedByUserID IS NULL OR m.countryID = 1) 
+			GROUP BY g.id
 			ORDER BY g.processStatus ASC, g.processTime ASC");
 		$buf = '';
-
+		$bufDef = $bufPause = $bufPregame = '';
+		
 		$count=0;
 		while($game=$DB->tabl_hash($tabl))
 		{
@@ -310,9 +311,20 @@ class libHome
 			$Variant=libVariant::loadFromVariantID($game['variantID']);
 			$Game=$Variant->panelGameHome($game);
 
-			$buf .= $Game->summary();
+			if (isset($Game->Members->ByUserID[$User->id]) && $Game->Members->ByUserID[$User->id]->status == 'Defeated')
+				$bufDef .= '<div class="hr"></div>'.$Game->summary();
+			elseif ($Game->processStatus == 'Paused')
+				$bufPause .= '<div class="hr"></div>'.$Game->summary();
+			elseif ($Game->phase == 'Pre-game')
+				$bufPregame .= '<div class="hr"></div>'.$Game->summary();
+			else
+				$buf .= '<div class="hr"></div>' . $Game->summary();
 		}
-
+		
+		if ($bufPause != '')   $buf .= $bufPause;
+		if ($bufPregame != '') $buf .= $bufPregame;
+		if ($bufDef != '')     $buf .= '<div class="hr"></div><div><p class="notice"><br />'.l_t('Defeated:').'</p></div>'.$bufDef;
+		
 		if($count==0)
 		{
 			$buf .= '<div class="hr"></div>';
@@ -369,16 +381,18 @@ class libHome
 	static function forumNew() 
 	{
 		// Select by id, prints replies and new threads
-		global $DB, $Misc;
+		global $DB, $Misc, $User;
 
 		$tabl = $DB->sql_tabl("
 			SELECT m.id as postID, t.id as threadID, m.type, m.timeSent, IF(t.replies IS NULL,m.replies,t.replies) as replies,
 				IF(t.subject IS NULL,m.subject,t.subject) as subject,
-				u.id as userID, u.username, u.points, u.type as userType,
+				m.anon,
+				u.id as userID, u.username, u.vpoints, IF(s.userID IS NULL,0,0) as online, u.type as userType,
 				SUBSTRING(m.message,1,100) as message, m.latestReplySent, t.fromUserID as threadStarterUserID
 			FROM wD_ForumMessages m
 			INNER JOIN wD_Users u ON ( m.fromUserID = u.id )
-			INNER JOIN wD_ForumMessages t ON ( m.toID = t.id AND t.type = 'ThreadStart' AND m.type = 'ThreadReply' )
+			LEFT JOIN wD_Sessions s ON ( m.fromUserID = s.userID )
+			LEFT JOIN wD_ForumMessages t ON ( m.toID = t.id AND t.type = 'ThreadStart' AND m.type = 'ThreadReply' )
 			ORDER BY m.timeSent DESC
 			LIMIT 50");
 		$oldThreads=0;
@@ -386,10 +400,24 @@ class libHome
 
 		$threadIDs = array();
 		$threads = array();
-
-		while(list($postID, $threadID, $type, $timeSent, $replies, $subject, $userID, $username, $points, $userType, $message, $latestReplySent,$threadStarterUserID
+		
+		while(list(
+				$postID, $threadID, $type, $timeSent, $replies, $subject,
+				$anon,
+				$userID, $username, $points, $online, $userType, $message, $latestReplySent,$threadStarterUserID
 			) = $DB->tabl_row($tabl))
 		{
+		
+			// Anonymize the forum posts on the home-screen too
+			if ($anon == 'Yes')
+			{
+				$username = 'Anon';
+				$userID = 0;
+				$points = '??';
+				$userType = 'User';
+			}
+			// End anonymizer
+			
 			$threadCount++;
 
 			if( $threadID )
@@ -414,10 +442,10 @@ class libHome
 
 			$threads[$threadID]['posts'][] = array(
 				'iconMessage'=>$iconMessage,'userID'=>$userID, 'username'=>$username,
-				'message'=>$message,'points'=>$points, 'userType'=>$userType, 'timeSent'=>$timeSent
+				'message'=>$message,'points'=>$points, 'online'=>$online, 'userType'=>$userType, 'timeSent'=>$timeSent
 			);
 		}
-
+		
 		$buf = '';
 		$threadCount=0;
 		foreach($threadIDs as $threadID)
@@ -442,8 +470,11 @@ class libHome
 			{
 				$buf .= '<div class="homeForumPost homeForumPostAlt'.libHTML::alternate().' userID'.$post['userID'].'">
 
-					<div class="homeForumPostTime">'.libTime::text($post['timeSent']).' '.$post['iconMessage'].'</div>'.
-					User::profile_link_static($post['username'], $post['userID'], $post['userType'], $post['points']).'
+					<div class="homeForumPostTime">'.libTime::text($post['timeSent']).' '.$post['iconMessage'].'</div>
+					<a href="profile.php?userID='.$post['userID'].'" class="light">'.$post['username'].'</a>
+						'.' ('.$post['points'].libHTML::vpoints().
+						User::typeIcon($post['userType']).')
+
 					<div style="clear:both"></div>
 					<div class="homeForumMessage">'.$post['message'].'</div>
 					</div>';
@@ -458,6 +489,9 @@ class libHome
 
 		if( $buf )
 		{
+			// First remove the mod-alerts from the home-forum-view.
+			$buf = str_replace('<img src="images/icons/alert_minor.png" alt="(!)" title="ModAlert" />','',$buf);
+			// Than return the buffer.
 			return $buf;
 		}
 		else
@@ -528,7 +562,7 @@ class libHome
 					$buf .= '<div style="clear:both"></div>';
 					$buf .= '<div class="homeForumPostTime" style="float:right"><em>'.libTime::text($t['topic_time']).'</em></div>';
 					$buf .= '<span style=\'font-size:90%\'>';
-					$buf .= 'Thread:</span> <a href="userprofile.php?userID='.$t['topic_poster_webdip'].'" class="light">'.$t['topic_first_poster_name'].'</a> ';
+					$buf .= 'Thread:</span> <a href="profile.php?userID='.$t['topic_poster_webdip'].'" class="light">'.$t['topic_first_poster_name'].'</a> ';
 					$buf .= '<div style="clear:both"></div></div>';
 					$buf .= '<div class="homeForumPost homeForumPostAlt'.$alt.'">';
 
@@ -539,7 +573,7 @@ class libHome
 						$buf .= '<div class="" style="margin-bottom:5px;margin-left:3px; margin-right:3px;">';
 						$buf .= '<div class="homeForumPostTime" style="float:right;font-weight:bold"><em>'.libTime::text($t['topic_last_post_time']).'</em></div>';
 						$buf .= '<span class="home-forum-latest">';
-						$buf .= 'Latest:</span> <a href="userprofile.php?userID='.$t['topic_last_poster_webdip'].'" class="light">'.$t['topic_last_poster_name'].'</a> '
+						$buf .= 'Latest:</span> <a href="profile.php?userID='.$t['topic_last_poster_webdip'].'" class="light">'.$t['topic_last_poster_name'].'</a> '
 						.'</div>';
 					}
 

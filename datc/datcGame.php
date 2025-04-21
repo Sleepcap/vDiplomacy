@@ -36,6 +36,7 @@ class datcGame extends processGame
 	 * @var int
 	 */
 	private $testID;
+        public $variantID;
 
 	/**
 	 * Create a clean new game to apply the test to
@@ -50,18 +51,31 @@ class datcGame extends processGame
 		 * Create a clean new game to apply the test to
 		 */
 		$this->testID = $testID;
-		list($id) = $DB->sql_row("SELECT id FROM wD_Games WHERE name='DATC-Adjudicator-Test'");
+                
+                if ($testID < 1000)
+                {
+                    $gameName = "DATC-Adjudicator-Test";
+                    $this->variantID = 1;
+                }
+				else
+				{
+					$this->variantID = floor($testID/1000);
+					
+					$gameName = "DATC-Adjudicator-".Config::$variants[$this->variantID]."-Test";
+				}
+                
+		list($id) = $DB->sql_row("SELECT id FROM wD_Games WHERE name='".$gameName."'");
 		if ( $id )
 		{
-			$DB->sql_put("UPDATE wD_Games SET phase = 'Diplomacy', turn = ".$testID.", gameOver = 'No' WHERE id = ".$id);
+			$DB->sql_put("UPDATE wD_Games SET phase = 'Diplomacy', turn = ".($testID%1000).", gameOver = 'No' WHERE id = ".$id);
 		}
 		else
 		{
-
-			$Game = processGame::create(1, 'DATC-Adjudicator-Test', '', 5,'Winner-takes-all', 30, 30, -1, 30, 30, 'No','Regular', 'Normal', 'draw-votes-hidden', 0, 4, 'Members', 'Members');
+			$Game = processGame::create($this->variantID, $gameName, '', 5,'Winner-takes-all', 30,30,-1,30,30, 'No','Regular', 'Normal', 'draw-votes-hidden', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'No', '', '', 'No', 'Members', 'Members');
 			$id = $Game->id;
-			$DB->sql_put("UPDATE wD_Games SET phase = 'Diplomacy', turn = ".$testID." WHERE id = ".$id);
+			$DB->sql_put("UPDATE wD_Games SET phase = 'Diplomacy', turn = ".($testID%1000)." WHERE id = ".$id);
 		}
+                
 
 		if( !isset($_REQUEST['DATCResults']) )
 		{
@@ -191,7 +205,7 @@ class datcGame extends processGame
 		$con=array();
 		$con['gameID']=$this->id;
 		$con['userID']=2;
-		$con['variantID']=1;
+		$con['variantID']=$this->variantID;
 		$con['memberID']=$memberID;
 		$con['turn']=$this->turn;
 		$con['phase']=$this->phase;

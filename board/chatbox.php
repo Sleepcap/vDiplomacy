@@ -83,7 +83,7 @@ class Chatbox
 	 * Post a message to the given countryID, if there is one to be posted. Will also send messages as a
 	 * GameMaster if the user is a moderator which isn't joined into the game.
 	 *
-	 * @param $msgCountryID The countryID to post to, may include 0 (Global)
+	 * @param int $msgCountryID The countryID to post to, may include 0 (Global)
 	 */
 	public function postMessage($msgCountryID)
 	{
@@ -92,6 +92,9 @@ class Chatbox
 		if( isset($_POST['newmessage']) AND $_POST['newmessage']!="" )
 		{
 			$newmessage = trim($_REQUEST['newmessage']);
+			
+			if ($Game->phase == 'Pre-game' && (isset($Member)) && $Game->anon == 'No')
+				$newmessage = "(".$User->username."): ".$newmessage;
 
 			if ( isset($Member) &&
 			     ( $Game->pressType == 'Regular' ||                                        // All tabs allowed for Regular
@@ -115,15 +118,23 @@ class Chatbox
 				else
 					libGameMessage::send($msgCountryID, $Member->countryID, $newmessage);
 			}
-			elseif ( $msgCountryID == 0 ) {
-				if( $User->type['Moderator'] )
-				{
-					libGameMessage::send(0, 'Moderator', '('.$User->username.'): '.$newmessage);
-				}
-				elseif( $Game->isDirector($User->id) )
-				{
-					libGameMessage::send(0, 'Game/Tournament Director', '('.$User->username.'): '.$newmessage);
-				}
+			elseif( $User->id == $Game->directorUserID)
+			{
+				$fromName = $User->username.' (Gamedirector)';
+				libGameMessage::send(0, 0, '<strong>'.$fromName.': </strong>'.$newmessage);
+			}
+			elseif( $User->type['Moderator'] || defined('AdminUserSwitch'))
+			{
+				$fromName = (($User->type['ForumModerator'] || $User->type['Admin']) ? $User->username.' (Moderator)' : 'Mod-Team');
+				libGameMessage::send(0, 0, '<strong>'.$fromName.': </strong>'.$newmessage);
+			}
+			elseif(isset($directorUserID) && $directorUserID == $User->id)
+			{
+				libGameMessage::send(0, 'Game Director', '('.$User->username.'): '.$newmessage);
+			}
+			elseif((isset($tournamentDirector) && $tournamentDirector == $User->id) || (isset($tournamentCodirector) && $tournamentCodirector == $User->id) )
+			{
+				libGameMessage::send(0, 'Tournament Director', '('.$User->username.'): '.$newmessage);
 			}
 		}
 
@@ -163,16 +174,19 @@ class Chatbox
 					<TR class="barAlt2 membersList">
 					<TD>';
 
-		if ( $msgCountryID == 0 )
+		if ( $Game->phase != 'Pre-game' )
 		{
-			$memList=array();
-			for($countryID=1; $countryID<=count($Game->Variant->countries); $countryID++)
-				$memList[]=$Game->Members->ByCountryID[$countryID]->memberNameCountry();
-			$chatbox .= '<div class="chatboxMembersList">'.implode(', ',$memList).'</div>';
-		}
-		else if (!isset($Member) || $Member->countryID != $msgCountryID)
-		{
-			$chatbox .= $Game->Members->ByCountryID[$msgCountryID]->memberBar();
+			if ( $msgCountryID == 0 )
+			{
+				$memList=array();
+				for($countryID=1; $countryID<=count($Game->Variant->countries); $countryID++)
+					$memList[]=$Game->Members->ByCountryID[$countryID]->memberNameCountry();
+				$chatbox .= '<div class="chatboxMembersList">'.implode(', ',$memList).'</div>';
+			}
+			else if (!isset($Member) || $Member->countryID != $msgCountryID)
+			{
+				$chatbox .= $Game->Members->ByCountryID[$msgCountryID]->memberBar();
+			}
 		}
 
 		$chatbox .= '</TD></TR></TABLE></DIV>';
@@ -195,17 +209,21 @@ class Chatbox
 
 		$chatbox .= '</TABLE></DIV>';
 
-		if ( ($msgCountryID == 0 && ( $User->type['Moderator'] || $Game->isDirector($User->id) )) || // A moderator / directory can see the global tab
+		if ( ( $User->type['Moderator'] && $msgCountryID == 0 ) || ((isset($directorUserID) && $directorUserID == $User->id && $msgCountryID == 0 ))||
+				 (isset($tournamentDirector) && $tournamentDirector == $User->id && $msgCountryID == 0) || (isset($tournamentCodirector) && $tournamentCodirector == $User->id && $msgCountryID == 0) ||
 		     ( isset($Member) &&
-		       ( $Game->pressType == 'Regular' ||                                         // All tabs allowed for Regular
+		       ( ($Game->pressType == 'Regular' && $Game->phase != 'Finished' ) ||        // All tabs allowed for Regular (but not after game is completed)
 		         $Member->countryID == $msgCountryID ||                                   // Notes tab always allowed
 				   ($Game->pressType == 'RulebookPress' && 								   // In rulebook press... allow
 				   			($Game->phase == 'Diplomacy' || $Game->phase == 'Finished')) ||// press only in diplomacy or after the game
 		         ( $msgCountryID == 0 &&                                                  // Global tab allowed for...
 		           ( $Game->pressType == 'PublicPressOnly' ||                             // public press and
-		             ( $Game->pressType == 'NoPress' && $Game->phase == 'Finished' )))))) // finished nopress.
+		             ( $Game->pressType == 'NoPress' && $Game->phase == 'Finished' ) ||   // finished nopress.
+					 ( $Game->pressType == 'Regular' && $Game->phase == 'Finished' )))))) // finished regular games only allow global chat.
 		{
             libHTML::$footerIncludes[] = l_j('message.js');
+			
+			$sendButtonName = ($Game->pressType == 'NoPress' && $User->type['Moderator'] && $Game->phase != 'Pre-game') ? 'Admin Send' : 'Send';
             $chatbox .= '<DIV class="chatbox">
 					<form method="post" class="safeForm" action="message.php?gameID='.$Game->id.'&amp;msgCountryID='.$msgCountryID.'" id="chatForm">
 					<TABLE>
@@ -222,7 +240,7 @@ class Chatbox
 					<TR class="barAlt2">
 						<TD class="left send">
 							<input type="hidden" name="formTicket" value="'.libHTML::formTicket().'" />
-							<input type="submit" tabindex="2" class="form-submit" value="'.l_t('Send').'" name="Send" onclick="return false;" id="message-send"/><br/>
+							<input type="submit" tabindex="2" class="form-submit" value="'.l_t($sendButtonName).'" name="Send" onclick="return false;" id="message-send"/><br/>
 
 
 					'.'
@@ -280,16 +298,52 @@ class Chatbox
 		global $Member, $Game;
 
 		$tabs = '<div id="chatboxtabs" class="gamelistings-tabs">';
-
-		for( $countryID=0; $countryID<=count($Game->Variant->countries); $countryID++)
+		
+		if ( $Game->phase == 'Pre-game' )
+			return $tabs.'</div>';
+			
+// Hide unneccessary countrychats patch
+		global $DB;
+		$activeChats = $passiveChats = array();
+		$tabl=$DB->sql_tabl('
+			SELECT fromCountryID FROM wD_GameMessages 
+			WHERE gameID='.$Game->id.' AND toCountryID='.$Member->countryID.'
+			GROUP by fromCountryID');
+		while( list($fromCountryID) = $DB->tabl_row($tabl) )
+			$activeChats[] = $fromCountryID;
+		$tabl=$DB->sql_tabl('
+			SELECT toCountryID FROM wD_GameMessages 
+			WHERE gameID='.$Game->id.' AND fromCountryID='.$Member->countryID.' AND toCountryID <>0
+			GROUP by toCountryID');
+		while( list($toCountryID) = $DB->tabl_row($tabl) )
+			$activeChats[] = $toCountryID;
+// Hide unneccessary countrychats patch end
+			
+//		for( $countryID=0; $countryID<=count($Game->Variant->countries); $countryID++)
+		$allCountries = $Game->Variant->countries;
+		$allCountries = array_diff($allCountries, array($Member->country));
+		sort($allCountries);
+		array_unshift($allCountries, 'Global'); array_push($allCountries, $Member->country);
+		
+		foreach ($allCountries as $countryChatName)
 		{
+			$countryID = ( $countryChatName == 'Global' ? 0 : $Game->Variant->countryID($countryChatName) );
+			
 			// Do not allow country specific tabs for restricted press games.
 			if (($Game->pressType != 'Regular' && $Game->pressType != 'RulebookPress') && $countryID != 0 && $countryID != $Member->countryID ) continue;
+
+// Hide unneccessary countrychats patch
+			if ((!(in_array($countryID, $activeChats))) && ($countryID != $Member->countryID) && ($countryID != 0) && ($msgCountryID != $countryID))
+			{
+				$passiveChats[] = $countryID;
+				continue;
+			}
+// Hide unneccessary countrychats patch end
 
 			$tabs .= ' <a href="./board.php?gameID='.$Game->id.'&amp;msgCountryID='.$countryID.'&amp;rand='.rand(1,100000).'#chatboxanchor" '.
 				'class="country'.$countryID.' '.( $msgCountryID == $countryID ? 'current"'
 					: '" title="'.l_t('Open %s chatbox tab"',( $countryID == 0 ? 'the global' : $this->countryName($countryID)."'s" )) ).'>';
-
+			
 			if ( $countryID == $Member->countryID )
 			{
 				$tabs .= l_t('Notes');
@@ -315,7 +369,23 @@ class Chatbox
 
 			$tabs .= '</a>';
 		}
-
+		
+// Hide unneccessary countrychats patch
+		if (count($passiveChats) > 0)
+		{
+			$tabs .= '<select name="CounryChat" onchange="location = this.value;"
+						style="margin-left: 2px; margin-right: 2px;
+								padding-top: 2px; padding-bottom: 2px;
+								background-color: #eaeaea; border-bottom: 2px solid #6898A1 !important;
+								font-weight: bold;">
+						<option value="">Open new chat:</option>';
+			foreach ( $passiveChats as $countryID)
+				$tabs .= '<option value="board.php?gameID='.$Game->id.'&amp;msgCountryID='.$countryID.'&amp;rand='.rand(1,100000).'#chatboxanchor"'
+							.'class="country'.$countryID.'">'.$Game->Members->ByCountryID[$countryID]->memberCountryName().'</option>';
+			$tabs .= '</select>';
+		}
+// Hide unneccessary countrychats patch end
+		
 		$tabs .= '</div>';
 
 		return $tabs;
@@ -391,7 +461,17 @@ class Chatbox
 		for ( $i = count($messages)-1; $i>=0; --$i )
 		{
 			$message = $messages[$i];
-
+			
+			if( $Game->phase == 'Pre-game')
+				$message['fromCountryID'] = 0;
+			
+			if (($Game->anon == 'Yes' && $Game->phase != 'Finished' 
+					&& $message['turn']==0 
+					&& $message['toCountryID']==0)
+					&& (!(($User->type['Moderator']) && !($Game->Members->isJoined())))
+				)
+					$message['message'] = preg_replace ('/^\((.*): /','(Anonymous): ',$message['message']);
+		
 			$alternate = ! $alternate;
 
 			$messagestxt .= '<TR class="replyalternate'.($alternate ? '1' : '2' ).
@@ -425,16 +505,23 @@ class Chatbox
 					$messagestxt .=  '('.l_t('To: <strong>%s</strong>',l_t($this->countryName($message['toCountryID']))).$fromtxt.') - ';
 			}
 
+			// Display the country name in front of the text (for colorblind people)
+			if ( $User->showCountryNames == 'Yes')
+				$messagestxt .=  '<span style="color: grey;">';
+			
 			if ( $message['turn'] < $Game->turn )
 			{
 				$messagestxt .= '<strong>'.$Game->datetxt($message['turn']).'</strong>: ';
 			}
 
+			if ( $User->showCountryNames == 'Yes')
+				$messagestxt .=  '<span style="color: black;">';
+
 			if( is_object($Member) && $message['fromCountryID'] == $Member->countryID )
 				$message['message'] = '<span class="messageFromMe">'.$message['message'].'</span>';
 
 			// Display the country name in front of the text (for colorblind people)
-			if ( $User->getOptions()->value['colourblind'] != 'No')
+			if ( ( $User->getOptions()->value['colourblind'] != 'No' || $User->showCountryNames == 'Yes') && ($Game->phase != 'Pre-game') )
 			{
 				if(isset($Member) && $Member->countryID == $message['fromCountryID'])
 					$messagestxt .=  '<strong>You:</strong> ';

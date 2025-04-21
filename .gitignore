@@ -1,8 +1,11 @@
-config.php
-errorlog/
-errorlogs/
-orderlog/
-orderlogs/
+/config.php
+/config_*.php
+/cache
+/logfiles
+/datc/maps/*.map*
+/css_lab
+/variants/*/cache/*
+!.htaccess
 *.zip
 *.gz
 *.tgz
@@ -20,8 +23,6 @@ pointlog.txt
 /.idea
 /datc/maps/
 !.htaccess
-variants/*/cache/
-variants/KnownWorld_901/
 ghostRatingData.*
 gr.php
 adminInfo.php

@@ -61,6 +61,8 @@ abstract class Pager
 		if ( $currentPage == $defaultPage && isset($_SESSION['page-'.$this->type.'-'.$this->URL]) )
 			unset($_SESSION['page-'.$this->type.'-'.$this->URL]);
 
+		if ( $currentPage > 1000000) $currentPage = 1000000; // Hard-coded to max. 1000000 to avoid SQL problems.
+		
 		$this->currentPage = $currentPage;
 	}
 

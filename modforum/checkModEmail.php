@@ -17,45 +17,50 @@
     You should have received a copy of the GNU Affero General Public License
     along with vDiplomacy.  If not, see <http://www.gnu.org/licenses/>.
  */
-/*
+
 defined('IN_CODE') or die('This script can not be run by itself.');
 
 $imap = imap_open(Config::$modEMailServerIMAP, Config::$modEMailLogin, Config::$modEMailPassword);
 $headers = imap_search($imap, 'UNSEEN');
 if ($headers != false)
 {
+	$sortedMails = array_map( function($val) {
+		global $imap; 
+		return (object) [
+			'header' => imap_headerinfo ( $imap , $val ),
+			'val' => $val
+		];
+	}, $headers);
+	usort(
+		$sortedMails,
+		function($mailA, $mailB) {return $mailA->header->udate == $mailB->header->udate ? 0 : $mailA->header->udate < $mailB->header->udate ? -1 : 1;}
+	);
+
 	$lastDate = $Misc->vDipLastMail;
-	foreach ($headers as $val)
+	foreach ($sortedMails as $mail)
 	{
-		$overview =  imap_fetch_overview ( $imap , $val );
-		$subject = $DB->escape(quoted_printable_decode($overview[0]->subject));
-		$from    = $DB->escape(quoted_printable_decode($overview[0]->from));
-		$date    = $DB->escape(quoted_printable_decode($overview[0]->udate));
-		$body    = $DB->escape(quoted_printable_decode(imap_fetchbody($imap,$val,1.1))); 
-        
-		if ($body == '') $body = $DB->escape(quoted_printable_decode(imap_fetchbody($imap,$val,1))); 
-		$body = preg_replace(array('/<[^>]+>/i', '/<[^>]+$/i'),array(' ', ' '), $body);
-		if (strlen($body) > 490) $body = substr($body,0,490).'...';
-		$body = str_replace('\r\n','<br />',$body);
+		$subject = property_exists($mail->header, 'subject') && $mail->header->subject != '' ? mb_decode_mimeheader($mail->header->subject) :  "[No subject]";
+		$fromName	= quoted_printable_decode($mail->header->fromaddress);
+		$fromMail 	= quoted_printable_decode($mail->header->from[0]->mailbox.'@'.$mail->header->from[0]->host);
+		$date    = quoted_printable_decode($mail->header->udate);
+		$body    = quoted_printable_decode(imap_fetchbody($imap,$mail->val,1.1)); 
+
+		if ($body == '') $body = quoted_printable_decode(imap_fetchbody($imap,$mail->val,1));
 		
 		if ($date > $Misc->vDipLastMail)
 		{
 			require_once('modforum/libMessage.php');
 
-			$newmessage = ModForumMessage::send(0, 2,
-						'There is a new Mail in the mod-team-inbox (<a href="'.Config::$modEMailServerHTTP.'">Webmail</a>)<br />'.$body,
-						$subject.' (From: '.$from.')',
-						'ThreadStart');
+			ModForumMessage::storeModMail($fromMail, $fromName, $subject, $body, $date);
 						
 			$lastDate = max ($date, $lastDate);
-			print 'There is a new Mail '.$date.' in the mod-team-inbox.<br>'.$subject.' (From: '.$from.')'."<br />\n";
+			print 'There is a new Mail '.$DB->escape($date).' in the mod-team-inbox.<br>'.$DB->escape($subject).' (From: '.$DB->escape($fromMail).')'."<br />\n";
 		}
 		
 	}
-	$Misc->vDipLastMail = $lastDate;
+	$Misc->vDipLastMail = $DB->escape($lastDate);
 	$Misc->write();
 }
 imap_close($imap);
 
 ?>
-*/

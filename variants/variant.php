@@ -419,6 +419,10 @@ abstract class WDVariant {
 
 		// This will wipe the variant if it is already present and install it
 		require_once(l_r('variants/'.$this->name.'/install.php'));
+		
+		// This will install variant specific adjudicator test cases if provided
+		if(file_exists(l_r('variants/'.$this->name.'/datc.php')))
+			require_once(l_r('variants/'.$this->name.'/datc.php'));
 
 		// This only gets called when there's no serialized variant cache available for this
 		// variant, so prepare the data to be serialized & saved now.
@@ -434,7 +438,7 @@ abstract class WDVariant {
 
 		list($this->supplyCenterCount) = $DB->sql_row("SELECT COUNT(id) FROM wD_Territories WHERE mapID=".$this->mapID." AND supply='Yes'");
 
-		$this->supplyCenterTarget = round((18.0/34.0)*$this->supplyCenterCount);
+		$this->supplyCenterTarget = floor($this->supplyCenterCount / 2) + 1;
 
 		if( isset($this->codeVersion) && $this->codeVersion != null && $this->codeVersion > 0 )
 			$this->cacheVersion = $this->codeVersion;
@@ -550,11 +554,13 @@ abstract class WDVariant {
 	 * @return string
 	 */
 	public function territoriesJSONFile() {
-		return l_j(libVariant::cacheDir($this->name).'/territories.js');
+		return l_j(libVariant::cacheDir($this->name).'/territories'.(isset($this->codeVersion)?'-'.$this->codeVersion:'').'.js');
 	}
 
 	public function link() {
-		return '<a class="light" href="variants.php#'.$this->name.'">'.l_t($this->fullName).'</a>';
+		// Changed the link so it displays only the variant, not the whole list.
+		// return '<a class="light" href="variants.php#'.$this->name.'">'.$this->fullName.'</a>';
+		return '<a class="light" href="variants.php?variantID='.$this->id.'">'.l_t($this->fullName).'</a>';
 	}
 }
 

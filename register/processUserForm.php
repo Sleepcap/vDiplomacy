@@ -77,8 +77,9 @@ try
 
 	if ( is_array($errors) && count($errors)>0 ) throw new Exception(implode('. ',$errors));
 
+	$set .= ', vpoints = 1000'; // Set the initial vPoints displayed to 1000.
 	$set .= ', timeJoined = '.time().', timeLastSessionEnded = '.time();
-
+	
 	if( User::findUsername($SQLVars['username']) )
 		throw new Exception(l_t("The username '%s' is already in use. Please choose another.",$SQLVars['username']));
 	elseif( strstr($SQLVars['username'], 'diplonow_')!==false )
@@ -99,25 +100,31 @@ try
 	$NewUser->options->load();
 
 	// Give user access to tutorial views for 365 days
+	/* vDip: Disabled tutorial as this is too webdip specific, might be enabled later when texts are adjusted
 	setcookie('wD-Tutorial', 'wD-Tutorial', ['expires'=>time()+60*60*24*365,'samesite'=>'Lax']);
 	setcookie('wD-Tutorial-Index', 'wD-Tutorial-Index', ['expires'=>time()+60*60*24*365,'samesite'=>'Lax']);
 	setcookie('wD-Tutorial-GameCreate', 'wD-Tutorial-GameCreate', ['expires'=>time()+60*60*24*365,'samesite'=>'Lax']);
 	setcookie('wD-Tutorial-JoinNewGame', 'wD-Tutorial-JoinNewGame', ['expires'=>time()+60*60*24*365,'samesite'=>'Lax']);
-	setcookie('wD-Tutorial-Settings', 'wD-Tutorial-Settings', ['expires'=>time()+60*60*24*365,'samesite'=>'Lax']);
+	setcookie('wD-Tutorial-Settings', 'wD-Tutorial-Settings', ['expires'=>time()+60*60*24*365,'samesite'=>'Lax']);*/
 
 	// libHTML does not like letting registered users access the registration page
 	$User = new User(GUESTID);
 
-	print libHTML::pageTitle(l_t('Register a webDiplomacy account'),l_t('Validate your e-mail address -&gt; Enter your account settings -&gt; <strong>Play webDiplomacy!</strong>'));
+	print libHTML::pageTitle(l_t('Register a vDiplomacy account'),l_t('Validate your e-mail address -&gt; Enter your account settings -&gt; <strong>Play vDiplomacy!</strong>'));
 
-	print "<h3>".l_t("Welcome to webDiplomacy!")."</h3>
+	print "<h3>".l_t("Welcome to vDiplomacy!")."</h3>
 			<p>".l_t("Welcome, %s!",$SQLVars['username'])."<br /><br />
-				".l_t("<strong>New to the game?</strong> Check out the <a href='intro.php' class='light'>Intro to Diplomacy</a> which explains the technical bits you'll need to dominate every board.".
-				"<br /><br /> <strong>Want to practice?</strong> Play a quick no-press/no-message <a href='botgamecreate.php' class='light'>game against bots</a>. ".
-				"<br /><br /> <strong>Want to meet other players?</strong> Introduce yourself in our <a href='/contrib/phpBB3/' class='light'>forum</a>.".
-				"<br /><br /> <strong>Confident in yourself already?</strong> Well then, you can jump right into a <a href='gamelistings.php' class='light'>game</a> or <a href='gamecreate.php' class='light'>create your own</a>.")."<br /> ".
-				l_t("<br /> Don’t forget to bookmark the <a href='index.php' class='light'>Home Page</a>, ".
-				"and give our <a href='rules.php' class='light'>Rules/info</a> a read.")."
+
+				".l_t("Before you start your conquest, please check out our <a href='intro.php' class='light'>Intro to Diplomacy</a> which explains the technical bits you’ll need to dominate every board.".
+				"<br /><br /> Want to announce your arrival? Take a stop by our <a href='forum.php' class='light'>forum</a>.".
+				"<br /><br /> Looking for help? Check out the <a href='help.php' class='light'>Help/Info</a> page. ".
+				"<br /><br /> Confident in yourself already? Well then, you can jump right into a <a href='gamelistings.php' class='light'>game</a> or <a href='gamecreate.php' class='light'>create your own</a>.")."<br /> ".
+				l_t("<br /> Finally, don’t forget to bookmark the <a href='index.php' class='light'>Home Page</a>, ".
+				"and give our <a href='rules.php' class='light'>Rules/info</a> a read through.")."<br /><br />
+
+				".l_t("If you don't know what Diplomacy is about yet check out the quick
+				<a href='intro.php' light='class'>graphical intro to vDiplomacy</a>,
+				so you can get going faster.")."
 			</p>";
 	print '</div>';
 

@@ -4,6 +4,9 @@
  * @package Base
  */
 
+// do not use this feature for vdip
+die();
+
 require_once('header.php');
 require_once(l_r('gamesearch/search.php'));
 require_once(l_r('pager/pagergame.php'));
@@ -304,7 +307,7 @@ if ($submitted == true)
             {
                 $Mailer->Send(array($email=>$email), $subject.' '.$User->username,
                 "
-                This request is from <a href='https://www.webdiplomacy.net/userprofile.php?userID=".$User->id."' class = 'contactUs'>".$User->username."</a>, 
+                This request is from <a href='https://www.webdiplomacy.net/profile.php?userID=".$User->id."' class = 'contactUs'>".$User->username."</a>, 
                 and their registered email is: ".$User->email."<br><br>
 
                 <strong>An emergency pause was used because of ".$actualProblem."</strong>
@@ -340,7 +343,7 @@ if ($submitted == true)
         {
             $Mailer->Send(array($email=>$email), $subject.' '.$User->username,
             "
-            This request is from <a href='https://www.webdiplomacy.net/userprofile.php?userID=".$User->id."' class = 'contactUs'>".$User->username."</a>, 
+            This request is from <a href='https://www.webdiplomacy.net/profile.php?userID=".$User->id."' class = 'contactUs'>".$User->username."</a>, 
             and their registered email is: ".$User->email."<br><br>
 
             <strong>The user called out ".$userPickedGame. ".</strong><br><br>

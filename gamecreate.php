@@ -24,6 +24,7 @@
  */
 
 require_once('header.php');
+require_once('lib/reliability.php');
 
 if ( $Misc->Panic )
 {
@@ -40,6 +41,7 @@ libHTML::starthtml();
 
 if( isset($_REQUEST['newGame']) and is_array($_REQUEST['newGame']) )
 {
+
 	try
 	{
 		libAuth::formToken_Valid();
@@ -47,8 +49,22 @@ if( isset($_REQUEST['newGame']) and is_array($_REQUEST['newGame']) )
 		$form = $_REQUEST['newGame']; // This makes $form look harmless when it is unsanitized; the parameters must all be sanitized
 
 		$input = array();
-		$required = array('variantID', 'name', 'password', 'passwordcheck', 'bet', 'potType', 'phaseMinutes', 'phaseMinutesRB', 'nextPhaseMinutes', 'phaseSwitchPeriod', 'joinPeriod', 'anon', 'pressType', 'missingPlayerPolicy','drawType','minimumReliabilityRating','excusedMissedTurns');
+		$required = array('variantID', 'name', 'password', 'passwordcheck', 'bet', 'potType', 'phaseMinutes', 'phaseMinutesRB', 'nextPhaseMinutes', 'phaseSwitchPeriod', 'joinPeriod', 'anon', 'pressType', 'missingPlayerPolicy','drawType','minimumReliabilityRating','excusedMissedTurns'
+						,'countryID'
+						,'minPhases'
+						,'maxTurns'
+						,'regainExcusesDuration'
+						,'delayDeadlineMaxTurn'
+						,'targetSCs'
+						,'moderated'
+						,'description'
+						,'noProcess'
+						,'fixStart'
+					);
 
+		if ( !isset($form['noProcess']) )
+			$form['noProcess'] = array();
+		
 		$playerTypes = 'Members';
 
 		if ( !isset($form['missingPlayerPolicy']) ) {$form['missingPlayerPolicy'] = 'Normal'; }
@@ -83,10 +99,12 @@ if( isset($_REQUEST['newGame']) and is_array($_REQUEST['newGame']) )
 		}
 
 		$input['bet'] = (int) $input['bet'];
-		if ( $input['bet'] < 5 or $input['bet'] > $User->points )
+		if ( $input['bet'] > $User->points )
 		{
 			throw new Exception(l_t("%s is an invalid bet size.",(string)$input['bet']));
 		}
+		if ( $input['bet'] == 0 )
+			$input['potType'] = 'Unranked';
 
 		if ( $input['potType'] != 'Winner-takes-all' and $input['potType'] != 'Points-per-supply-center' and $input['potType'] != 'Unranked' and $input['potType'] != 'Sum-of-squares')
 		{
@@ -141,12 +159,13 @@ if( isset($_REQUEST['newGame']) and is_array($_REQUEST['newGame']) )
 		
 		$input['anon'] = ( (strtolower($input['anon']) == 'yes') ? 'Yes' : 'No' );
 		
-		// Force 1 vs 1 variants to be unranked to prevent point farming. 
-		if ( $input['variantID'] == 15 or  $input['variantID'] == 23 or $input['variantID'] == 91)
-		{
-			$input['bet'] = 5; 
-			$input['potType'] = 'Unranked';
-		}
+// Handled differently at vdip
+//		// Force 1 vs 1 variants to be unranked to prevent point farming. 
+//		if ( $input['variantID'] == 15 or  $input['variantID'] == 23 or $input['variantID'] == 91)
+//		{
+//			$input['bet'] = 5; 
+//			$input['potType'] = 'Unranked';
+//		}
 
 		// Only classic, no press can support fill with bots. 
 		if ( ($input['variantID'] != 1) || ($input['pressType'] != 'NoPress') )
@@ -215,7 +234,61 @@ if( isset($_REQUEST['newGame']) and is_array($_REQUEST['newGame']) )
 		{
 			throw new Exception(l_t("The excused missed turn number is too large or small; it must be between 0 and 4."));
 		}
+		
+		$input['minPhases'] = (int)$input['minPhases'];
+		if ( $input['minPhases'] > $User->phaseCount )
+		{
+			throw new Exception("You didn't play enough phases (".$User->phaseCount.") for your own requirement (".$input['minPhases'].")");
+		}
+		
+		$input['maxTurns'] = (int)$input['maxTurns'];		
+		if ( $input['maxTurns'] < 4 )
+			$input['maxTurns'] = 0;
+		if ( $input['maxTurns'] > 200 )
+			$input['maxTurns'] = 200;
 
+		$input['targetSCs'] = (int)$input['targetSCs'];		
+		$input['countryID'] = (int)$input['countryID'];
+		
+		$input['regainExcusesDuration'] = (int)$input['regainExcusesDuration'];
+		if ( $input['regainExcusesDuration'] <  1 ) 
+			throw new Exception(l_t("The duration to regain excuses is to small. Minimum is one turn without a miss."));
+		if ( $input['regainExcusesDuration'] > 10 ) $input['regainExcusesDuration'] = 99;
+		
+		$input['delayDeadlineMaxTurn'] = (int)$input['delayDeadlineMaxTurn'];
+		if ( $input['delayDeadlineMaxTurn'] <  0 ) $input['delayDeadlineMaxTurn'] = 0;
+		if ( $input['delayDeadlineMaxTurn'] > 99 ) $input['delayDeadlineMaxTurn'] = 99;
+		
+		$input['chooseYourCountry'] = ( ($input['countryID'] > 0) ? 'Yes' : 'No' );
+		
+		$input['moderator'] = ( (strtolower($input['moderated']) == 'yes') ? $User->id : '0' );
+		if ( $input['moderator'] != 0 && !$User->DirectorLicense())
+		{
+			throw new Exception("You do not meet the criteria to moderate a game. Please ask the mods for assistance.");
+		}	
+		
+		if ( $input['password'] == '' && $input['moderator'] != 0)
+		{
+			throw new Exception("Moderated games need a password.");
+		}	
+		
+		$input['description'] = $DB->msg_escape($input['description']);
+		if ( $input['description'] == '' && $input['moderator'] != 0)
+		{
+			throw new Exception("Moderated games need a game description.");
+		}	
+		$patterns = array('/gameID[:= _]?([0-9]+)/i','/userID[:= _]?([0-9]+)/i','/threadID[:= _]?([0-9]+)/i','/((?:[^a-z0-9])|(?:^))([0-9]+) ?(?:(?:D)|(?:points))((?:[^a-z])|(?:$))/i');
+		$replacements = array('<a href="board.php?gameID=\1" class="light">gameID=\1</a>','<a href="profile.php?userID=\1" class="light">userID=\1</a>','<a href="forum.php?threadID=\1#\1" class="light">threadID=\1</a>',	'\1\2'.libHTML::points().'\3');
+		$input['description'] = preg_replace($patterns, $replacements, $input['description']);
+
+		$input['noProcess'] = implode(',',$input['noProcess']);
+		if ( $input['noProcess'] == '1,2,3,4,5,6,0' )
+		{
+			throw new Exception("Games need at least one weekday for processing allowed.");
+		}	
+		
+		$input['fixStart'] = ( (strtolower($input['fixStart']) == 'yes') ? 'Yes' : 'No' );
+		
 		// Create Game record & object
 		require_once(l_r('gamemaster/game.php'));
 		$Game = processGame::create(
@@ -235,7 +308,29 @@ if( isset($_REQUEST['newGame']) and is_array($_REQUEST['newGame']) )
 			$input['drawType'],
 			$input['minimumReliabilityRating'],
 			$input['excusedMissedTurns'],
-			$playerTypes);
+			$input['maxTurns'],
+			$input['targetSCs'],
+			$input['minPhases'],
+			$input['regainExcusesDuration'],
+			$input['delayDeadlineMaxTurn']
+			,$input['moderator']
+			,$input['chooseYourCountry']
+			,$input['description']
+			,$input['noProcess']
+			,$input['fixStart']
+			,$playerTypes
+		);
+		
+		/**		
+ 		 * Check for reliability, bevore a user can create a new game...		
+ 		 */		
+ 		require_once(l_r('lib/reliability.php'));		 		
+ 		if(libReliability::userGameLimitRestriction($User, $Game) )		
+ 		{		
+ 			processGame::eraseGame($Game->id);		
+ 			libHTML::notice('You are blocked from creating new games.', libReliability::isAtGameLimit($User));		
+ 		}		
+ 		// END RELIABILITY-PATCH
 
 		// Prevent temp banned players from making new games.
 		if ($User->userIsTempBanned())
@@ -245,7 +340,16 @@ if( isset($_REQUEST['newGame']) and is_array($_REQUEST['newGame']) )
 		}
 
 		// Create first Member record & object
-		processMember::create($User->id, $input['bet']);
+		if ($input['moderator'] == 0)
+			processMember::create($User->id, $Game->minimumBet, $input['countryID']);
+	
+		// Post a small note at the beginning of each ChooseYourCountry game to tell everyone discussion has to wait till everybody joined.
+		if ($input['countryID'] != 0 && $input['pressType'] != 'NoPress')
+		{
+			include_once ('lib/gamemessage.php');
+			libGameMessage::send(0, 'GameMaster', 'Please remember that negotiations before the game begins are not allowed.' , $Game->id);			
+		}
+		
 		$Game->Members->joinedRedirect();
 	}
 	catch(Exception $e)
@@ -280,6 +384,9 @@ else
 
 if( isset($input) && isset($input['points']) ) { $formPoints = $input['points']; }
 else { $formPoints = $defaultPoints; }
+
+require_once('lib/reliability.php');		
+libReliability::printCDNotice($User);
 
 require_once(l_r('locales/English/gamecreate.php'));
 

@@ -71,7 +71,7 @@ class datcGame extends processGame
 		}
 		else
 		{
-			$Game = processGame::create($this->variantID, $gameName, '', 5,'Winner-takes-all', 30,30,-1,30,'No','Regular', 'Normal', 'draw-votes-hidden', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'No', '', '', 'No', 'Members');
+			$Game = processGame::create($this->variantID, $gameName, '', 5,'Winner-takes-all', 30,30,-1,30,30, 'No','Regular', 'Normal', 'draw-votes-hidden', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'No', '', '', 'No', 'Members', 'Members');
 			$id = $Game->id;
 			$DB->sql_put("UPDATE wD_Games SET phase = 'Diplomacy', turn = ".($testID%1000)." WHERE id = ".$id);
 		}
@@ -199,7 +199,7 @@ class datcGame extends processGame
 			WHERE testID=".$this->testID);
 	}
 
-	private function loadOI($memberID, $countryID){
+	private function loadOIForDATC($memberID, $countryID){
 		global $DB;
 
 		$con=array();
@@ -213,6 +213,7 @@ class datcGame extends processGame
 		$con['orderStatus']='Saved';
 		$con['tokenExpireTime']=time()+60*60*6;
 		list($con['maxOrderID'])=$DB->sql_row("SELECT MAX(id)+100 FROM wD_Orders");
+		$con['isSandboxMode']=false;
 
 		$con=OrderInterface::getContext($con);
 		return OrderInterface::newJSON($con['key'], $con['json']);
@@ -236,8 +237,8 @@ class datcGame extends processGame
 		{
 			libHTML::$footerScript[] = '(function() {';
 
-			$OI = $this->loadOI($memberID, $countryID);
-			$OI->load();
+			$OI = $this->loadOIForDATC($memberID, $countryID);
+			$OI->load(true);
 
 			print '<p><strong>'.l_t($this->Variant->countries[$countryID-1]).'</strong></p>';
 
@@ -253,7 +254,7 @@ class datcGame extends processGame
 		if( !isset($_REQUEST['verySlowStep']) && !isset($_REQUEST['slowStep']) )
 		{
 			libHTML::$footerScript[] = '
-				document.location.href="datc.php?'.( isset($_REQUEST['batchTest']) ? 'batchTest=on&':'').'DATCResults="+DATCResults.toJSON();
+				document.location.href="datc.php?'.( isset($_REQUEST['batchTest']) ? 'batchTest=on&':'').'DATCResults="+JSON.stringify(DATCResults);
 			';
 		}
 	}
@@ -292,6 +293,10 @@ class datcGame extends processGame
 			document.write(response.responseText);
 		};
 		OrdersHTML.onSuccess=function(response) {
+			if ( response.responseJSON )                                                                                                                                          
+			{                                                                                                                                                                     
+					response.headerJSON = response.responseJSON;                                                                                                                  
+			}
 			if( null == response.headerJSON )
 			{
 				OrdersHTML.onFailure(response);

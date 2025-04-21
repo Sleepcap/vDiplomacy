@@ -24,6 +24,7 @@
  */
 
 require_once('header.php');
+require_once('lib/sms.php');
 
 require_once(l_r('objects/mailer.php'));
 global $Mailer;
@@ -48,28 +49,113 @@ libHTML::starthtml();
 
 $page = 'firstValidationForm';
 
-if ( isset($_COOKIE['imageToken']) && isset($_REQUEST['imageText']) && isset($_REQUEST['emailValidate']) && isset($_REQUEST['rulesValidate']) )
+$exception = null;
+
+if ( ((isset($_COOKIE['imageToken']) && isset($_REQUEST['imageText'])) || isset($_REQUEST['recaptchaToken'])) && isset($_REQUEST['emailValidate']) && isset($_REQUEST['rulesValidate']) )
 {
 	try
 	{
-		// Validate and send email
-		$imageToken = explode('|', $_COOKIE['imageToken'], 2);
-
-		if ( count($imageToken) != 2 )
-			throw new Exception(l_t("A bad anti-script code was given, please try again"));
-
-
-		list($Hash, $Time) = $imageToken;
-
-		if ( md5(Config::$secret.$_REQUEST['imageText'].$_SERVER['REMOTE_ADDR'].$Time) != $Hash )
+		if(isset($_COOKIE['imageToken']) && isset($_REQUEST['imageText']))
 		{
-			throw new Exception(l_t("An invalid anti-script code was given, please try again"));
+			// Validate using the built in easycaptcha, which is fairly easy to work around and has cookie issues with certain browser configs
+			// Validate and send email
+			$imageToken = explode('|', $_COOKIE['imageToken'], 2);
+
+			if ( count($imageToken) != 2 )
+				throw new Exception(l_t("A bad anti-script code was given, please try again"));
+
+			list($Hash, $Time) = $imageToken;
+
+			if ( md5(Config::$secret.$_REQUEST['imageText'].$_SERVER['REMOTE_ADDR'].$Time) != $Hash )
+			{
+				throw new Exception(l_t("An invalid anti-script code was given, please try again"));
+			}
+			elseif( (time() - 3*60) > $Time)
+			{
+				throw new Exception(l_t("This anti-script code has expired, please submit it within 3 minutes"));
+			}
 		}
-		elseif( (time() - 3*60) > $Time)
+		else if( isset($_REQUEST['recaptchaToken']) )
 		{
-			throw new Exception(l_t("This anti-script code has expired, please submit it within 3 minutes"));
+			// Validate the given token using the CURL API
+			//print 'Validating token: '.$_REQUEST['recaptchaToken'].'<br />';
+			/*
+
+			Disabled as Google is returning 400
+			$ch = curl_init('https://recaptchaenterprise.googleapis.com/v1/projects/'.Config::$recaptchaProject.'/assessments?key='.Config::$recaptchaApiKey.'');
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 );
+			curl_setopt($ch, CURLOPT_POST,           1 );
+			curl_setopt($ch, CURLOPT_POSTFIELDS,     '{
+	"event": {
+		"token": "'.$_REQUEST['recaptchaToken'].'",
+		"siteKey": "'.Config::$recaptchaSiteKey.'",
+		"expectedAction": "LOGIN"
+	}
+	}' ); 
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+				'Content-Type: application/json; charset=utf-8'
+			));
+			//print 'Executing request<br />';
+			$res = curl_exec($ch);
+			if ( ! ($res)) {
+				$errno = curl_errno($ch);
+				$errstr = curl_error($ch);
+				curl_close($ch);
+				throw new Exception("Error validating anti-bot token: [$errno] $errstr");
+			}
+			
+			$info = curl_getinfo($ch);
+			$http_code = $info['http_code'];
+			if ($http_code != 200) {
+				throw new Exception("Google responded with http code $http_code");
+			}
+
+			$responseData = json_decode($res, true);
+			if( $responseData['tokenProperties']['valid'] === true )
+			{
+				
+			}
+			else
+			{
+				throw new Exception("Google responded with invalid token: " . $responseData['tokenProperties']['invalidReason']);
+			}
+
+
+			//print 'Got response: '.$res.'<br />';
+
+			
+
+			//print 'Got info: '.print_r($info, true).'<br />';
+			
+			curl_close($ch);
+			*/
+		}
+		else
+		{
+			throw new Exception(l_t("No anti-bot token provided"));
 		}
 
+		// Did he enter the two basic rules?
+		$rules = strtolower(preg_replace ("[^A-Za-z]", "", $_REQUEST['rulesValidate'] ));
+		if ( (strpos($rules, 'multiaccounting') === false) || (strpos($rules, 'metagaming') === false) )
+			throw new Exception(
+				l_t("You did not enter the two rules. Please read and try again."));
+
+		if( !isset($_REQUEST['antiBotCountryID']) || !isset($_REQUEST['antiBotTerritoryIDs']) )
+		{
+			throw new Exception(l_t("No anti-bot country selection provided."));
+		}
+		$antiBotCountryID = (int)$_REQUEST['antiBotCountryID'];
+		$antiBotTerritoryIDs = $_REQUEST['antiBotTerritoryIDs'];
+		
+		$tabl = $DB->sql_tabl("SELECT id FROM wD_Territories WHERE mapID = 1 AND countryID = ".$antiBotCountryID." AND supply='Yes' ORDER BY id");
+		$validTerritoryIDs = array();
+		while( $row = $DB->tabl_row($tabl) ) $validTerritoryIDs[] = $row[0];
+		$validTerritoryIDs = implode(',', $validTerritoryIDs);
+		if( $validTerritoryIDs !== $antiBotTerritoryIDs )
+		{
+			throw new Exception(l_t("The selected territories (".$antiBotTerritoryIDs.") do not match the expected values (".$validTerritoryIDs."). Please click on the supply center territories requested."));
+		}
 		// Did he enter the two basic rules?
 		$rules = strtolower(preg_replace ("[^A-Za-z]", "", $_REQUEST['rulesValidate'] ));
 		if ( (strpos($rules, 'multiaccounting') === false) || (strpos($rules, 'metagaming') === false) )
@@ -97,6 +183,8 @@ if ( isset($_COOKIE['imageToken']) && isset($_REQUEST['imageText']) && isset($_R
 			".l_t("2. You need to have an invitation code on any game you play with people you know from outside the site to keep games fair.")."<br>
 			".l_t("The rest of the rules can be found here: https://".$_SERVER['SERVER_NAME']."/rules.php")."<br><br>
 
+			".l_t("Join the webDiplomacy community on Discord at https://discord.gg/dPm4QnY")."<br><br>
+
 			".l_t("If you forgot your password, use the lost password finder here: https://".$_SERVER['SERVER_NAME']."/logon.php?forgotPassword=1")."<br><br>
 			".l_t("If you have any further problems contact the server's admin at %s.",Config::$adminEMail)."<br><br>
 
@@ -107,10 +195,7 @@ if ( isset($_COOKIE['imageToken']) && isset($_REQUEST['imageText']) && isset($_R
 	}
 	catch(Exception $e)
 	{
-		print '<div class="content">';
-		print '<p class="notice">'.$e->getMessage().'</p>';
-		print '</div>';
-
+		$exception = $e;
 		$page = 'validationForm';
 	}
 }
@@ -144,10 +229,7 @@ elseif ( isset($_REQUEST['emailToken']) )
 	}
 	catch( Exception $e)
 	{
-		print '<div class="content">';
-		print '<p class="notice">'.$e->getMessage().'</p>';
-		print '</div>';
-
+		$exception = $e;
 		$page = 'emailTokenFailed';
 	}
 }
@@ -173,6 +255,7 @@ switch($page)
 		print '<h2>'.l_t('Welcome to vDiplomacy!').'</h2>';
 		print '<p>'.l_t('We are a competitive community looking for fair and fun games; to ensure you are a human with a working email address, please fill out the registration form below. Help us keep the server free of spam and cheaters!').'</p>';
 
+		/*
 		print '<h2>'.l_t('Site User Agreement (We aren’t Apple™, so please read this.)').'</h2>';
 		print '<p>'.l_t('I agree not to create more than one account.<br /> '.
 		'I agree not to work around game communication rules.<br /> '.
@@ -181,6 +264,7 @@ switch($page)
 		'I agree to treat all members with respect regardless of race, religion, gender, or creed.<br /><br /> '.
 
 		'If you can agree to these values and adhere to our site rules, you are welcome here!').'</p>';
+		*/
 		
 	case 'validationForm':
 

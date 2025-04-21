@@ -87,43 +87,57 @@ class Database {
 		if( ! $this->link )
 			trigger_error(l_t("Couldn't connect to the MySQL server, if this problem persists please inform the admin."));
 		if( ! mysqli_select_db($this->link,Config::$database_name) )
-		{
 			trigger_error(l_t("Connected to the MySQL server, but couldn't access the specified database. ".
-			"If this problem persists please inform the admin."));
-		}
-		
-			/*
-			 * Using InnoDB's default transaction isolation level (REPEATABLE-READ) a snapshot is taken when you
-			 * first read.
-			 * Any other changes made by other transactions aren't read, except for LOCK IN SHARE MODE, which will
-			 * always get the latest data from the database.
-			 *
-			 * The amazing thing is, locking FOR UPDATE /does not/ get the latest data from the database, despite
-			 * it being a "tougher" lock than LOCK IN SHARE MODE (read/write-lock instead of just read-lock).
-			 *
-			 * So what used to happen is when joining a game and members were locked FOR UPDATE, and a player would
-			 * join based on the false assumption that the game and member rows must be the latest rows.
-			 *
-			 * SELECT whatever			|
-			 * 							| SELECT whatever
-			 * LOCK game etc FOR UPDATE	|
-			 * CHECK player can join	|
-			 * INSERT player into game	| LOCK game etc FOR UPDATE [waiting...]
-			 * COMMIT					|
-			 * 							| CHECK player can join (using same info as when SELECT whatever happened!!)
-			 * 							| INSERT player into game
-			 * 							| COMMIT
-			 *
-			 * A player has joined the game /twice/ despite read/write locking..
-			 *
-			 *
-			 * Because of this we use READ COMMITTED, which ensures that not only LOCK IN SHARE MODE gets the latest
-			 * committed data, but /all selects/ get the latest data (having the latest data is a pretty useful
-			 * transaction-mode)
-			 */
+						"If this problem persists please inform the admin."));
+
+		$this->enableTransactions();
+	}
+
+	public function enableTransactions()
+	{
+		/*
+		 * Using InnoDB's default transaction isolation level (REPEATABLE-READ) a snapshot is taken when you
+		 * first read.
+		 * Any other changes made by other transactions aren't read, except for LOCK IN SHARE MODE, which will
+		 * always get the latest data from the database.
+		 *
+		 * The amazing thing is, locking FOR UPDATE /does not/ get the latest data from the database, despite
+		 * it being a "tougher" lock than LOCK IN SHARE MODE (read/write-lock instead of just read-lock).
+		 *
+		 * So what used to happen is when joining a game and members were locked FOR UPDATE, and a player would
+		 * join based on the false assumption that the game and member rows must be the latest rows.
+		 *
+		 * SELECT whatever			|
+		 * 							| SELECT whatever
+		 * LOCK game etc FOR UPDATE	|
+		 * CHECK player can join	|
+		 * INSERT player into game	| LOCK game etc FOR UPDATE [waiting...]
+		 * COMMIT					|
+		 * 							| CHECK player can join (using same info as when SELECT whatever happened!!)
+		 * 							| INSERT player into game
+		 * 							| COMMIT
+		 *
+		 * A player has joined the game /twice/ despite read/write locking..
+		 *
+		 *
+		 * Because of this we use READ COMMITTED, which ensures that not only LOCK IN SHARE MODE gets the latest
+		 * committed data, but /all selects/ get the latest data (having the latest data is a pretty useful
+		 * transaction-mode)
+		 */
 		$this->sql_put("SET AUTOCOMMIT=0, NAMES utf8, time_zone = '+0:00'");
 		$this->sql_put("SET SQL_MODE='NO_ENGINE_SUBSTITUTION'"); // This statement is just intended to make sure the server isn't in strict mode
-		$this->sql_put("SET TRANSACTION ISOLATION LEVEL READ COMMITTED"); // Changed from READ COMMITTED which was causing too many deadlocks; use LOCK IN SHARE MODE when the latest query is needed instead
+		$this->sql_put("SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED"); // 20220515 added SESSION to ensure all transactions run under READ COMMITTED, including after first commit// Changed from READ COMMITTED which was causing too many deadlocks; use LOCK IN SHARE MODE when the latest query is needed instead
+		
+		// This seems odd since SET AUTOCOMMIT=0 is enough to set it for the whole session, but SET TRANSACTION ISOLATION LEVEL doesn't set it for the whole session.. https://dev.mysql.com/doc/refman/5.6/en/innodb-autocommit-commit-rollback.html
+	}
+
+	public function disableTransactions()
+	{
+		// For queries that update a lot of records but aren't transactionally important e.g. reliability ratings 
+		// transactions should be disabled temporarily to avoid deadlocks due to high frequency bot requests
+		$this->sql_put("SET AUTOCOMMIT=1, NAMES utf8, time_zone = '+0:00'");
+		$this->sql_put("SET SQL_MODE='NO_ENGINE_SUBSTITUTION'");
+		$this->sql_put("SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
 	}
 
 	/**
@@ -211,6 +225,8 @@ class Database {
 
 		$this->getqueries++;
 
+		if( defined('RUNNINGFROMCLI') ) print $sql."\n";
+		
 		if( Config::$debug )
 			$timeStart=microtime(true);
 
@@ -336,6 +352,8 @@ class Database {
 	 */
 	public function sql_row($sql)
 	{
+		if( defined('RUNNINGFROMCLI') ) print $sql."\n";
+
 		$tabl = $this->sql_tabl($sql);
 		$row = $this->tabl_row($tabl);
 
@@ -356,6 +374,8 @@ class Database {
 	{
 		$tabl = $this->sql_tabl($sql);
 		$row = $this->tabl_hash($tabl);
+
+		if( defined('RUNNINGFROMCLI') ) print $sql."\n";
 
 		// Free the table resource from memory, if it hasn't already been freed by tabl_row
 		if ( $row ) mysqli_free_result($tabl);
@@ -379,6 +399,8 @@ class Database {
 		if( Config::$debug )
 			$timeStart=microtime(true);
 
+		if( defined('RUNNINGFROMCLI') ) print $sql."\n";
+
 		if(! mysqli_query($this->link,$sql) )
 		{
 			trigger_error(mysqli_error($this->link));
@@ -388,6 +410,34 @@ class Database {
 			$this->profiler($timeStart, $sql);
 	}
 
+	/**
+	 * Runs a multi-statement SQL script
+	 *
+	 * @param string $sql The SQL script
+	 *
+	 * @returns int The ID of the last inserted row, which may be irrelevant if an INSERT/UPDATE query weren't performed
+	 */
+	public function sql_script($sql)
+	{
+		if( Config::$debug )
+			$timeStart=microtime(true);
+		
+		if( defined('RUNNINGFROMCLI') ) print $sql."\n";
+
+		if(mysqli_multi_query($this->link,$sql)){
+			do{
+				if($result=mysqli_store_result($this->link)){ 
+					mysqli_free_result($result);
+				}
+			} while(mysqli_more_results($this->link) && mysqli_next_result($this->link));
+		}
+		if($error_mess=mysqli_error($this->link)){
+			trigger_error($error_mess);
+		}
+
+		if( Config::$debug )
+			$this->profiler($timeStart, $sql);
+	}
 	public function last_affected()
 	{
 		return mysqli_affected_rows($this->link);

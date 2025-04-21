@@ -29,9 +29,8 @@ adminInfo.php
 tmp/
 apilog.txt
 git*
-/variants/*/install-save*
-Thumbs.db
-/piwik
-/nbproject
-/msg*.html
-/phpBB3/
+beta-src/node_modules/
+vendor/
+composer.lock
+gamemaster-entrypoint.txt
+botslog.txt

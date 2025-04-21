@@ -21,6 +21,7 @@
 defined('IN_CODE') or die('This script can not be run by itself.');
 
 require_once(l_r('gamepanel/game.php'));
+require_once(l_r('objects/group.php'));
 
 /**
  * This class displays the game panel within a board context. It displays more info
@@ -35,12 +36,16 @@ class panelGameBoard extends panelGame
 		global $User;
 
 		$mapTurn = (($this->phase=='Pre-game'||$this->phase=='Diplomacy') ? $this->turn-1 : $this->turn);
-		$smallmapLink = 'map.php?gameID='.$this->id.'&turn='.$mapTurn .($User->options->value['showMoves'] == 'No'? '&hideMoves':'');
-		$largemapLink = $smallmapLink.'&mapType=large'.($User->options->value['showMoves']=='No'?'&hideMoves':'');
+		$smallmapLink = 'map.php?gameID='.$this->id.'&turn='.$mapTurn .($User->getOptions()->value['showMoves'] == 'No'? '&hideMoves':'');
+		$betaLink = 'beta?gameID='.$this->id;
+		$largemapLink = $smallmapLink.'&mapType=large'.($User->getOptions()->value['showMoves']=='No'?'&hideMoves':'');
 
-		$staticFilename=Game::mapFilename($this->id, $mapTurn, 'small');
+		if( $this->Variant->mapID != 1 )
+			$betaLink = $largemapLink;
+		
+		$staticFilename = Game::mapFilename($this->id, $mapTurn, 'small');
 
-		if( file_exists($staticFilename) && $User->options->value['showMoves'] == 'Yes' )
+		if( file_exists($staticFilename) && $User->getOptions()->value['showMoves'] == 'Yes' )
 			$smallmapLink = STATICSRV.$staticFilename.'?nocache='.rand(0,99999);
 
 		if ($User->colorCorrect != 'Off')
@@ -60,7 +65,7 @@ class panelGameBoard extends panelGame
 
 /*		$map = '
 		<div id="mapstore">
-			<img id="mapImage" src="'.$smallmapLink.'" alt=" " title="'.l_t('The small map for the current phase. If you are starting a new turn this will show the last turn\'s orders').'" />
+			<img id="mapImage" src="'.$smallmapLink.'" alt=" " title="'.l_t('The small map for the current phase. If you are starting a new turn this will show the last turn\'s orders').'" style="width: auto; max-width: 100%;" onclick="window.open(\''.$betaLink.'\');" />
 			<p class="lightgrey" style="text-align:center">
 				<a class="mapnav" href="#" onClick="loadMap('.$this->id.','.$mapTurn.',-1); return false;">
 					<img id="Start" src="'.l_s('images/historyicons/Start_disabled.png').'" alt="'.l_t('Start').'" title="'.l_t('View the map from the first turn').'" />
@@ -156,8 +161,14 @@ class panelGameBoard extends panelGame
 	{
 		$buf = '';
 
-		if ( $this->phase != 'Pre-game') 
-			$buf .= '<div class="bar archiveBar"> '.$this->archiveBar().'</div> ';
+		if ( $this->phase != 'Pre-game')
+		{
+			$buf .= '<div class="bar archiveBar"> '.
+				$this->archiveBar().
+				$this->sandboxBar().
+				$this->pointAndClickBar().
+				'</div> ';
+		}
 
 		$buf .= parent::links();
 
@@ -169,7 +180,7 @@ class panelGameBoard extends panelGame
 		$buf = parent::pausedInfo();
 
 		if( is_null($this->pauseTimeRemaining) )
-			$remaining = $this->phaseMinutes*60;
+			$remaining = $this->getCurPhaseMinutes()*60;
 		else
 			$remaining = $this->pauseTimeRemaining;
 
@@ -193,7 +204,6 @@ class panelGameBoard extends panelGame
 
 		$vAllowed = Members::$votes;
 		$vSet = $this->Members->ByUserID[$User->id]->votes;
-		$vPassed = $this->Members->votesPassed();
 
 		$vCancel=array();
 		$vVote=array();
@@ -206,24 +216,25 @@ class panelGameBoard extends panelGame
 				if ( (empty(Config::$concedeVariants)) || (in_array($this->variantID, Config::$concedeVariants)) )
 				{
 					if(in_array($vote, $vSet))
-					{
-						if(!in_array($vote, $vPassed)) $vCancel[]=$vote;
-					}
-					else $vVote[]=$vote;
+						$vCancel[]=$vote;
+					else
+						$vVote[]=$vote;
 				}
 			}
 			else
 			{
 				if(in_array($vote, $vSet))
-				{
-					if(!in_array($vote, $vPassed)) $vCancel[]=$vote;
-				}
-				else $vVote[]=$vote;
+					$vCancel[]=$vote;
+				else 
+					$vVote[]=$vote;
 			}			
 		}
 
-		$buf = '<div style="width: 300px; margin: 0 auto; text-align:center;"><a href="contactUsDirect.php" align="center";>Need help?</a></div>
-		<div class="bar membersList memberVotePanel"><a name="votebar"></a>
+		// archiveBar class to make the text visible in dark mode
+		$buf = '<div style="margin: 0 auto; text-align:center; padding-top:5px; padding-bottom:5px;">
+			<a href="modforum.php?fromGameID='.$this->id.'">Need help?</a> - <a href="board.php?gameID='.$this->id.'&lodgeSuspicion=on">Lodge cheating suspicion</a></div>';
+		
+		$buf .= '<div class="bar membersList memberVotePanel"><a name="votebar"></a>
 		<table><tr class="member">
 			<td class="memberLeftSide">
 				<strong>'.l_t('Votes:').'</strong>
@@ -238,6 +249,54 @@ class panelGameBoard extends panelGame
 		$buf = '<div class="bar membersList memberVotePanel"><a name="votebar"></a>'.$this->showVoteForm($vVote, $vCancel);
 			
 		return $buf . '</div>';
+	}
+
+	/**
+	 * The form that lets users lodge suspicions of other players. TODO: Move to group.php
+	 */
+	function lodgeSuspicionForm()
+	{
+		global $User;
+
+		if( !$this->Members->isJoined() ) return "";
+
+		$buf = '<div class="bar memberVotePanel memberSuspectPanel" style="font-size:90%; font-weight:normal !important; text-align:left">
+			<form action="group.php" method="post">
+			'.libAuth::formTokenHTML().'
+			<input type="hidden" name="gameID" value="'.$this->id.'" /><br />
+			<input type="hidden" name="gameID" value="'.$this->id.'" /><br />
+			<strong>Countries:</strong> <em>Please select the countries / users which you believe are metagaming / multi-accounting.</em><br />
+			<div style="text-align:center">';
+		foreach($this->Members->ByCountryID as $countryID=>$Member)
+		{
+			if( $Member->userID == $User->id ) continue;
+
+			if ($this->anon == 'No' || !$Member->isNameHidden() )
+				$buf .= '<nobr><input type="checkbox" name="countryIsSuspected'.$countryID.'" /> ' . $Member->profile_link() . ', </nobr>';
+			else
+				$buf .= '<nobr><input type="checkbox" name="countryIsSuspected'.$countryID.'" /> ' . $Member->memberNameCountry() . ', </nobr>';
+		}
+		$buf .= '</div>
+			<br />
+			<strong>Explanation:</strong> <em>Below please enter a detailed explanation of why you believe the selected countries are meta/multi gaming.</em><br />
+			<textarea name="explanation" rows=5></textarea><br /><br />
+			<strong>Strength:</strong> '.Group::getSelectWeighting('user', '', 50).' <em>Choose from WEAK to STRONG, to select how strongly you suspect these users. This will determine whether mods urgently investigate or just take note of a possible link for future investigations.</em><br />
+		';
+		$buf .= '<br /><strong>Note:</strong> Strong/mid-strength accusations will be followed up by the mod team, and will be discussed all involved. Do not submit without a genuine suspicion of meta/multi-gaming.<br />Other accusation strengths will be looked into as time permits, and combined with other accusations to detect possible links. Thanks for helping to keep the server fun to play on!<br /><br />
+			<input class="form-submit" type="Submit" name="Submit" value="Submit cheating suspicion" /> ';
+		$buf .= '</form>';
+		require_once('objects/group.php');
+		require_once('objects/groupUser.php');
+		
+		$buf .= '<div>';
+		$buf .= GroupUserToUserLinks::loadFromGame($this)->outputTable();
+		$buf .= '</div>';
+
+		$groupUsers = Group::getUsers("gr.isActive = 1 AND gr.gameID = ".$this->id);
+		$buf .= Group::outputUserTable_static($groupUsers, null, null);
+		$buf .= '</div></div>';
+
+		return $buf;
 	}
 
 	/**
@@ -326,7 +385,7 @@ class panelGameBoard extends panelGame
 		if( $this->processStatus == 'Paused' )
 		{
 			$buf .= '<p><strong>Unpause Vote: </strong></br>
-						If all players vote unpause, the game will be unpaused. If a game is stuck paused, email the mods at webdipmod@gmail.com for help.
+						If all players vote unpause, the game will be unpaused. If a game is stuck paused, message the mods via the <a href="modforum.php">Mod forum</a>.
 					</p>';
 		}
 		else
@@ -340,7 +399,13 @@ class panelGameBoard extends panelGame
 					If all players vote cancel, the game will be cancelled. All points will be refunded, and the game will be deleted. Cancels are typically used in the first year or two of a game with missing players.
 				</p>';
 
-		if ($this->playerTypes <> 'Members')
+		if ($this->playerTypes == 'MemberVsBots')
+		{
+			$buf .= '<p><strong>Bot Voting: </strong></br>
+				A vote to Pause or Cancel will immediately Pause or Cancel the game.
+			</p>';
+		}
+		else if ($this->playerTypes == 'Mixed')
 		{
 			$buf .= '<p><strong>Bot Voting: </strong></br>
 				The bots in this game do not get a pause or unpause vote, pausing and unpausing only counts human votes. <br><br>
@@ -566,7 +631,7 @@ class panelGameBoard extends panelGame
 		global $User;
 		libHTML::$alternate=2;
 		$buf = '<div class="titleBar">
-				'.$this->titleBar().'
+				'.$this->titleBar(true).'
 			</div>';
 		
 		$buf .= $this->description();

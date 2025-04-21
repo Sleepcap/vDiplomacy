@@ -23,6 +23,7 @@ defined('IN_CODE') or die('This script can not be run by itself.');
 require_once(l_r('objects/notice.php'));
 require_once(l_r('objects/useroptions.php'));
 require_once(l_r('objects/basic/set.php'));
+require_once(l_r('objects/groupUserToUserLinks.php'));
 require_once('lib/reliability.php');
 
 /**
@@ -132,7 +133,7 @@ class User {
 	
  	/**
 	 * Notification flags; an array of notification flags, each set to true if notification should be done.
-	 * @var array
+	 * @var setUserNotifications
 	 */
 	public $notifications;
 
@@ -155,13 +156,6 @@ class User {
 	public $tempBanReason;
 
 	/**
-	 * Hide-email? 'Yes'/'No'
-	 *
-	 * @var string
-	 */
-	public $hideEmail;
-
-	/**
 	 * UNIX timestamp of join-date
 	 *
 	 * @var int
@@ -181,10 +175,12 @@ class User {
 	public $online;
 
 	/**
+	 * Replaced with getOptions() which includes memcache caching and ensures options are only fetched when needed (e.g. they
+	 * are needed for the user viewing the page, but not for user objects loaded for other users)
 	 * The user's options
 	 * @var UserOptions
+	 * public $options;
 	 */
-	public $options;
 
 	/*
 	 * The user is blocked from joining or creating new games till the given time
@@ -266,9 +262,16 @@ class User {
 	 * 
 	 * Generated in libGameMaster
 	 * 
-	 * @var int/double
+	 * @var int|float
 	 */
 	public $cdCount, $nmrCount, $cdTakenCount, $phaseCount, $gameCount, $reliabilityRating;
+	
+	/**
+	 * The users identity score from 0 to 100
+	 * 
+	 * @var int
+	 */
+	public $identityScore;
 	
 	/**
 	 * integrityBalance
@@ -298,6 +301,41 @@ class User {
 	 */
 	public $darkMode;
 
+	/**
+	 * optInFeatures
+	 * A integer bitset from that can be used to allow users to opt into various experimental features that are in development.
+	 * @var int
+	 */
+	public $optInFeatures;
+
+	/**
+	 * Fetches options from the user options table in a lazy cached way
+	 * @var UserOptions
+	 */
+	public function getOptions()
+	{
+		if( $this->userOptionsCache == null )
+		{
+			if( $this->id == 1 )
+			{
+				$this->userOptionsCache = new UserOptions();
+			}
+
+			if( ! ($this->userOptionsCache = UserOptions::fetchFromCache($this->id) ) )
+			{
+				// No cached data available, load from DB.
+				$this->userOptionsCache = new UserOptions($this->id);
+				$this->userOptionsCache->saveToCache();
+			}
+		}
+		return $this->userOptionsCache;
+	}
+	/**
+	 * Cache for user options to prevent multiple loads
+	 * @var UserOptions
+	 */
+	private $userOptionsCache = null;
+	
 	/**
 	 * Give this user a supplement of points
 	 *
@@ -339,7 +377,7 @@ class User {
 	{
 		global $DB;
 
-		assert($points >= 0);
+		if( $points == 0 ) return;
 
 		$userPassed = new User($userID);
 
@@ -400,7 +438,7 @@ class User {
 		else
 		{
 			// Prevent mods from trying to dock more points than a user has, throwing an exception. Just dock the user to 0.
-			if (($points < 0 ) && ($this->points + $points) < 0 ) { $DB->sql_put("UPDATE wD_Users SET points = 0 WHERE id = ".$userID); }
+			if (($points < 0 ) && ($userPassed->points + $points) < 0 ) { $DB->sql_put("UPDATE wD_Users SET points = 0 WHERE id = ".$userID); }
 			else { $DB->sql_put("UPDATE wD_Users SET points = points + ".$points." WHERE id = ".$userID); }
 		}
 	}
@@ -508,18 +546,6 @@ class User {
 			}
 		}
 
-		if( isset($userForm['hideEmail']) )
-		{
-			if ( $userForm['hideEmail'] == "Yes" )
-			{
-				$SQLVars['hideEmail'] = "Yes";
-			}
-			else
-			{
-				$SQLVars['hideEmail'] = "No";
-			}
-		}
-
 		if( isset($userForm['homepage']) AND $userForm['homepage'] )
 		{
 			$userForm['homepage'] = $DB->escape($userForm['homepage']);
@@ -532,6 +558,121 @@ class User {
 			$userForm['comment'] = $DB->msg_escape($userForm['comment']);
 
 			$SQLVars['comment'] = $userForm['comment'];
+		}
+		
+		if( isset($userForm['showCountryNames']) )
+		{
+			if ( $userForm['showCountryNames'] == "Yes" )
+				$SQLVars['showCountryNames'] = "Yes";
+			else
+				$SQLVars['showCountryNames'] = "No";
+		}
+		
+		if( isset($userForm['showCountryNamesMap']) )
+		{
+			if ( $userForm['showCountryNamesMap'] == "Yes" )
+				$SQLVars['showCountryNamesMap'] = "Yes";
+			else
+				$SQLVars['showCountryNamesMap'] = "No";
+		}
+			
+		if( isset($userForm['colorCorrect']) )
+		{
+			if ( $userForm['colorCorrect'] == "Protanope" )
+				$SQLVars['colorCorrect'] = "Protanope";
+			elseif ( $userForm['colorCorrect'] == "Deuteranope" )
+				$SQLVars['colorCorrect'] = "Deuteranope";
+			elseif ( $userForm['colorCorrect'] == "Tritanope" )
+				$SQLVars['colorCorrect'] = "Tritanope";
+			else
+				$SQLVars['colorCorrect'] = "Off";
+		}
+		
+		if( isset($userForm['sortOrder']) )
+		{
+			if ( $userForm['sortOrder'] == "TerrName" )
+				$SQLVars['sortOrder'] = "TerrName";
+			elseif ( $userForm['sortOrder'] == "NorthSouth" )
+				$SQLVars['sortOrder'] = "NorthSouth";
+			elseif ( $userForm['sortOrder'] == "EastWest" )
+				$SQLVars['sortOrder'] = "EastWest";
+			else
+				$SQLVars['sortOrder'] = "BuildOrder";
+		}
+		
+		if( isset($userForm['unitOrder']) )
+		{
+			if ( $userForm['unitOrder'] == "FA" )
+				$SQLVars['unitOrder'] = "FA";
+			elseif ( $userForm['unitOrder'] == "AF" )
+				$SQLVars['unitOrder'] = "AF";
+			else
+				$SQLVars['unitOrder'] = "Mixed";
+		}
+		
+		if( isset($userForm['pointNClick']) )
+		{
+			if ( $userForm['pointNClick'] == "Yes" )
+				$SQLVars['pointNClick'] = "Yes";
+			else
+				$SQLVars['pointNClick'] = "No";
+		}
+		
+		if( isset($userForm['terrGrey']) )
+		{
+			if ( $userForm['terrGrey'] == "all" )
+				$SQLVars['terrGrey'] = "all";
+			elseif ( $userForm['terrGrey'] == "selected" )
+				$SQLVars['terrGrey'] = "selected";
+			else
+				$SQLVars['terrGrey'] = "off";
+		}
+		
+		if( isset($userForm['greyOut']) )
+		{
+			$SQLVars['greyOut'] = (int)($userForm['greyOut']);
+			if ($SQLVars['greyOut'] < 10)
+				$SQLVars['greyOut'] = 10;
+			if ($SQLVars['greyOut'] > 90)
+				$SQLVars['greyOut'] = 90;			
+		}
+	
+		if( isset($userForm['scrollbars']) )
+		{
+			if ( $userForm['scrollbars'] == "Yes" )
+				$SQLVars['scrollbars'] = "Yes";
+			else
+				$SQLVars['scrollbars'] = "No";
+		}
+		
+		if( isset($userForm['buttonWidth']) )
+		{
+			if ( $userForm['buttonWidth'] == "auto" )
+				$SQLVars['buttonWidth'] = "auto";
+			else if ( $userForm['buttonWidth'] == "large" )
+				$SQLVars['buttonWidth'] = "large";
+			else
+				$SQLVars['buttonWidth'] = "small";
+		}
+		
+		if( isset($userForm['cssStyle']) )
+		{
+			if ( $userForm['cssStyle'] == "webDip" )
+				$SQLVars['cssStyle'] = "webDip";
+			else
+				$SQLVars['cssStyle'] = "vDip";
+		}
+
+		if( isset($userForm['locale']) )
+		{
+			if( !in_array($userForm['locale'], Config::$availablelocales) )
+			{
+				$errors[] = "Specified locale not available";
+			}
+			else
+			{
+				$SQLVars['locale'] = $userForm['locale'];
+			}
 		}
 		
 		if( isset($userForm['showCountryNames']) )
@@ -696,7 +837,6 @@ class User {
 			u.type,
 			u.comment,
 			u.homepage,
-			u.hideEmail,
 			u.timeJoined,
 			u.timeLastSessionEnded,
 			u.points,
@@ -727,13 +867,14 @@ class User {
 			u.vpoints,
 			u.integrityBalance,
 			u.cssStyle,
-			IF(s.userID IS NULL,0,1) as online,
+			0 as online,
 			u.deletedCDs, 
 			u.emergencyPauseDate, 
 			u.yearlyPhaseCount,
-			u.tempBanReason
+			u.tempBanReason,
+			u.optInFeatures,
+			u.identityScore
 			FROM wD_Users u
-			LEFT JOIN wD_Sessions s ON ( u.id = s.userID )
 			WHERE ".( $username ? "u.username='".$username."'" : "u.id=".$this->id ));
 
 		if ( ! isset($row['id']) or ! $row['id'] )
@@ -746,6 +887,12 @@ class User {
 			$this->{$name} = $value;
 		}
 
+		// Ensure the only optional opt-in feature flags set are allowed in the config:
+		if( !isset(Config::$enabledOptInFeatures) )
+			$this->optInFeatures = 0;
+		else
+			$this->optInFeatures = $this->optInFeatures & Config::$enabledOptInFeatures;
+		
 		// For display, cdCount should include deletedCDs
 		$this->{'cdCount'} = $this->{'cdCount'} + $this->{'deletedCDs'};
 
@@ -778,6 +925,30 @@ class User {
 		$this->options = new UserOptions($this->id);
 	}
 
+	function isMapUIPointAndClick()
+	{
+		return $this->options->value['mapUI'] == 'Point and click';
+	}
+
+	private $watchedGameIDsCache = null;
+	function getWatchedGameIDs()
+	{
+		global $DB;
+		if( $this->watchedGameIDsCache == null )
+		{
+			$this->watchedGameIDsCache = array();
+			$tabl = $DB->sql_tabl('SELECT gameID from wD_WatchedGames WHERE userID=' . $this->id);
+			while(list($gameID) = $DB->tabl_row($tabl))
+				$this->watchedGameIDsCache[] = $gameID;
+		}
+		return $this->watchedGameIDsCache;
+	}
+
+	function isWatchingGame($gameID)
+	{
+		return in_array($gameID, $this->getWatchedGameIDs());
+	}
+
 	/**
 	 * Return a profile link for this user
 	 * @param bool[optional] $welcome If true this profile link is tweaked to be used as the Welcome link
@@ -785,19 +956,30 @@ class User {
 	 */
 	function profile_link($welcome = false)
 	{
+		return self::profile_link_static($this->username, $this->id, $this->type, $this->points, $this->identityScore);
+	}
+
+	/**
+	 * Generate a profile link using raw database values ($type can be a $User->type array or string ENUM field)
+	 */
+	static function profile_link_static($username, $id, $type, $points, $identityScore = -1)
+	{
+		global $User;
+
 		$buffer = '';
 
-		if ( $this->type['User'] )
+		if ( (is_array($type) && $type['User']) || (!is_array($type) && strstr($type, 'User') !== false ) )
 		{
 			$buffer .= '<a href="./profile.php?userID='.$this->id.'"';
 
-			$buffer.='>'.$this->username;
+			// Allow javascript to use this ID link:
+			$buffer.=' profileLinkUserID="'.$id.'">'.$username;
 
 			$buffer.=' ('.$this->vpoints.libHTML::vpoints().$this->typeIcon($this->type).')</a>';
 		}
 		else
 		{
-			$buffer .= '<em>'.$this->username.'</em>';
+			$buffer .= '<em>'.$username.'</em>';
 		}
 
 		return $buffer;
@@ -821,17 +1003,17 @@ class User {
 		
 		if( strstr($type,'ForumModerator') && $showMod==true)
 		{
-			if ($User->getTheme() == 'No' || $User->getTheme() == null)
+			if (!$User->isDarkMode())
 			{
-				$buf .= ' <img src="'.l_s('images/icons/mod.png').'" alt="'.l_t('Mod').'" title="'.l_t('Moderator/Admin').'" />';
+				$buf .= '<img src="'.l_s('images/icons/mod.png').'" alt="'.l_t('Mod').'" title="'.l_t('Moderator/Admin').'" />';
 			}
 			else
 			{
-				$buf .= ' <img src="'.l_s('images/icons/mod3.png').'" alt="'.l_t('Mod').'" title="'.l_t('Moderator/Admin').'" />';
+				$buf .= '<img src="'.l_s('images/icons/mod3.png').'" alt="'.l_t('Mod').'" title="'.l_t('Moderator/Admin').'" />';
 			}
 		}
 		elseif(strstr($type,'Banned') )
-			$buf .= ' <img src="'.l_s('images/icons/cross.png').'" alt="X" title="'.l_t('Banned').'" />';
+			$buf .= '<img src="'.l_s('images/icons/cross.png').'" alt="X" title="'.l_t('Banned').'" />';
 
 		if( strstr($type,'DonatorPlatinum') )
 			$buf .= libHTML::platinum();
@@ -899,7 +1081,7 @@ class User {
 	}
 
 	/**
-	 * This will set a notification value in both the object and wd_users table if not already set.
+	 * This will set a notification value in both the object and wD_Users table if not already set.
 	 * @param notification notification value to set, must be 'PrivateMessage', 'GameMessage', 'Unfinalized', or 'GameUpdate'.
 	 **/
 	function setNotification($notification)
@@ -915,7 +1097,7 @@ class User {
 	}
 
     /**
-	 * This will clear a notification value in both the object and the wd_users table if not already cleared.
+	 * This will clear a notification value in both the object and the wD_Users table if not already cleared.
 	 * @param notification notification value to clear, must be 'PrivateMessage', 'GameMessage', 'Unfinalized', or 'GameUpdate'.
 	 **/
 	function clearNotification($notification)
@@ -958,25 +1140,87 @@ class User {
 		else
 			$userAgentHash = '0000';
 
-		if ( ! isset($_COOKIE['wD_Code']) or intval($_COOKIE['wD_Code']) == 0 or intval($_COOKIE['wD_Code']) == 1 )
+		if ( ! isset($_COOKIE['wD_Code']) or !( is_numeric($_COOKIE['wD_Code']) or ctype_xdigit($_COOKIE['wD_Code'])) )
 		{
-			// Making this larger than 2^31 makes it negative..
-			$cookieCode = rand(2, 2000000000);
-			setcookie('wD_Code', $cookieCode,time()+365*7*24*60*60);
+			// Cookie code used to be a 32 bit int, now a 128 bit hex string is generated, but old int based cookie codes
+			// should still be collected if given
+			$cookieCode = md5("".rand(1,pow(2,32)).rand(1,pow(2,32)).rand(1,pow(2,32)).rand(1,pow(2,32)).rand(1,pow(2,32)));//rand(2, 2000000000);
+			setcookie('wD_Code', $cookieCode,['expires'=>time()+365*7*24*60*60,'samesite'=>'Lax']);
 		}
 		else
 		{
-			$cookieCode = (int) $_COOKIE['wD_Code'];
+			if( is_numeric($_COOKIE['wD_Code']) )
+				$cookieCode = '000000000000000000000000'.dechex($_COOKIE['wD_Code']);
+			else if( ctype_xdigit($_COOKIE['wD_Code']) )
+				$cookieCode = $_COOKIE['wD_Code'];
+			else
+				$cookieCode = '00000000000000000000000000000000';
 		}
+
+        if( isset($_COOKIE['wD_FJT']) && ctype_xdigit($_COOKIE['wD_FJT']) )
+        {
+            $browserFingerprint = trim($_COOKIE['wD_FJT']); // ctype_xdigit is very strict, even the trim is likely unneeded
+        }
+        else
+        {
+            $browserFingerprint = '';
+        }
 
 		if($this->type['Banned'])
 			libHTML::notice(l_t('Banned'), l_t('You have been banned from this server. If you think there has been a mistake contact the moderator team at %s , and if you still aren\'t satisfied contact the admin at %s (with details of what happened).',Config::$modEMail, Config::$adminEMail));
 
-		$DB->sql_put("INSERT INTO wD_Sessions (userID, lastRequest, hits, ip, userAgent, cookieCode)
-					VALUES (".$this->id.",CURRENT_TIMESTAMP,1, INET_ATON('".$_SERVER['REMOTE_ADDR']."'),
-							UNHEX('".$userAgentHash."'), ".$cookieCode." )
-					ON DUPLICATE KEY UPDATE hits=hits+1");
+		$ip = $originalIP = isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
 
+		$ip = (explode(',',$ip))[0]; // Somehow this seems to be of the form 1.2.3.4,1.2.3.5, as in a list of IPS
+		// Don't know whyu but need a fix as causing ip is null errors on insert
+		if( strstr($ip, ':') !== false )
+		{
+			// It's an IPv6; just take the last 0xffffffff
+			// '2409:8a00:184f:70d0:652f:47b3:7ee1:5f50'
+			$ip=str_replace(':','',$ip);
+			// '24098a00184f70d0652f47b37ee15f50'
+			/*
+			Previous truncation of 128 bit address to 32 bit address no longer needed
+			if( strlen($ip) >= 6)
+			{
+				$ip=substr($ip, min(strlen($ip)-6,0), 6);
+				// 'e15f50'\
+				$h='0x'.$ip;
+				$hd=hexdec($h);
+				$ip  = long2ip($hd);
+				// '0.225.95.80'
+				// first number is always 0 to indicate this is an ipv6 snippet; this is only a small part of the whole address so is just an indicator
+			}
+			else
+			{
+				$ip='1.1.1.1';
+			}*/
+		}
+		else
+		{
+			$ip = ip2long($ip);
+			if( !$ip ) $ip = 0;
+			$ip = dechex($ip);
+		}
+
+		if ( isset($_COOKIE['wD_WP']) )
+			$webPushrSID = (int)$_COOKIE['wD_WP'];
+		else
+			$webPushrSID = 0;
+
+		if( !isset($_SESSION['auid']) && !defined('AdminUserSwitch')  && $this->id > 1 && !defined('PLAYNOW') && strstr($this->username,'diplonow_') === false )
+		{
+			// Only store a session hit if we are not impersonating a user
+			$DB->sql_put("INSERT INTO wD_Sessions (userID, lastRequest, hits, ip, userAgent, cookieCode, browserFingerprint, webPushrSID)
+			VALUES (".$this->id.",CURRENT_TIMESTAMP,1, UNHEX('".$ip."'),
+					UNHEX('".$userAgentHash."'), UNHEX('".$cookieCode."'), UNHEX('".$browserFingerprint."'), ".$webPushrSID.")
+			ON DUPLICATE KEY UPDATE hits=hits+1,ip=UNHEX('".$ip."'),userAgent=UNHEX('".$userAgentHash."'), cookieCode=UNHEX('".$cookieCode."'), browserFingerprint=UNHEX('".$browserFingerprint."'), webPushrSID=".$webPushrSID);
+			
+			$DB->sql_put("INSERT INTO wD_IPLookups (ipCode, ip, timeInserted, timeLastHit)
+			VALUES (UNHEX('".$ip."'), '".$originalIP."', UNIX_TIMESTAMP(), UNIX_TIMESTAMP())
+			ON DUPLICATE KEY UPDATE hits=hits+1, timeLastHit=UNIX_TIMESTAMP()");
+		}
+		
 		$this->online = true;
 	}
 
@@ -1035,10 +1279,10 @@ class User {
 		{
 			list($tempBan) = $DB->sql_row("SELECT tempBan FROM wD_Users WHERE id = ".$userID);
 		
-			if( $tempBan > time() + ($days * 86400) ) return;
+			if( $tempBan > time() + ($days * 5*24*60*60) ) return;
 		}
 		
-		$DB->sql_put("UPDATE wD_Users SET tempBanReason = '".$reason."', tempBan = ". ( time() + ($days * 86400) )." WHERE id=".$userID);
+		$DB->sql_put("UPDATE wD_Users SET tempBanReason = '".$reason."', tempBan = ". ( time() + ($days * 5*24*60*60) )." WHERE id=".$userID);
 	}
 
 	public function rankingDetails()
@@ -1066,8 +1310,21 @@ class User {
 		{
 			$rankingDetails['stats'][$status] = $number;
 		}
-		$rankingDetails['stats']['Civil disorder'] = $this->cdCount;
-		$rankingDetails['stats']['Civil disorders taken over'] = $this->cdTakenCount;
+
+		// $rankingDetails['stats']['Civil disorder'] = $this->cdCount; // These don't get updated anywhere
+		// $rankingDetails['stats']['Civil disorders taken over'] = $this->cdTakenCount;
+		list($rankingDetails['stats']['Civil disorder']) = $DB->sql_row(
+			"SELECT COUNT(c.userID) FROM wD_CivilDisorders c ".
+				/*INNER JOIN wD_Games g ON ( g.id = c.gameID )
+				LEFT JOIN wD_Members m ON ( c.gameID = m.gameID and c.userID = ".$this->id." )*/
+				" WHERE c.userID = ".$this->id //." AND m.userID IS NULL"
+			);
+
+		list($rankingDetails['stats']['Civil disorders taken over']) = $DB->sql_row(
+			"SELECT COUNT(c.userID) FROM wD_CivilDisorders c 
+			INNER JOIN wD_Members m ON ( c.gameID = m.gameID and m.countryID = c.countryID )
+			WHERE c.userID <> ".$this->id." AND m.userID = ".$this->id
+			);
 		
 		if (isset($rankingDetails['stats']['Resigned']))
 			unset ($rankingDetails['stats']['Resigned']);
@@ -1093,14 +1350,6 @@ class User {
 
 		list($rankingDetails['stats']['Playing']) = $DB->sql_row("SELECT COUNT(id) FROM wD_Members WHERE userID = ".$this->id." AND status='Playing'");
 		list($rankingDetails['anon']['Playing'])  = $DB->sql_row("SELECT COUNT(m.id) FROM wD_Members m INNER JOIN wD_Games AS g ON m.gameID = g.id WHERE userID = ".$this->id." AND g.anon = 'Yes' AND status='Playing'");
-
-		list($rankingDetails['takenOver']) = $DB->sql_row(
-			"SELECT COUNT(c.userID) FROM wD_CivilDisorders c
-				INNER JOIN wD_Games g ON ( g.id = c.gameID )
-				LEFT JOIN wD_Members m ON ( c.gameID = m.gameID and c.userID = ".$this->id." )
-				WHERE c.userID = ".$this->id." AND m.userID IS NULL"
-			);
-
 
 		$rankingDetails['rankingPlayers'] = $Misc->RankingPlayers;
 
@@ -1404,13 +1653,10 @@ class User {
 		$gameID = (int)$gameID;
 		$muteCountryID = (int)$muteCountryID;
 
-		if ($muteCountryID != 0)
-		{
-			if( $this->isCountryMuted($gameID,$muteCountryID) )
-				$DB->sql_put("DELETE FROM wD_MuteCountry WHERE userID=".$this->id." AND gameID=".$gameID." AND muteCountryID=".$muteCountryID);
-			else
-				$DB->sql_put("INSERT INTO wD_MuteCountry (userID, gameID, muteCountryID) VALUES (".$this->id.",".$gameID.",".$muteCountryID.")");
-		}
+		if( $this->isCountryMuted($gameID,$muteCountryID) )
+			$DB->sql_put("DELETE FROM wD_MuteCountry WHERE userID=".$this->id." AND gameID=".$gameID." AND muteCountryID=".$muteCountryID);
+		else
+			$DB->sql_put("INSERT INTO wD_MuteCountry (userID, gameID, muteCountryID) VALUES (".$this->id.",".$gameID.",".$muteCountryID.")");
 	}
 		
 	/*
@@ -1577,7 +1823,7 @@ class User {
 
 		return $tempBan > time();
 	}
-	
+
 	/*
 	 * Get the number of CDs taken over by this user in the last year.
 	 */
@@ -1606,23 +1852,11 @@ class User {
 	}
 
 	/* 
-	 * Get style theme user is using, 'No' = light mode; 'Yes' = dark mode. If the user has not accessed their user settings, this will default to light mode.
+	 * Returns true if in dark mode, false otherwise
 	 */
-	public function getTheme()
+	public function isDarkMode()
 	{
-		global $DB;
-
-		if( is_null($DB) ) return 'No';
-
-		list($variable) = $DB->sql_row("SELECT darkMode FROM wD_UserOptions WHERE userID=".$this->id);
-		if ($variable == null) 
-		{
-			return 'No';
-		}
-		else
-		{
-			return $variable;
-		}
+		return $this->getOptions()->value['darkMode'] === 'Yes';
 	}
 
 	/*
@@ -1633,7 +1867,7 @@ class User {
 		global $DB;
 		if( is_null($DB) ) return 0;
 		list($totalBotGames) = $DB->sql_row("SELECT COUNT(1) FROM wD_Games g inner join wD_Members m on m.gameID = g.id  
-			WHERE m.userID = ".$this->id." AND g.gameOver = 'No' and g.playerTypes = 'MemberVsBots'");
+			WHERE m.userID = ".$this->id." AND g.gameOver = 'No' and g.playerTypes = 'MemberVsBots' AND g.sandboxCreatedByUserID IS NULL");
 		
 		return $totalBotGames;
 	}
@@ -1708,6 +1942,13 @@ class User {
 
 		$reversed = array_reverse($ghostRatingTrends);
 		return $reversed;
+	}
+
+	public function summaryPanel()
+	{
+		/*
+		
+		*/
 	}
 }
 ?>

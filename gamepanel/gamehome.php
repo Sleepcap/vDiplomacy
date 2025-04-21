@@ -88,7 +88,7 @@ class panelGameHome extends panelGameBoard
 	function titleBarName()
 	{
 		$name=parent::titleBarName();
-		if(strlen($name)>30) $name = substr($name,0,30).'...';
+		if(strlen($name)>15) $name = substr($name,0,15).'...';
 		return '<span class="homeGameTitleBar" gameID="'.$this->id.'">'.$name.'</span>';
 	}
 
@@ -96,7 +96,7 @@ class panelGameHome extends panelGameBoard
 	 * Shortened titlebar info
 	 * @return string
 	 */
-	function titleBar()
+	function titleBar($isGameBoard = false)
 	{
 		global $User;
 		$buf = '
@@ -114,33 +114,43 @@ class panelGameHome extends panelGameBoard
 				<span class="gamePhase">'.l_t($this->phase).'</span>
 			</div>
 			<div class="titleBarLeftSide">
-				Pot: <span class="gamePot">'.$this->pot().'</span>';
+				Pot: <span class="gamePot">'.$this->pot().'</span>
+			</div>
+			<div style="clear:both"></div>
+			
+			<div class="titleBarRightSide">
+				<span class="gameHoursPerPhase">'.$this->gameHoursPerPhase().'</span>
+			</div>
+			<div class="titleBarLeftSide">';
 
-		$alternatives=array();
-		if( $this->pressType=='NoPress')
-			$alternatives[]=l_t('No chat');
-		elseif( $this->pressType=='RulebookPress' )
-			$alternatives[]=l_t('Rulebook chat');
-		elseif( $this->pressType=='PublicPressOnly' )
-			$alternatives[]=l_t('Public chat');
-		if( $this->anon=='Yes' )
-			$alternatives[]=l_t('Anon');
-		if( $this->drawType=='draw-votes-hidden')
-			$alternatives[]=l_t('Hidden draw votes');
-
-		if( $this->minimumReliabilityRating > 0) 
-		{
-			$alternatives[]= l_t('<span class="%s">RR%s%%</span>',
-			($User->reliabilityRating < $this->minimumReliabilityRating ? 'Austria' :''), 
-			($this->minimumReliabilityRating));
-		}
-
-		if ( $alternatives )
-			$buf .= '
-				<br /><span class="gamePot">'.implode(', ',$alternatives).'</span>
-			';
+			$alternatives=array();
+			if( $this->pressType=='NoPress')
+				$alternatives[]=l_t('No chat');
+			elseif( $this->pressType=='RulebookPress' )
+				$alternatives[]=l_t('Rulebook chat');
+			elseif( $this->pressType=='PublicPressOnly' )
+				$alternatives[]=l_t('Public chat');
+			if( $this->anon=='Yes' )
+				$alternatives[]=l_t('Anon');
+			if( $this->drawType=='draw-votes-hidden')
+				$alternatives[]=l_t('Hidden draw votes');
+	
+			if( $this->minimumReliabilityRating > 0) 
+			{
+				$alternatives[]= l_t('<span class="%s">RR%s%%</span>',
+				($User->reliabilityRating < $this->minimumReliabilityRating ? 'Austria' :''), 
+				($this->minimumReliabilityRating));
+			}
+			if( !is_null($this->sandboxCreatedByUserID) ){
+				$alternatives[] = l_t( 'Sandbox' );
+			}
+	
+			if ( count($alternatives) == 0 ) $alternatives[] = '';
+			
+		$buf .= '<span class="gamePot">'.implode(', ',$alternatives).'</span>';
 
 		$buf .= '</div>
+		
 			<div style="clear:both"></div>';
 
 		return $buf;
@@ -162,61 +172,32 @@ class panelGameHome extends panelGameBoard
 	function links()
 	{
 		global $DB, $User;
-		$userInGame = 0;
-		list($userInGame) = $DB->sql_row("SELECT count(1) FROM wD_Members WHERE userID =".$User->id." and gameID =".$this->id);
-		$watchString= '';	
 
-		if ($this->watched() || $userInGame == 0)
+		if ($this->watched() || !isset($this->Members->ByUserID[$User->id]) )
 		{
-			if ($this->watched()) { $watchString = '- <a href="board.php?gameID='.$this->id.'&unwatch">'.l_t('Stop spectating').'</a>'; }
-			if( $this->phase == 'Pre-game')
-			{
-				return '<div class="bar homeGameLinks barAlt'.libHTML::alternate().'">
-					<a href="board.php?gameID='.$this->id.'">'.l_t('Open').'</a>
-					'.$watchString.'
-					</div>';
-			}
-			else
-			{
-				return '<div class="bar homeGameLinks barAlt'.libHTML::alternate().'">
-					<a href="board.php?gameID='.$this->id.'#gamePanel">'.l_t('Open').'</a> 
-					'.$watchString.'
-					</div>';
-			}
+			return '<div class="bar homeGameLinks barAlt'.libHTML::alternate().'">
+				<a href="board.php?gameID='.$this->id.($this->phase == 'Pre-game' ? '' : '#gamePanel').'">'.l_t('View').'</a> 
+				'.($this->watched() ? '- <a href="index.php?gameID='.$this->id.'&unwatch">'.l_t('Stop spectating').'</a>' : '').'
+				'.(!isset($this->Members->ByUserID[$User->id]) && $this->isJoinable()? '- <a href="board.php?gameID='.$this->id.'&join=on">'.l_t('Join').'</a>' : '').'
+				</div>';
 		}
 		else
 		{
-			$noticesStatus = 5;
 			$SubmitName = 'Toggle Notices';
-			list($noticesStatus) = $DB->sql_row("SELECT hideNotifications FROM wD_Members WHERE userID =".$User->id." and gameID =".$this->id);
+			$noticesStatus = $this->Members->ByUserID[$User->id]->hideNotifications;
 			if ($noticesStatus == 1) { $SubmitName = 'Enable Notices'; }
-			else if ($noticesStatus == 0) { $SubmitName = 'Disable Notices'; }
+			else { $SubmitName = 'Disable Notices'; }
 
-			if( $this->phase == 'Pre-game')
-			{
-				return '<div class="bar homeGameLinks barAlt'.libHTML::alternate().'">
-				<form action="#" method="post">
-				'.libAuth::formTokenHTML().'
-					<a href="board.php?gameID='.$this->id.'">'.l_t('Open').'</a>
-					<input type="hidden" value="'.$this->id.'" name="gameToggleName" />
-					<input type="submit" title="Turn on/off the notifications for this game." style="float: right;" class = "home-submit toggle-notice" name="submit" value="'.$SubmitName.'"/>
+			return 
+				'<div class="bar homeGameLinks barAlt'.libHTML::alternate().'">
+					<form class="homeGameLinksForm" action="#" method="post" >
+						'.libAuth::formTokenHTML().'
+						<a href="board.php?gameID='.$this->id.''.($this->phase == 'Pre-game' ? '' : '#gamePanel').'">'.l_t('Open').'</a> 
+						<input type="hidden" value="'.$this->id.'" name="gameToggleNotices" />
+						<input type="submit" title="Turn on/off the notifications for this game." class = "home-submit toggle-notice" name="submit" value="'.$SubmitName.'"/>
 					</form>
-					</div>';
-			}
-			else
-			{
-				return '<div class="bar homeGameLinks barAlt'.libHTML::alternate().'">
-					
-					<form action="#" method="post">
-					'.libAuth::formTokenHTML().'
-					<a href="board.php?gameID='.$this->id.'#gamePanel">'.l_t('Open').'</a> 
-					<input type="hidden" value="'.$this->id.'" name="gameToggleName" />
-					<input type="submit" title="Turn on/off the notifications for this game." style="float: right;" class = "home-submit toggle-notice" name="submit" value="'.$SubmitName.'"/>
-					</form>
-					
-					</div>';
-			}
-		}	
+				</div>';
+		}
 	}
 }
 ?>

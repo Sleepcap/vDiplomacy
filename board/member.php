@@ -43,7 +43,7 @@ class userMember extends panelMember
 
 		if ( $this->status == 'Left' )
 		{
-			$this->setBackFromLeft();
+			$this->markBackFromLeft();
 		}
 		elseif( (time() - $this->timeLoggedIn) > 3*60)
 		{
@@ -59,66 +59,6 @@ class userMember extends panelMember
 	}
 
 	/**
-	 * Set that this user is no longer in civil disorder for this membership. Sets as playing, removes
-	 * civildisorder record, sets their orderStatus depending on whether they
-	 * have orderes to enter, puts them into the correct Game->Members->ByStatus list.
-	 */
-	protected function setBackFromLeft()
-	{
-		global $DB,$Game,$User;
-		
-		if ( $this->Game->Members->isTempBanned() )
-		{
-			throw new Exception("You are blocked from rejoining your games.");
-		}
-
-		unset($this->Game->Members->ByStatus[$this->status][$this->id]);
-		$this->status = 'Playing';
-		$this->Game->Members->ByStatus[$this->status][$this->id] = $this;
-
-		/*
-		 * Remove the CD mark from this person's record
-		 * Someone could possible go into CD, be taken over, join another country, go CD again, then rejoin, so country has to be specified
-		 */
-		 // Was this a mod forced CD?
-		$DB->sql_tabl("SELECT * FROM wD_CivilDisorders
-					WHERE forcedByMod=0 
-					AND gameID = ".$this->gameID."
-					AND userID = ".$this->userID."
-					AND countryID = ".$this->countryID);
-					
-		/* On vDip we do not record CDs if a player retakes his position
-		if ($DB->affected() != 0) {
-            $DB->sql_put("UPDATE wD_Users SET deletedCDs = deletedCDs + 1 where id=" .$this->userID);
-		}
-		// End of vDip patch */
-		
-		// vDip-Patch: Make sure to not delete take-Over information of older CDs 
-		// (only a non-taken-over Civil Disorder can be retaken)
-		$DB->sql_put("DELETE FROM wD_CivilDisorders
-					WHERE gameID = ".$this->gameID."
-					AND userID = ".$this->userID."
-					AND countryID = ".$this->countryID."
-					AND takenByUserID IS NULL
-				");
-				
-		$this->orderStatus->Ready=false;
-
-		$DB->sql_put(
-				"UPDATE wD_Members
-				SET status = 'Playing', ".( $this->orderStatus->updated ? "orderStatus='".$this->orderStatus."', " : '' )."
-					timeLoggedIn = ".time()."
-				WHERE id = ".$this->id
-			);
-
-		// Reset the min bet so that the game no longer appears in open games searches. 
-		require_once(l_r('gamemaster/game.php'));
-		$Variant=libVariant::loadFromGameID($this->gameID);
-		$Game = $Variant->processGame($this->gameID);
-		$Game->resetMinimumBet();
-	}
-
-	/**
 	 * Toggle the value of a member's vote, e.g. Pause or Draw. Sets/unsets it in the database and in $this->votes[]
 	 * Also detects if a vote has passed and will schedule it for processing if so.
 	 *
@@ -128,7 +68,7 @@ class userMember extends panelMember
 	 */
 	public function toggleVote($voteName)
 	{
-		global $DB;
+		global $DB,$User;
 		
 		if ($this->Game->adminLock == 'Yes') return;
 		if (strpos($this->Game->blockVotes,$voteName)!== false) return;			
@@ -175,8 +115,21 @@ class userMember extends panelMember
 
 		// Keep a log that a vote was set in the game messages, so the vote time is recorded
 		require_once(l_r('lib/gamemessage.php'));
-		libGameMessage::send($this->countryID, $this->countryID, ($voteOn?'Un-':'').'Voted for '.$voteName, $this->gameID);
-		$DB->sql_put("UPDATE wD_Members SET votes='".implode(',',$this->votes)."' WHERE id=".$this->id);
+		
+		if( $this->Game->playerTypes=='MemberVsBots' && !$User->type['Bot'] && in_array($voteName, array('Pause','Cancel')) )
+		{
+			libGameMessage::send($this->countryID, $this->countryID, ($voteOn?'Un-':'').'Voted for '.$voteName, $this->gameID);
+			// If it's a member vs bots game allow the member to pause or cancel the game
+			if( $voteOn )
+				$DB->sql_put("UPDATE wD_Members SET votes=REPLACE(votes,'".$voteName."',''), votesChanged=UNIX_TIMESTAMP() WHERE gameID=".$this->gameID);
+			else
+				$DB->sql_put("UPDATE wD_Members SET votes=CONCAT(COALESCE(CONCAT(votes,','),''),'".$voteName."'), votesChanged=UNIX_TIMESTAMP() WHERE gameID=".$this->gameID);
+		}
+		else
+		{
+			libGameMessage::send($this->countryID, $this->countryID, ($voteOn?'Un-':'').'Voted for '.$voteName, $this->gameID);
+			$DB->sql_put("UPDATE wD_Members SET votes='".implode(',',$this->votes)."', votesChanged=UNIX_TIMESTAMP() WHERE id=".$this->id);
+		}
 	}
 
 	/**

@@ -88,9 +88,7 @@ class Chatbox
 	public function postMessage($msgCountryID)
 	{
 		global $Member, $Game, $User, $DB;
-		list($directorUserID) = $DB->sql_row("SELECT directorUserID FROM wD_Games WHERE id = ".$Game->id);
-		list($tournamentDirector, $tournamentCodirector) = $DB->sql_row("SELECT directorID, coDirectorID FROM wD_Tournaments t INNER JOIN wD_TournamentGames g ON t.id = g.tournamentID WHERE g.gameID = ".$Game->id);
-
+		
 		if( isset($_POST['newmessage']) AND $_POST['newmessage']!="" )
 		{
 			$newmessage = trim($_REQUEST['newmessage']);
@@ -158,9 +156,7 @@ class Chatbox
 	 */
 	public function output ($msgCountryID)
 	{
-		global $DB, $Game, $User, $Member;
-		list($directorUserID) = $DB->sql_row("SELECT directorUserID FROM wD_Games WHERE id = ".$Game->id);
-		list($tournamentDirector, $tournamentCodirector) = $DB->sql_row("SELECT directorID, coDirectorID FROM wD_Tournaments t INNER JOIN wD_TournamentGames g ON t.id = g.tournamentID WHERE g.gameID = ".$Game->id);
+		global $Game, $User, $Member;
 
 		$chatbox = '<a name="chatboxanchor"></a><a name="chatbox"></a>';
 
@@ -525,7 +521,7 @@ class Chatbox
 				$message['message'] = '<span class="messageFromMe">'.$message['message'].'</span>';
 
 			// Display the country name in front of the text (for colorblind people)
-			if ( ( $User->options->value['colourblind'] != 'No' || $User->showCountryNames == 'Yes') && ($Game->phase != 'Pre-game') )
+			if ( ( $User->getOptions()->value['colourblind'] != 'No' || $User->showCountryNames == 'Yes') && ($Game->phase != 'Pre-game') )
 			{
 				if(isset($Member) && $Member->countryID == $message['fromCountryID'])
 					$messagestxt .=  '<strong>You:</strong> ';

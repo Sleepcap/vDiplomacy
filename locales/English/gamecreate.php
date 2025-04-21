@@ -44,13 +44,6 @@ Start a new game; you decide the name, how long it runs, and how much it's worth
 				about in order to make your game and make sure that you know what each setting you select
 				means.
 				<br>
-				On webDiplomacy, you can play games against humans or bots. If you want to play against other players,
-				you\'re in the right place. You can just fill out this form. If you want to play against bots,
-				you can click "Play a Game Against Bots." Our bots are artificial intelligence users, so they are not 
-				computer players like you might encounter in online chess, for example. They are very unique and 
-				they are trained rigorously based on the decisions real players made, which means they are both 
-				intelligent and unpredictable. Give them a try sometime, you might be surprised how good they are!
-				<br>
 				You should first give your game an appropriate title, determine how much you want each player 
 				to have to bet to join, and how long each phase would last. If you want to play a game that lasts
 				a few hours in the evening but takes your full attention, your phase length should be 5 or 10 minutes, 
@@ -63,11 +56,6 @@ Start a new game; you decide the name, how long it runs, and how much it's worth
 				but is full within 3 days, it will start in 3 days, not 7. A live game will be "scheduled," meaning that
 				it will not start until the time to fill has expired, even if it fills early.
 				<br>
-				If you are playing with friends, family, or people you know outside of webDiplomacy, you are required
-				to set an invite code to your game. You can send this invite code to whoever you want to invite and know
-				that people who you do not want in your game will not accidentally join. If you are just looking for a 
-				game with some other players, you do not need to add an invite code. 
-				<br>
 				You also get to choose whether players can send messages or not, whether players are anonymized or 
 				displayed, what map you want to play on, how the game should be scored, and more. For more information on
 				these settings, just click the "?" icon next to them on the form after you close this tutorial. Good luck!
@@ -76,7 +64,7 @@ Start a new game; you decide the name, how long it runs, and how much it's worth
 			libHTML::help('Create New Game', $tutorialMessage);
 
 			unset($_COOKIE['wD-Tutorial-GameCreate']);
-			setcookie('wD-Tutorial-GameCreate', '', time()-3600);
+			setcookie('wD-Tutorial-GameCreate', '', ['expires'=>time()-3600,'samesite'=>'Lax']);
 		}
 	?>
 	<!-- No bot games on vdip -->
@@ -84,17 +72,18 @@ Start a new game; you decide the name, how long it runs, and how much it's worth
 
 	<div class = "gameCreateShow">
 		<form method="post">
+			<h3>Basic settings</h3>
 			<p>
 				<strong>Game Name:</strong></br>
 				<input class = "gameCreate" type="text" name="newGame[name]" value="" size="30" onkeypress="if (event.keyCode==13) this.blur(); return event.keyCode!=13">
 			</p>
 
-			<strong>Bet size: (2<?php print libHTML::points(); ?>-<?php print $User->points.libHTML::points(); ?>)</strong>
-			<img id = "modBtnBet" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" />
-			<div id="betModal" class="modal">
+			<strong>Bet size: (2-<?php print $User->points.libHTML::points(); ?>)</strong>
+			<img id = "modBtnBet" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" class="modalButtonList" />
+			<div id="modBtnBetModal" class="modal">
 				<!-- Modal content -->
 				<div class="modal-content">
-					<span id="closeBetModal" class="close1">&times;</span>
+					<span id="modBtnBetClose">&times;</span>
 					<p><strong>Bet:</strong> </br>
 						The bet required to join this game. This is the amount of points that all players, including you,
 						must put into the game's "pot" (<a href="points.php" class="light">read more</a>).<br />
@@ -138,11 +127,11 @@ Start a new game; you decide the name, how long it runs, and how much it's worth
 			
 			</br></br>
 			<strong>Phase length: (5 min - 10 days)</strong>
-			<img id = "modBtnPhaseLength" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" />
-			<div id="phaseLengthModal" class="modal">
+			<img id = "modBtnPhaseLength" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" class="modalButtonList" />
+			<div id="modBtnPhaseLengthModal" class="modal">
 				<!-- Modal content -->
 				<div class="modal-content">
-					<span id="closePhaseLengthModal" class="close4">&times;</span>
+					<span id="modBtnPhaseLengthClose">&times;</span>
 					<p><strong>Phase Length: </strong></br>
 						How long each phase of the game will last in hours. Longer phase hours means a slow game with more time to talk. 
 						Shorter phases require players be available to check the game frequently.
@@ -227,11 +216,11 @@ Start a new game; you decide the name, how long it runs, and how much it's worth
 			</p>
 			
 			<strong>Game Messaging:</strong>
-			<img id = "modBtnMessaging" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" />
-			<div id="messagingModal" class="modal">
+			<img id = "modBtnMessaging" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" class="modalButtonList" />
+			<div id="modBtnMessagingModal" class="modal">
 				<!-- Modal content -->
 				<div class="modal-content">
-					<span id="closeMessagingModal" class="close1">&times;</span>
+					<span id="modBtnMessagingClose">&times;</span>
 					<p><strong>Game Messaging:</strong> </br>
 						The type of messaging allowed in a game.</br></br>
 						All: Global and Private Messaging allowed. </br></br>
@@ -249,12 +238,12 @@ Start a new game; you decide the name, how long it runs, and how much it's worth
 			</select>
 
 			</br></br>
-			<strong>Variant type (map choices):</strong>
-			<img id = "modBtnVariant" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" />
-			<div id="variantModal" class="modal">
+			<strong>Variant/Map type (map choices):</strong>
+			<img id = "modBtnVariant" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" class="modalButtonList" />
+			<div id="modBtnVariantModal" class="modal">
 				<!-- Modal content -->
 				<div class="modal-content">
-					<span id="closeVariantModal" class="close1">&times;</span>
+					<span id="modBtnVariantClose">&times;</span>
 					<p><strong>Variant:</strong> </br>
 						Type of Diplomacy game from a selection of maps and alternate rule settings available. Click any of the variant names to view the details on the variants page.
 					</p>
@@ -315,11 +304,11 @@ Start a new game; you decide the name, how long it runs, and how much it's worth
 			</br></br>
 			<!--<div id="botFill" style="display:none">
 			<strong>Fill Empty Spots with Bots: </strong>
-			<img id = "modBtnBot" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" />
-			<div id="botModal" class="modal">
+			<img id = "modBtnBot" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" class="modalButtonList" />
+			<div id="modBtnBotModal" class="modal">
 				<!-- Modal content -->
 				<!--<div class="modal-content">
-					<span id="closeBotModal" class="close1">&times;</span>
+					<span id="modBtnBotClose" class="close1">&times;</span>
 					<p><strong>Fill with Bots:</strong> </br>
 						If the game has at least 2 human players it will 
 						fill with bots if there are empty spaces at the designated start time instead of being cancelled. This type 
@@ -350,10 +339,10 @@ Start a new game; you decide the name, how long it runs, and how much it's worth
 			<div id="potType">
 				<strong>Scoring: (<a href="points.php#DSS">See scoring types here</a>)</strong>
 				<img id = "modBtnScoring" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" />
-				<div id="scoringModal" class="modal">
+				<div id="modBtnScoringModal" class="modal">
 					<!-- Modal content -->
 					<div class="modal-content">
-						<span id="closeScoringModal" class="close1">&times;</span>
+						<span id="modBtnScoringClose" class="close1">&times;</span>
 						<p><strong>Scoring:</strong> </br>
 
 							Should the winnings be split up according to who has the most supply centers, or should the winner
@@ -369,11 +358,11 @@ Start a new game; you decide the name, how long it runs, and how much it's worth
 			</div>
 
 			<strong>Anonymous players: </strong>
-			<img id = "modBtnAnon" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" />
-			<div id="anonModal" class="modal">
+			<img id = "modBtnAnon" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" class="modalButtonList" />
+			<div id="modBtnAnonModal" class="modal">
 				<!-- Modal content -->
 				<div class="modal-content">
-					<span id="closeAnonModal" class="close1">&times;</span>
+					<span id="modBtnAnonClose">&times;</span>
 					<p><strong>Anonymous players: </strong></br>
 						Decide if player names should be shown or hidden.</br></br> *Please note that games with no messaging are always anonymous regardless of what is set here to prevent cheating.
 					</p>
@@ -473,10 +462,10 @@ Start a new game; you decide the name, how long it runs, and how much it's worth
 			</br></br>
 			<strong>Excused missed turns per player:</strong>
 			<img id = "modBtnDelay" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" />
-			<div id="delayModal" class="modal">
+			<div id="modBtnDelaysModal" class="modal">
 				<!-- Modal content -->
 				<div class="modal-content">
-					<span id="closeDelayModal" class="close1">&times;</span>
+					<span id="modBtnDelaysClose">&times;</span>
 					<p><strong>Excused missed turns per player:</strong></br>
 						The number of excused missed turns before a player is removed from the game and can be replaced. 
 						If a player is missing orders at a deadline, the deadline will reset and the player will be 
@@ -488,7 +477,7 @@ Start a new game; you decide the name, how long it runs, and how much it's worth
 			</div>
 			<select class = "gameCreate" id="NMR" name="newGame[excusedMissedTurns]">
 			<?php
-				for ($i=0; $i<=4; $i++) { print '<option value="'.$i.'"'.($i==1 ? ' selected' : '').'>'.$i.(($i==0)?' (strict)':'').'</option>'; }
+				for ($i=0; $i<=4; $i++) { print '<option value="'.$i.'"'.($i==3 ? ' selected' : '').'>'.$i.(($i==0)?' (strict)':'').'</option>'; }
 			?>
 			</select>
 			
@@ -587,12 +576,50 @@ Start a new game; you decide the name, how long it runs, and how much it's worth
 					if (this.value > 200) this.value = 200;"
 			/> 
 
+			<div class="hr"></div>
+
 			<p>
-				<img src="images/icons/lock.png" alt="Private" /> <strong>Add Invite Code (optional):</strong></br>
-				<input class = "gameCreate" type="password"autocomplete="new-password" name="newGame[password]" value="" size="20" /></br>
-				Confirm: <input class = "gameCreate" autocomplete="new-password" type="password" name="newGame[passwordcheck]" value="" size="20" /></br>
+				<strong>Required reliability rating:</strong>
+				<img id = "modBtnReliability" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" class="modalButtonList" /></br>
+				<div id="modBtnReliabilityModal" class="modal">
+					<!-- Modal content -->
+					<div class="modal-content">
+						<span id="modBtnReliabilityClose">&times;</span>
+						<p><strong>Required reliability rating:</strong></br>
+							A player's reliability rating varies from 0% to 100% depending on how many times they have 
+							failed to submit orders when they are due. By setting this to higher values you will exclude
+							less reliable players, but you may have more trouble finding players to join.
+						</p>
+					</div>
+				</div>
+				<input id="minRating" class = "gameCreate" type="text" name="newGame[minimumReliabilityRating]" size="2" value="<?php print $defaultRR ?>"
+					onkeypress="if (event.keyCode==13) this.blur(); return event.keyCode!=13"
+					onChange="
+						this.value = parseInt(this.value);
+						if (this.value == 'NaN' ) this.value = 0;
+						if (this.value < 0 ) this.value = 0;
+						if (this.value > <?php print $maxRR ?> ) this.value = <?php print $User->reliabilityRating ?>;"/>
 			</p>
-			
+
+			<p>
+				<img src="images/icons/lock.png" alt="Private" /> <strong>Add Invite Code / Password:</strong>
+				<img id = "modBtnPassword" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" class="modalButtonList" />
+				<div id="modBtnPasswordModal" class="modal">
+					<!-- Modal content -->
+					<div class="modal-content">
+						<span id="modBtnPasswordClose">&times;</span>
+						<p><strong>Invite Code / Password: </strong></br>
+							Optionally add a code / password so that only people you tell the code / password to can join. 
+							Leave blank if you do not want to add a code / password.
+						</p>
+					</div>
+				</div>
+				<input class = "gameCreate" type="password"autocomplete="new-password" name="newGame[password]" value="" size="20" />
+			</p>
+			<p>
+				<img src="images/icons/lock.png" alt="Private" /> <strong>Confirm Invite Code / Password:</strong></br> <input class = "gameCreate" autocomplete="new-password" type="password" name="newGame[passwordcheck]" value="" size="20" /></br>
+			</p>
+
 			<strong>Moderated game:</strong>
 			<img id = "modBtnModerated" height="16" width="16" src="images/icons/help.png" alt="Help" title="Help" />
 			<div id="moderatedModal" class="modal">
@@ -805,6 +832,21 @@ function updatePhasePeriod(){
 			selectPhaseSwitchPeriod.options[i].disabled = true;
 		}
 	}
+
+	selectPhaseMinutesRB = document.getElementById("selectPhaseMinutesRB");
+
+	for (i = 0; i < selectPhaseMinutesRB.length; i++){
+		var optVal = parseInt(selectPhaseMinutesRB.options[i].value);
+		if (optVal < 0 || optVal >= phaseLength / 10 && optVal <= phaseLength){
+			selectPhaseMinutesRB.options[i].hidden = false;
+			selectPhaseMinutesRB.options[i].disabled = false;
+		}
+		else{
+			selectPhaseMinutesRB.options[i].hidden = true;
+			selectPhaseMinutesRB.options[i].disabled = true;
+		}
+	}
+	selectPhaseMinutesRB.value = -1;
 }
 
 
@@ -812,6 +854,7 @@ function updatePhasePeriod(){
 
 selectPhaseSwitchPeriod.addEventListener("change", updatePhasePeriod)
 selectPhaseMinutes.addEventListener("change", updatePhasePeriod)
+window.onload = updatePhasePeriod
 
 </script>
 

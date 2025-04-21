@@ -370,7 +370,7 @@ if ($submitted == false)
         </select></br></br>
 
         <strong>Required reliability:</strong></br>
-        <input id="minRating" class = "gameCreate" type="text" name="minRR" size="2" value="80"
+        <input id="minRating" class = "gameCreate" type="text" name="minRR" size="2" value="60"
             onkeypress="if (event.keyCode==13) this.blur(); return event.keyCode!=13"
             onChange="
                 this.value = parseInt(this.value);
@@ -440,7 +440,7 @@ else
         }
         catch(Exception $e)
         {
-            print '<div class="contactUs"> Sorry, but there was a problem making this tournament, contact the moderator team at '.Config::$modEMail;
+            print '<div class="contactUs"> Sorry, but there was a problem making this tournament, contact the moderator team in the <a href="modforum.php">moderator forum</a>';
             print '<p class="contactUs">'.$e->getMessage().'</p>';
             print '</div>';
             $worked = false;
@@ -464,7 +464,7 @@ else
         }
         catch(Exception $e)
         {
-            print '<div class="contactUs"> Sorry, but there was a problem making this tournament, contact the moderator team at '.Config::$modEMail;
+            print '<div class="contactUs"> Sorry, but there was a problem making this tournament, contact the moderator team in the <a href="modforum.php">moderator forum</a>';
             print '<p class="contactUs">'.$e->getMessage().'</p>';
             print '</div>';
             $worked = false;

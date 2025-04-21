@@ -75,6 +75,12 @@ class panelMember extends Member
 					$buf .= '<div class="panelAnonOnlyFlag"><b>All countries have entered orders.</b></div>';
 				}
 			}
+
+			// Create placeholders for users to receive a notice that the game has processed
+			$buf .= '<div style="text-align:center" class="panelAnonOnlyFlag">';
+			$buf .= '<span id="websocketsGameProcessed"></span>';
+			$buf .= '<span id="websocketsMessageSent"></span>';
+			$buf .= '</div>';
 		}
 
 		if ( $this->Game->phase != 'Pre-game' )
@@ -175,48 +181,23 @@ class panelMember extends Member
 			return '';
 	}
 
-	private $isNameHidden;
 	function isNameHidden()
 	{
-		global $User, $DB;
-		list($directorUserID) = $DB->sql_row("SELECT directorUserID FROM wD_Games WHERE id = ".$this->Game->id);
-		list($tournamentDirector, $tournamentCodirector) = $DB->sql_row("SELECT directorID, coDirectorID FROM wD_Tournaments t INNER JOIN wD_TournamentGames g ON t.id = g.tournamentID WHERE g.gameID = ".$this->Game->id);
-
-		if ( !isset($this->isNameHidden) )
-		{
-			if ( ($this->Game->isMemberInfoHidden() && $User->id!=$this->userID) && !(isset($directorUserID) && $directorUserID == $User->id) 
-			&& !(isset($tournamentDirector) && $tournamentDirector == $User->id) && !(isset($tournamentCodirector) && $tournamentCodirector == $User->id))
-				$this->isNameHidden = true;
-			else
-				$this->isNameHidden = false;
-		}
-
-		return $this->isNameHidden;
+		global $User;
+		
+		return $this->Game->isMemberInfoHidden() && $User->id!=$this->userID && !$this->Game->isDirector($User->id);
 	}
 
-	private $isLastSeenHidden;
 	function isLastSeenHidden()
 	{
-		global $User, $DB;
+		global $User;
 
-		list($tournamentDirector, $tournamentCodirector) = $DB->sql_row("SELECT directorID, coDirectorID FROM wD_Tournaments t INNER JOIN wD_TournamentGames g ON t.id = g.tournamentID WHERE g.gameID = ".$this->Game->id);
-
-		$this->isLastSeenHidden = true;
-		if ((($User->type['Moderator']) || (isset($tournamentDirector) && $tournamentDirector == $User->id) || 
-		(isset($tournamentCodirector) && $tournamentCodirector == $User->id))&& (! $this->Game->Members->isJoined()))
-		{
-			$this->isLastSeenHidden = false;
-		}
-
-		return $this->isLastSeenHidden;
+		return $this->isNameHidden(); //!( $User->type['Moderator'] || $this->Game->isDirector($User->id) ) && !$this->Game->Members->isJoined();
 	}
 
-	private $isMissedTurnsHidden;
 	function isMissedTurnsHidden()
 	{
-		$this->isMissedTurnsHidden = $this->isNameHidden();
-
-		return $this->isMissedTurnsHidden;
+		return $this->isNameHidden();
 	}
 
 	/**
@@ -548,6 +529,9 @@ class panelMember extends Member
 			if ( !$this->isLastSeenHidden() )
 				$buf .= '<br /><span class="memberLastSeen">
 						'.l_t('Last seen:').' <strong>'.$this->lastLoggedInTxt().'</strong>';
+			else
+				$buf .= '<br /><span class="memberLastSeen">
+						'.l_t('Last seen:').' <strong>'.$this->lastLoggedInTxt_Anon().'</strong>';
 
 			$voteList = $this->memberVotes();
 			if($voteList)
@@ -616,7 +600,7 @@ class panelMember extends Member
 	function memberBar()
 	{
 		global $User;
-		if ($this->Game->anon == 'No' || (!$this->isNameHidden) && isset($this->isNameHidden))
+		if ($this->Game->anon == 'No' || !$this->isNameHidden() )
 		{
 			$buf = '<td class="memberLeftSide">
 			<span class="memberCountryName">'.$this->memberSentMessages().' '.$this->memberFinalized().$this->memberCountryName().'</span>';

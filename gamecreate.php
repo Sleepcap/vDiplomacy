@@ -49,7 +49,7 @@ if( isset($_REQUEST['newGame']) and is_array($_REQUEST['newGame']) )
 		$form = $_REQUEST['newGame']; // This makes $form look harmless when it is unsanitized; the parameters must all be sanitized
 
 		$input = array();
-		$required = array('variantID', 'name', 'password', 'passwordcheck', 'bet', 'potType', 'phaseMinutes', 'nextPhaseMinutes', 'phaseSwitchPeriod', 'joinPeriod', 'anon', 'pressType', 'missingPlayerPolicy','drawType','minimumReliabilityRating','excusedMissedTurns'
+		$required = array('variantID', 'name', 'password', 'passwordcheck', 'bet', 'potType', 'phaseMinutes', 'phaseMinutesRB', 'nextPhaseMinutes', 'phaseSwitchPeriod', 'joinPeriod', 'anon', 'pressType', 'missingPlayerPolicy','drawType','minimumReliabilityRating','excusedMissedTurns'
 						,'countryID'
 						,'minPhases'
 						,'maxTurns'
@@ -116,6 +116,15 @@ if( isset($_REQUEST['newGame']) and is_array($_REQUEST['newGame']) )
 		{
 			throw new Exception(l_t("The phase value is too large or small; it must be between 5 minutes and 10 days."));
 		}
+		$input['phaseMinutesRB'] = (int)$input['phaseMinutesRB'];
+		if ( $input['phaseMinutesRB'] != -1 && ($input['phaseMinutesRB'] < 1 or $input['phaseMinutesRB'] > 1440*10 ))
+		{
+			throw new Exception(l_t("The phase value for retreats and builds is too large or small; it must be between 1 minute and 10 days."));
+		}
+		if ( $input['phaseMinutesRB'] != -1 && ($input['phaseMinutesRB'] > $input['phaseMinutes'] || $input['phaseMinutesRB'] < $input['phaseMinutes'] / 10)) 
+		{
+			throw new Exception(l_t("The phase length for retreats and builds must be within 10% and 100% of the regular phase length."));
+		}
 
 		$input['nextPhaseMinutes'] = (int)$input['nextPhaseMinutes'];
 		$input['phaseSwitchPeriod'] = (int)$input['phaseSwitchPeriod'];
@@ -152,7 +161,7 @@ if( isset($_REQUEST['newGame']) and is_array($_REQUEST['newGame']) )
 		
 // Handled differently at vdip
 //		// Force 1 vs 1 variants to be unranked to prevent point farming. 
-//		if ( $input['variantID'] == 15 or  $input['variantID'] == 23)
+//		if ( $input['variantID'] == 15 or  $input['variantID'] == 23 or $input['variantID'] == 91)
 //		{
 //			$input['bet'] = 5; 
 //			$input['potType'] = 'Unranked';
@@ -289,6 +298,7 @@ if( isset($_REQUEST['newGame']) and is_array($_REQUEST['newGame']) )
 			$input['bet'], 
 			$input['potType'], 
 			$input['phaseMinutes'], 
+			$input['phaseMinutesRB'],
 			$input['nextPhaseMinutes'],
 			$input['phaseSwitchPeriod'],
 			$input['joinPeriod'], 
@@ -353,12 +363,12 @@ if( isset($_REQUEST['newGame']) and is_array($_REQUEST['newGame']) )
 if ($User->reliabilityRating < 100)
 {
 	$maxRR = max(0, (floor($User->reliabilityRating - 1)));
-	$defaultRR = min(80,$maxRR);
+	$defaultRR = min(60,$maxRR);
 }
 else
 {
 	$maxRR = 100;
-	$defaultRR = 80;
+	$defaultRR = 60;
 }
 
 if ( $User->points >= 5 ) { $defaultPoints = 5; }

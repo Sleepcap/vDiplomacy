@@ -20,6 +20,10 @@
 
 define('AJAX', true); // Makes header.php ignore some of the unneeded stuff, mainly loading $User
 
+define('IN_CODE', 1);
+require_once('config.php');
+if( Config::isOnPlayNowDomain() ) define('PLAYNOW',true);
+
 require_once('header.php');
 
 /*
@@ -46,7 +50,35 @@ logJavaScriptError();
 
 $results = array('status'=>'Invalid', 'notice'=>'No valid action specified');
 
-if( isset($_GET['likeMessageToggleToken']) ) {
+// footer JS needs to contain a cached 
+
+// Check for group link changes. Has to be a user at least, and specifying a group type:
+if( isset($User) && $User->type['User'] && isset($_GET['groupType']) && isset($_GET['userID']) && isset($_GET['groupID']) )
+{
+	// Someone is making a group link change.
+	if( isset($_GET['setActive']) )
+	{
+
+	}
+}
+if( isset($_GET['groupID']) && isset($_GET['userID']) && isset($User) && $User->type['User'] )
+{
+}
+else if( isset($_GET['sendSMSToken']) ) {
+	if( libAuth::sendSMSToken_Valid($_GET['sendSMSToken']) ) {
+		
+		$token = explode('_', $_GET['sendSMSToken']);
+		$number = $token[0];
+		$message = $token[1];
+		
+		require_once('lib/sms.php');
+		
+		libSMS::send($number, $message);
+		
+		$results = "Success";
+	}
+}
+else if( isset($_GET['likeMessageToggleToken']) ) {
 	if( libAuth::likeToggleToken_Valid($_GET['likeMessageToggleToken']) ) {
 		
 		$token = explode('_', $_GET['likeMessageToggleToken']);
@@ -78,7 +110,7 @@ elseif( isset($_REQUEST['context']) && isset($_REQUEST['contextKey']) && isset($
 	try
 	{
 		$O = OrderInterface::newJSON($_REQUEST['contextKey'], $_REQUEST['context']);
-		$O->load();
+		$O->load(true); // Load and lock the member row to update
 
 		$newReady=$oldReady=$O->orderStatus->Ready;
 
@@ -142,8 +174,23 @@ elseif( isset($_REQUEST['context']) && isset($_REQUEST['contextKey']) && isset($
 			'statusText'=>'', 'notice'=>l_t('Exception: ').$e->getMessage(), 'orders'=>array());
 	}
 }
+/*
+file_put_contents(
+	'bot_ajax_requestlog.txt', 
+	date('l jS \of F Y h:i:s A')."\n".
+	"UserID: ".$User->id."\n".
+	"-------------------\n".
+	$_SERVER['REQUEST_URI']."\n".
+	"-------------------\n".
+	json_encode($results, JSON_PRETTY_PRINT)."\n".
+	"-------------------\n\n", 
+	FILE_APPEND);
+*/
 
+header('Content-Type: application/json');
 header('X-JSON: ('.json_encode($results).')');
+
+print json_encode($results);
 
 close();
 

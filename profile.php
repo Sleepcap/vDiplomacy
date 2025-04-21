@@ -833,14 +833,12 @@ print '<p><ul class="formlist">';
 if ( $UserProfile->type['Moderator'] ||  $UserProfile->type['ForumModerator'] || $UserProfile->type['Admin'] )
 {
 	print '<li><strong>'.l_t('Mod/Admin team').'</strong></li>';
-	print '<li>'.l_t('The best way to get moderator assistance is to contact a moderator at the <a href="modforum.php"> modforum</a>. Please do not message
-	moderators directly for help.')
-			/*l_t('The best way to get moderator assistance is using our built in <a href="contactUs.php">help page</a>. Please do not message
-	moderators directly for help.')*/.'</li>';
+	print '<li>'.l_t('The best way to get moderator assistance is using our built in <a href="modforum.php">moderator forum</a>. Please do not message
+	moderators directly for help.').'</li>';
 	print '<li>&nbsp;</li>';
 }
 
-if ( $UserProfile->online || time() - (24*60*60) < $UserProfile->timeLastSessionEnded)
+if ( time() - (24*60*60) < $UserProfile->timeLastSessionEnded)
 	print '<li><strong>'.l_t('Visited in last 24 hours').'</strong></li>';
 else
 	print '<li><strong>'.l_t('Last visited:').'</strong> '.libTime::text($UserProfile->timeLastSessionEnded).'</li>';
@@ -873,34 +871,7 @@ print '<li><strong>'.l_t('Joined:').'</strong> '.$UserProfile->timeJoinedtxt().'
 print '<li><strong>'.l_t('User ID#:').'</strong> '.$UserProfile->id.'</li>';
 if( $User->type['Moderator'] )
 {
-	print '<li><strong>'.l_t('E-mail:').'</strong>
-			'.$UserProfile->email.($UserProfile->hideEmail == 'No' ? '' : ' <em>'.l_t('(hidden for non-mods)').'</em>').'</li>';
-}
-else if ( $UserProfile->hideEmail == 'No' )
-{
-	$emailCacheFilename = libCache::dirID('users',$UserProfile->id).'/email.png';
-	if( !file_exists($emailCacheFilename) )
-	{
-		$image = imagecreate( strlen($UserProfile->email) *8, 15);
-		$white = imagecolorallocate( $image, 255, 255, 255);
-		$black = imagecolorallocate( $image, 0, 0, 0 );
-
-		imagestring( $image, 2, 10, 1, $UserProfile->email, $black );
-
-		imagepng($image, $emailCacheFilename);
-	}
-
-	print '<li><strong>'.l_t('E-mail:').'</strong>
-			<img src="'.STATICSRV.$emailCacheFilename.'" alt="'.l_t('[E-mail address image]').'" title="'.l_t('To protect e-mails from spambots they are embedded in an image').'" >
-		</li>';
-}
-
-if ( $UserProfile->hideEmail != 'No' )
-{
-	$emailCacheFilename = libCache::dirID('users',$UserProfile->id).'/email.png';
-
-	if( file_exists($emailCacheFilename) )
-		unlink($emailCacheFilename);
+	print '<li><strong>'.l_t('E-mail:').'</strong>'.$UserProfile->email.'</li>';
 }
 
 print '<li>&nbsp;</li>';
@@ -923,12 +894,15 @@ if ( $User->type['Moderator'] && $User->id != $UserProfile->id )
 	if ( $User->type['Admin'] )
 		$modActions[] = '<a href="index.php?auid='.$UserProfile->id.'">'.l_t('Enter this user\'s account').'</a>';
 
+	if ( $User->type['Admin'] )
+		$modActions[] = '<a href="index.php?auid_cookie='.$UserProfile->id.'">'.l_t('Log on as user with cookie').'</a>';
+ 
 	$modActions[] = libHTML::admincpType('User',$UserProfile->id);
 
 	if( !$UserProfile->type['Admin'] && ( $User->type['Admin'] || !$UserProfile->type['Moderator'] ) )
 		$modActions[] = libHTML::admincp('banUser',array('userID'=>$UserProfile->id), l_t('Ban user'));
 
-	$modActions[] = '<a href="admincp.php?tab=Multi-accounts&aUserID='.$UserProfile->id.'" class="light">'.
+	$modActions[] = '<a href="admincp.php?tab=Account Analyzer&aUserID='.$UserProfile->id.'" class="light">'.
 		l_t('Enter multi-account finder').'</a>';
 
 	if($modActions)
@@ -1004,13 +978,13 @@ else
 {
 	if ( $User->type['User'] && $User->id != $UserProfile->id)
 	{
-		list($newForumId) = $DB->sql_row("SELECT user_id FROM `phpbb_users` WHERE webdip_user_id = ".$UserProfile->id);
-		if ($newForumId > 0)
+		list($newForumID) = $DB->sql_row("SELECT user_id FROM `phpbb_users` WHERE webdip_user_id = ".$UserProfile->id);
+		if ($newForumID > 0)
 		{
 			print '
 			<div id="profile-forum-link-container">
 				<div class="profile-forum-links">
-					<a class="profile-link" href="/contrib/phpBB3/memberlist.php?mode=viewprofile&u='.$newForumId.'">
+					<a class="profile-link" href="/contrib/phpBB3/memberlist.php?mode=viewprofile&u='.$newForumID.'">
 						<button class="form-submit" id="view-forum-profile">
 							New Forum Profile
 						</button>
@@ -1018,7 +992,7 @@ else
 				</div>';
 			print '
 				<div class="profile-forum-links">
-					<a class="profile-link" href="/contrib/phpBB3/ucp.php?i=pm&mode=compose&u='.$newForumId.'">
+					<a class="profile-link" href="/contrib/phpBB3/ucp.php?i=pm&mode=compose&u='.$newForumID.'">
 						<button class="form-submit" id="send-pm">
 							Send a message to this user
 						</button>
@@ -1068,14 +1042,13 @@ if ( isset($_REQUEST['sortCol']))
 	else if ($_REQUEST['sortCol'] == 'phaseMinutes') { $sortCol='phaseMinutes'; }
 	else if ($_REQUEST['sortCol'] == 'minimumBet') {$sortCol='minimumBet'; }
 	else if ($_REQUEST['sortCol'] == 'minimumReliabilityRating') {$sortCol='minimumReliabilityRating'; }
-	else if ($_REQUEST['sortCol'] == 'watchedGames') {$sortCol='watchedGames'; }
 	else if ($_REQUEST['sortCol'] == 'turn') {$sortCol='turn'; }
 	else if ($_REQUEST['sortCol'] == 'processTime') {$sortCol='processTime'; }
 }
 if ( isset($_REQUEST['sortType'])) { if ($_REQUEST['sortType'] == 'asc') { $sortType='asc'; } }
 if ( isset($_REQUEST['pagenum'])) { $pagenum=(int)$_REQUEST['pagenum']; }
 
-$SQL = "SELECT g.*, (SELECT count(1) FROM wD_WatchedGames w WHERE w.gameID = g.id) AS watchedGames FROM wD_Games g INNER JOIN wD_Members m ON m.gameID = g.id
+$SQL = "SELECT g.* FROM wD_Games g INNER JOIN wD_Members m ON m.gameID = g.id
 	WHERE m.userID = ".$UserProfile->id;
 $SQLCounter = "SELECT count(1) FROM wD_Games g INNER JOIN wD_Members m ON m.gameID = g.id
 	WHERE m.userID = ".$UserProfile->id;
@@ -1085,7 +1058,7 @@ if($User->id != $UserProfile->id && !$User->type['Moderator'])
 	$SQLCounter .= " AND (g.anon = 'No' OR g.phase = 'Finished')";
 }
 $SQL = $SQL . " ORDER BY ";
-if ($sortCol <> 'watchedGames' && $sortCol <> 'processTime' && $sortCol <> 'minimumBet') {$SQL .= "g.";}
+if ( $sortCol <> 'processTime' && $sortCol <> 'minimumBet') {$SQL .= "g.";}
 $ordering = $sortCol;
 if ($sortCol == 'processTime') {$ordering = "(CASE WHEN g.processStatus = 'Paused' THEN (g.pauseTimeRemaining + ".time().") ELSE g.processTime END)";}
 elseif ($sortCol == 'minimumBet') {$ordering = "(SELECT m4.bet FROM wD_Members m4 WHERE m4.gameID = g.id AND m4.bet > 0 LIMIT 1)";}
@@ -1171,7 +1144,6 @@ function printPageBar($pagenum, $maxPage, $sortCol, $sortType, $sortBar = False)
 				<option'.(($sortCol=='minimumBet') ? ' selected="selected"' : '').' value="minimumBet">Bet</option>
 				<option'.(($sortCol=='phaseMinutes') ? ' selected="selected"' : '').' value="phaseMinutes">Phase Length</option>
 				<option'.(($sortCol=='minimumReliabilityRating') ? ' selected="selected"' : '').' value="minimumReliabilityRating">Reliability Rating</option>
-				<option'.(($sortCol=='watchedGames') ? ' selected="selected"' : '').' value="watchedGames">Spectator Count</option>
 				<option'.(($sortCol=='turn') ? ' selected="selected"' : '').' value="turn">Game Turn</option>
 				<option'.(($sortCol=='processTime') ? ' selected="selected"' : '').' value="processTime">Time to Next Phase</option>
 			</select>

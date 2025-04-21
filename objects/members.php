@@ -91,83 +91,6 @@ class Members
 
 	static $votes = array('Draw','Pause','Cancel','Extend','Concede');
 
-	function votesPassed()
-	{
-		global $DB;
-		$votes=self::$votes;
-		
-		$ext=0;
-		$concede=0;
-
-		//gets the number of players that are still playing for use of the bot
-		$playerCount = count($this->ByStatus['Playing']);
-
-		//initialize an int to keep track of how many bots are playing 
-		$botCount = 0; 
-		foreach($this->ByStatus['Playing'] as $Member)
-		{
-			$userPassed = new User($Member->userID);
-
-			//Bot votes are handled differently
-			if($userPassed->type['Bot']) 
-			{
-				$botCount += 1;
-
-				//Each bot will automatically vote for a pause
-				$botVotes = array('Pause'); 
-				$botSC = $Member->supplyCenterNo;
-
-				//This loop checks to see if the bot is winning or tied for the lead, since it will not vote draw or cancel in these cases
-				foreach($this->ByStatus['Playing'] as $CurMember) 
-				{
-					if ($botSC < $CurMember->supplyCenterNo)
-					{
-						$botVotes = array('Draw','Pause','Cancel');
-					}
-				}
-
-				//This variable and the following query get the SC count for 2 years ago, which will be used to prevent bot stalemates
-				$oldSC = 0; 
-				list($oldSC) = $DB->sql_row("SELECT COUNT(ts.terrID) FROM wD_TerrStatusArchive ts INNER JOIN wD_Territories t ON ( ts.terrID = t.id ) 
-				WHERE t.supply='Yes' AND ts.countryID = ".$Member->countryID." AND ts.gameID = ".$this->Game->id." 
-				AND t.mapID=".$this->Game->Variant->mapID." AND ts.turn = ".max(0,$this->Game->turn - 4));
-
-				//A bot will draw or cancel if it is stalled out or if it is the first year
-				if ($oldSC >= $botSC || $this->Game->turn < 2) 
-				{
-					$botVotes = array('Draw','Pause','Cancel');
-				}
-				//A bot will always cancel in the first two years
-				elseif ($this->Game->turn < 4) 
-				{
-					$botVotes = array('Pause','Cancel');
-				}
-				$votes = array_intersect($votes, $botVotes);
-			}
-			else
-			{
-				$votes = array_intersect($votes, $Member->votes);
-				if (in_array('Extend' ,$Member->votes))
-					$ext++;
-				if (in_array('Concede',$Member->votes))
-					$concede++;
-			}
-		}
-
-		//This condition will force draw the game if the only players left are bots
-		if ($playerCount == $botCount) 
-		{
-			$votes = array('Draw');
-		}
-
-		if ($ext >= 2/3*count($this->ByStatus['Playing']))
-			$votes[]='Extend';
-		if ($concede >= (count($this->ByStatus['Playing']) - 1) && ($concede > 0))
-			$votes[]='Concede';
-
-		return $votes;
-	}
-
 	function isReady()
 	{
 		foreach($this->ByStatus['Playing'] as $Member)
@@ -201,7 +124,7 @@ class Members
 			$Member->orderStatus->Ready=false;
 			
 			if( $Member->orderStatus->updated )
-				$DB->sql_put("UPDATE wD_Members SET orderStatus='".$Member->orderStatus."' WHERE id = ".$Member->id);
+				$DB->sql_put("UPDATE wD_Members SET orderStatus='".$Member->orderStatus."', orderStatusChanged=UNIX_TIMESTAMP() WHERE id = ".$Member->id);
 		}
 	}
 
@@ -275,12 +198,16 @@ class Members
 		{
 			$this->ByID[$Member->id] = $Member;
 			$this->ByStatus[$Member->status][$Member->id] = $Member;
-			$this->ByUserID[$Member->userID] = $Member;
 			$this->ByRlGroup[$Member->rlGroup][] = $Member;
 
 			// If pre-game all countries are 'Unassigned', so members cannot be indexed by countryID.
 			if ( $Member->countryID != 0 )
 				$this->ByCountryID[$Member->countryID] = $Member;
+			
+			// If in sandbox mode make sure we don't accidentally get set as a player that has been defeated:
+			if( isset($this->ByUserID[$Member->userID]) && $this->ByUserID[$Member->userID]->status = 'Playing' )
+				continue;
+			$this->ByUserID[$Member->userID] = $Member;
 		}
 		
 		// Small hack to enable country selection if moderated CYOC-game with 0 members.
@@ -306,6 +233,7 @@ class Members
 				m.supplyCenterNo as supplyCenterNo,
 				m.unitNo as unitNo,
 				m.excusedMissedTurns as excusedMissedTurns,
+				COALESCE(m.hideNotifications,0) as hideNotifications,
 				m.chessTime AS chessTime,
 				m.ccMatch AS ccMatch,
 				m.ipMatch AS ipMatch,
@@ -315,14 +243,15 @@ class Members
 				u.rlGroup AS rlGroup,
 				u.reliabilityRating AS reliabilityRating,		
 				m.pointsWon as pointsWon,
-				IF(s.userID IS NULL,0,1) as online,
+				0 as online,
 				u.type as userType
 			FROM wD_Members m
 			INNER JOIN wD_Users u ON ( m.userID = u.id )
-			LEFT JOIN wD_Sessions s ON ( u.id = s.userID )
 			WHERE m.gameID = ".$this->Game->id."
 			ORDER BY m.status ASC, m.supplyCenterNo DESC, ".
-			($this->Game->anon=='Yes' ? "m.countryID ASC" : "u.points DESC" ).
+			($this->Game->anon=='Yes' ? "m.countryID ASC, " : "u.points DESC, " ).
+			"m.id ASC", // Ordering by ID ensures the ordering is consistent across requests, which unfortunately 
+			// matters for e.g. sandbox games where the country that's loaded for authentication depends on this load order.
 			$this->Game->lockMode
 			);
 

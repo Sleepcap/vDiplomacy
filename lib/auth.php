@@ -27,6 +27,18 @@ defined('IN_CODE') or die('This script can not be run by itself.');
  */
 class libAuth
 {
+	public static function generateToken($inputData)
+	{
+		$inputData = (string)$inputData;
+		$randInput = rand(0,1000000000);
+		return md5($randInput.$inputData.Config::$salt.Config::$secret.'generateToken').'_'.$randInput;
+	}
+	public static function validateToken($token)
+	{
+		$inputData = explode('_',$token)[0];
+		$randInput = explode('_',$token)[1];
+		return $token === (md5($randInput.$inputData.Config::$salt.Config::$secret.'generateToken').'_'.$randInput);
+	}
 	public static function resourceLimiter($name, $seconds)
 	{
 		global $User;
@@ -97,7 +109,31 @@ class libAuth
 		
 		return true;
 	}
-
+	public static function sendSMSToken_Key($phonenumber, $message) {
+		
+		return md5('sendSMS-'.$phonenumber.'-'.$message.'-'.Config::$secret);
+	}
+	public static function sendSMSToken($phonenumber, $message) {
+		
+		return $phonenumber.'_'.$message.'_'.self::likeToggleToken_Key($phonenumber, $message);
+	}
+	public static function sendSMSToken_Valid($token) {
+		
+		$token = explode('_',$token);
+		
+		if( count($token) != 3 )
+			throw new Exception(l_t('Corrupt token %s',$token));
+		
+		$phonenumber = $token[0];
+		$message = $token[1];
+		$key = $token[2];
+		
+		if( $key !== self::sendSMSToken_Key($phonenumber, $message))
+			throw new Exception(l_t('Invalid token %s',$token));
+		
+		return true;
+	}
+	
 	public static function gamemasterToken($gameID)
 	{
 		$time=time();
@@ -124,7 +160,7 @@ class libAuth
 			throw new Exception(l_t('Invalid form token %s',$formToken));
 
 		if ( (time()-$time)>60*60 )
-			throw new Exception(l_t('Form token %s expired (%s), over an hour old. Please resubmit.',$formToken,time()));
+			libHTML::notice("Token expired",l_t('Form token %s expired (%s), over an hour old. Please resubmit.',$formToken,time()));
 	}
 	private static function formToken_Key($time)
 	{
@@ -140,6 +176,14 @@ class libAuth
 		}
 		return self::$formToken_cached; // One token per page is fine
 	}
+	public static function sandboxToken_Key($gameID)
+	{
+		return substr(md5('SandboxToken_'.$gameID.'_'.Config::$secret),0,8);
+	}
+	public static function sandboxToken_Valid($gameID, $key)
+	{
+		return self::sandboxToken_Key($gameID) === $key;
+	}
 	private static $formTokeURL_cached = false;
 	public static function formTokenURLParameter()
 	{
@@ -150,6 +194,11 @@ class libAuth
 		return self::$formTokeURL_cached;
 	}
 
+	public static function email_token($email)
+	{
+		$timestamp = time();
+		return substr(md5(Config::$secret.$email.$timestamp),0,8).'|'.$timestamp.'|'.$email;
+	}
 	/**
 	 * Return a URL allowing the user to validate a given e-mail.
 	 * emailToken is the name used, and additional GET vars can be added
@@ -161,9 +210,8 @@ class libAuth
 	{
 		$thisURL = 'https://'.$_SERVER['SERVER_NAME'].$_SERVER['PHP_SELF'];
 
-		$timestamp = time();
 		// %7C = | , but some webmail clients think that | is the end of the link
-		$emailToken = substr(md5(Config::$secret.$email.$timestamp),0,8).'%7C'.$timestamp.'%7C'.urlencode($email);
+		$emailToken = urlencode(self::email_token($email));
 
 		return $thisURL.'?emailToken='.$emailToken;
 	}
@@ -184,7 +232,9 @@ class libAuth
 
 		list($key, $timestamp, $email) = $emailToken;
 
-		if( (time() - $timestamp) > 60*60 ) throw new Exception("The given e-mail token link has expired; please request another one and click the link within an hour.");
+		// Check that the validation link isn't expired, or that there is no secret set implying (I hope!) that 
+		// we are in a dev / docker environment:
+		if( Config::$secret != "" && (time() - $timestamp) > 60*60*24 ) throw new Exception("The given e-mail token link has expired; please request another one and click the link within an hour.");
 
 		if ( $key !== substr(md5(Config::$secret.$email.$timestamp),0,8) )
 			return false;
@@ -330,8 +380,11 @@ class libAuth
 		}
 	}
 
-	public static function generateKey($userId, $userKey) {
-		return $userId.'_'.md5(md5(Config::$secret).$userId.$userKey.sha1(Config::$secret));
+	public static function generateKey($userID, $userKey) {
+			if( isset(Config::$adminSecretUserIDs) && in_array($userID, Config::$adminSecretUserIDs) )
+					return $userID.'_'.md5(md5(Config::$secret.Config::$adminSecret).$userID.$userKey.sha1(Config::$secret.Config::$adminSecret));
+			else
+					return $userID.'_'.md5(md5(Config::$secret).$userID.$userKey.sha1(Config::$secret));
 	}
 	
 	/**
@@ -348,6 +401,7 @@ class libAuth
 		}
 		catch(Exception $e)
 		{
+			self::keyWipe(); // If there is a problem with a cookie ensure it is wiped
 			libHTML::error(l_t("The userID provided does not exist."));
 		}
 		return self::generateKey($userID, $TRYUser->password);
@@ -376,14 +430,14 @@ class libAuth
 	public static function keyWipe()
 	{
 		// Don't change this line. Don't ask why it needs to be set to expire in a year to expire immidiately
-		$success=setcookie('wD-Key', '', (time()-3600));
+		$success=setcookie('wD-Key', '', ['expires'=>(time()-3600),'samesite'=>'Lax']);
 		libHTML::$footerScript[] = 'eraseCookie("wD-Key");';
 
 		if ( isset($_COOKIE[session_name()]) )
 		{
 			libHTML::$footerScript[] = 'eraseCookie("'.session_name().'");';
 			unset($_COOKIE[session_name()]);
-			setcookie(session_name(), '', time()-3600);
+			setcookie(session_name(), '', ['expires'=>time()-3600,'samesite'=>'Lax']);
 			session_destroy();
 		}
 
@@ -403,11 +457,11 @@ class libAuth
 		$key = self::userID_Key($userID);
 
 		if ( $session )
-			setcookie('wD-Key', $key );
+			setcookie('wD-Key', $key ,['expires'=>null,'samesite'=>'Lax']);
 		elseif ( $path )
-			setcookie('wD-Key', $key, (time()+365*24*60*60), $path );
+			setcookie('wD-Key', $key, ['expires'=>(time()+365*24*60*60),'samesite'=>'Lax'], $path );
 		else
-			setcookie('wD-Key', $key, (time()+365*24*60*60));
+			setcookie('wD-Key', $key, ['expires'=>(time()+365*24*60*60),'samesite'=>'Lax']);
 	}
 
 	/**
@@ -679,5 +733,46 @@ class libAuth
 		return preg_match("!^$addr_spec$!", $email) ? 1 : 0;
 	}
 
+	// If we are in playnow mode this will ensure we have a valid temporary user account
+	public static function configurePlayNowUser()
+	{
+		global $User, $DB;
+
+		if( !defined('PLAYNOW') ) throw new Exception("Cannot set up a play now user when not in play now mode.");
+		
+		if( !isset($User) || $User->type['Guest'] || !$User->type['User'] )
+		{
+			// Make a User
+			// Save their key, if present
+			// Until no key
+			// Set their new key their key
+			
+			//libAuth::keyWipe();
+			// Generate user key
+			$acct = 'diplonow_'.round(rand(0,1000000));
+			while( 0 != $DB->sql_row("SELECT COUNT(1) FROM wD_Users WHERE username='" . $acct . "'")[0] )
+			{
+				$acct = 'diplonow_'.round(rand(0,1000000));
+			}
+			$pass = (string)(rand(0,1000000000)); 
+			//$DB->sql_put("INSERT INTO wd_Users (username,type,email,points,comment,homepage,timejoined,timeLastSessionEnded,password) VALUES ('".$acct."', 'User', '".$acct."', 0, '', '', ".time().", ".time().", UNHEX('".$passHash."'));");
+			$DB->sql_put("INSERT INTO wD_Users(
+				`username`,`email`,`points`,`comment`,`homepage`,`hideEmail`,`timeJoined`,`locale`,`timeLastSessionEnded`,`lastMessageIDViewed`,`password`,`type`,`notifications`,`muteReports`,`silenceID`,`cdCount`,`nmrCount`,`cdTakenCount`,`phaseCount`,`gameCount`,`reliabilityRating`,`deletedCDs`,`tempBan`,`emergencyPauseDate`,`yearlyPhaseCount`,`tempBanReason`,`optInFeatures`
+				)
+				SELECT '".$acct."' `username`,'".$acct."' `email`, 100 `points`,`comment`,`homepage`,`hideEmail`,`timeJoined`,`locale`,".time()." `timeLastSessionEnded`,".time()."`lastMessageIDViewed`,UNHEX('".libAuth::pass_Hash($pass)."'),'User' `type`,`notifications`,`muteReports`,`silenceID`,`cdCount`,`nmrCount`,`cdTakenCount`,`phaseCount`,`gameCount`,`reliabilityRating`,`deletedCDs`,`tempBan`,`emergencyPauseDate`,`yearlyPhaseCount`,`tempBanReason`,1
+				FROM wD_Users
+				WHERE id = 1");
+			list($newUserID) = $DB->sql_row("SELECT LAST_INSERT_ID()");
+			
+			//$NewUser = new User($newUserID);
+			$key = libAuth::userPass_Key($acct, $pass); // Password is never uysed
+			
+
+			$cookieKey = $key;//libAuth::generateKey($newUserID, $pass);
+			setcookie('wD-Key',$cookieKey,['expires'=>time()+365*24*60*60,'samesite'=>'Lax']);
+
+			$User = new User($newUserID);
+		}
+	}
 }
 ?>

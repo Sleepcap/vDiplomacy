@@ -35,8 +35,7 @@ try
 
 	$set = '';
 
-	$required = array('Username' => 'username', 'E-mail' => 'email',
-					'E-mail hiding' => 'hideEmail');
+	$required = array('Username' => 'username', 'E-mail' => 'email');
 
 	$allowed = array('Homepage'=>'homepage','Comment'=>'comment');
 
@@ -83,6 +82,8 @@ try
 	
 	if( User::findUsername($SQLVars['username']) )
 		throw new Exception(l_t("The username '%s' is already in use. Please choose another.",$SQLVars['username']));
+	elseif( strstr($SQLVars['username'], 'diplonow_')!==false )
+		throw new Exception(l_t("This username is reserved for a play now server. Please choose another username."));
 	elseif( User::findEmail($SQLVars['email']) )
 		throw new Exception(l_t("The e-mail address '%s', is already in use. If this is your e-mail, please use the Forgot your username and password features to recover your account or contact the moderators at %s for assistance. Making a second account for any reason is against the site rules.",$SQLVars['email'], Config::$modEMail));
 
@@ -100,11 +101,11 @@ try
 
 	// Give user access to tutorial views for 365 days
 	/* vDip: Disabled tutorial as this is too webdip specific, might be enabled later when texts are adjusted
-	setcookie('wD-Tutorial', 'wD-Tutorial', time()+60*60*24*365);
-	setcookie('wD-Tutorial-Index', 'wD-Tutorial-Index', time()+60*60*24*365);
-	setcookie('wD-Tutorial-GameCreate', 'wD-Tutorial-GameCreate', time()+60*60*24*365);
-	setcookie('wD-Tutorial-JoinNewGame', 'wD-Tutorial-JoinNewGame', time()+60*60*24*365);
-	setcookie('wD-Tutorial-Settings', 'wD-Tutorial-Settings', time()+60*60*24*365);*/
+	setcookie('wD-Tutorial', 'wD-Tutorial', ['expires'=>time()+60*60*24*365,'samesite'=>'Lax']);
+	setcookie('wD-Tutorial-Index', 'wD-Tutorial-Index', ['expires'=>time()+60*60*24*365,'samesite'=>'Lax']);
+	setcookie('wD-Tutorial-GameCreate', 'wD-Tutorial-GameCreate', ['expires'=>time()+60*60*24*365,'samesite'=>'Lax']);
+	setcookie('wD-Tutorial-JoinNewGame', 'wD-Tutorial-JoinNewGame', ['expires'=>time()+60*60*24*365,'samesite'=>'Lax']);
+	setcookie('wD-Tutorial-Settings', 'wD-Tutorial-Settings', ['expires'=>time()+60*60*24*365,'samesite'=>'Lax']);*/
 
 	// libHTML does not like letting registered users access the registration page
 	$User = new User(GUESTID);

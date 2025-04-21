@@ -30,24 +30,10 @@ print libHTML::pageTitle('Information and Links','Links to pages with more infor
 
 <div class='help'>
     
-    <div class = 'help_title'>Mentor Program</div>
+    <div class = 'help_title'>Get Help - Mod forum</div>
     <div class = 'help_content'>
         <p>
-            <a href="https://docs.google.com/document/d/1dSq6zlizecb90F3OKSqyFUWGI32Or87ZNmkFmhCVz-c/edit">Mentor-Apprentice Program (External Link)</a>
-            This is a program to allow new members to receive advice and guidance on the game from our more experienced members. </br>
-            If you are a new member and want a mentor, <a href="https://goo.gl/forms/tHxJMZQ7mKgjAtEO2">click here</a> to sign up. </br>
-            If you would like to mentor a new member, please <a href="https://goo.gl/forms/XdMDvxfxdQQQJjDI3">click here</a> to sign up. </br>
-            Any questions on this program can be directed to webdipmentors@gmail.com.
-        </p>
-    </div>
-  
-<li class="formlistdesc"></li>
-
-    <div class = 'help_title'>Contact Information</div>
-    <div class = 'help_content'>
-        <p>
-            If you need to contact one of the site owners, or see more about what the moderator team and owners can help you out with, see their 
-            <a href="contactUs.php">Contact Information</a> here!
+            If you need to get in touch with the mod team please submit a message to the <a href="modforum.php">moderator forum</a>!
         </p>
     </div>
 
@@ -109,8 +95,7 @@ print libHTML::pageTitle('Information and Links','Links to pages with more infor
         </p>
     </div>
 
-<p>Didn't find the help or information you were looking for? Post a message in the <a href="forum.php" class="light">forum</a>, or or contact the moderators at <a href="mailto:<?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?>" class="light">
-<?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?></a>.</p>
+<p>Didn't find the help or information you were looking for? Post a message in the <a href="forum.php" class="light">forum</a>, or or contact the moderators in the <a href="modforum.php">moderator forum</a>.</p>
 
 </div>
 

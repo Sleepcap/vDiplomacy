@@ -65,6 +65,12 @@ class Mailer
 			trigger_error(l_t("No mailer type chosen; either sendmail, smtp, or mail need to be selected for e-mailing."));
 	}
 
+	public function SetReplyTo($address, $name)
+	{
+		$this->PHPMailer->clearReplyTos();
+		$this->PHPMailer->addReplyTo($address, $name, false);
+	}
+	
 	private function Clear()
 	{
 		if( $this->useDebug ) return;
@@ -130,7 +136,8 @@ class Mailer
 	$email,
 	$name,
 	gmdate("Y-m-d\TH:i:s\Z"),
-	htmlentities($_SERVER['REMOTE_ADDR'])
+	// Check for REMOTE_ADDR as this might be from a console
+	htmlentities(isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'webdiplomacy.net')
 )."<br /><br />
 
 ".l_t("If this e-mail was unexpected it can be ignored, please don't reply.")."<br />

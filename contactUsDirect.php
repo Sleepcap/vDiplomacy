@@ -26,6 +26,10 @@ if( !$User->type['User'] )
 	libHTML::error(l_t("This page is only for registered users."));
 }
 
+header('refresh: 4; url=modforum.php');
+
+libHTML::notice('Redirecting to Mod forum', 'Redirecting you to the <a href="modforum.php">moderator forum</a> where you can submit a request to the mod team.');
+
 $submitted = false;
 $issueType = '';
 $gamesValid = false;
@@ -260,6 +264,9 @@ if ($submitted == true)
     $worked = true;
     $pausedGames = '';
 
+    // Make it easier to respond to direct to the user
+    $Mailer->SetReplyTo($User->email, $User->username);
+
     if ($issueType=='emergencyIssue')
     {
         if ($User->qualifiesForEmergency())
@@ -283,7 +290,7 @@ if ($submitted == true)
                             WHERE id = ".$values->gameID);
 
                         // Any votes to toggle the pause are now void
-                        $DB->sql_put("UPDATE wD_Members SET votes = REPLACE(votes,'Pause','') WHERE gameID = ".$values->gameID);
+                        $DB->sql_put("UPDATE wD_Members SET votes = REPLACE(votes,'Pause',''), votesChanged=UNIX_TIMESTAMP() WHERE gameID = ".$values->gameID);
                     }
                 }
             }
@@ -391,8 +398,8 @@ else
     If you have a question about how the game works, please read the <a href="faq.php" class="contactUs">FAQ</a> 
     and the <a href="intro.php" class="contactUs"> intro to webDiplomacy</a> before using this form. </p>
 
-    <p> Need something else? Take a look at our <a href="contactUs.php" class="contactUs">Contact Info</a> 
-    page to learn how to contact an owner and see all the problems moderators can help with!</p>
+    <p> Need something else? Take a look at our <a href="modforum.php" class="contactUs">Moderator forum</a> 
+    page to get in contact with the moderator team!</p>
     
     </div>';
     print '<div class = "contactUsShow">';
@@ -459,7 +466,7 @@ else
     <u>Vacations, business trips, or any other absence you know of ahead of time do not count as a personal emergency.</u> 
     This tool is intended for unexpected absences, such as a family emergency, widespread power outage, natural disaster, or other circumstance you cannot plan for. 
     If you can plan for your pause ahead of time, it is not an emergency. You should inform others in your game in advance that you will need a pause, 
-    and if you cannot do so instead contact the moderators at ' .Config::$modEMail.'.</font></br></br>
+    and if you cannot do so instead contact the moderators in the <a href="modforum.php">moderator forum</a>.</font></br></br>
     Abuse of the emergency pause will be punished with a 50% point dock and removal of your emergency pause privilege at minimum. <br><br>
     Using your emergency pause will instantly pause the following games: ';
     

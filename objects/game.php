@@ -21,6 +21,7 @@
 require_once(l_r('lib/variant.php'));
 require_once(l_r('objects/members.php'));
 require_once(l_r('objects/scoringsystem.php'));
+require_once(l_r('objects/groupUserToUserLinks.php'));
 
 /**
  * Prints data on a game, and loads and manages the collections of members which this game contains.
@@ -178,7 +179,6 @@ class Game
 	// Arrays of aggregate objects
 	/**
 	 * An array of Member(/processMember) objects indexed by countryID
-	 * @var object
 	 */
 	public $Members;
 
@@ -246,6 +246,27 @@ class Game
 	 * The minimum value for Reliability Rating before a player can join this game
 	 */
 	public $minimumReliabilityRating;
+
+	/**
+	 * The minimum value for identity score before a player can join this game
+	 */
+	public $minimumIdentityScore;
+
+	/**
+	 * The relationship policy, which sets what the criteria are for users with suspected/declared/verified relationships
+	 * 'ModStrong'
+	 * 'ModMid'
+	 * 'ModWeak'
+	 * 'MemberSuspicionStrong'
+	 * 'MemberSuspicionMid'
+	 * 'MemberSuspicionWeak'
+	 * 'DeclaredStrong'
+	 * 'DeclaredMid'
+	 * 'DeclaredWeak'
+	 * 'DeclaredOnly'
+	 * 'GroupOnly'
+	 */
+	public $relationshipRestrictions;
 
 	public $civilDisorderInfo;
 	/**
@@ -350,11 +371,31 @@ class Game
 	public $startTime;
 
 	/**
+	 * User id of the tournament director or null if no director
+	 * @var int|null
+	 */
+	public $tournamentDirectorUserID;
+
+	/**
+	 * User id of the co-tournament director or null if no director
+	 * @var int|null
+	 */
+	public $tournamentCodirectorUserID;
+
+	/**
+	 * User id of the user who created this game, if it is a sandbox game
+	 * @var int|null
+	 */
+	public $sandboxCreatedByUserID;
+
+	/**
 	 * @param int/array $gameData The game ID of the game to load, or the array of its database row
 	 * @param string[optional] $lockMode The database locking phase to use; no locking by default
 	 */
 	public function __construct($gameData, $lockMode = NOLOCK)
 	{
+		global $DB;
+		
 		$this->lockMode = $lockMode;
 
 		/* If a Game has already been loaded it gets moved out of the way
@@ -367,7 +408,7 @@ class Game
 
 		$GLOBALS['Game'] = $this;
 
-		if ( $lockMode == NOLOCK && is_array($gameData) )
+		if ( is_array($gameData) ) // && $lockMode == NOLOCK Sometimes a game record is fetched and locked before being constructed here
 			$this->loadRow($gameData);
 		else
 		{
@@ -407,7 +448,13 @@ class Game
 		{
 			if( (isset($this->processTime)||!is_null($this->processTime))
 				|| (!isset($this->pauseTimeRemaining) || is_null($this->pauseTimeRemaining) ))
-				trigger_error(l_t("Paused game timeout values incorrectly set."));
+			{
+				// This is a hack to fix a bug where the pause time remaining was not set correctly, which often happens with sandbox games
+				$DB->sql_put("UPDATE wD_Games SET processTime = NULL, pauseTimeRemaining = 600 WHERE id = ".$this->id);
+				$DB->sql_put("COMMIT"); // Save the change
+				// Continue to log as an error instead of moving on so that this is tracked and properly fixed
+				trigger_error(l_t("Paused game timeout values incorrectly set, please refresh the page."));
+			}
 		}
 		elseif( $this->processStatus!='Crashed' && (
 			( isset($this->pauseTimeRemaining)||!is_null($this->pauseTimeRemaining) )
@@ -417,6 +464,16 @@ class Game
 
 	private $isMemberInfoHidden;
 
+	/**
+	 * Is the given user ID a director of this game, either game director, tournament director or tournament codirector
+	 * @return boolean
+	 */
+	public function isDirector($userID)
+	{
+		return ($this->directorUserID != null && $this->directorUserID == $userID) 
+			|| ($this->tournamentDirectorUserID != null && $this->tournamentDirectorUserID == $userID) 
+			|| ($this->tournamentCodirectorUserID != null && $this->tournamentCodirectorUserID == $userID);
+	}
 	/**
 	 * Should members be hidden for this game and this viewer?
 	 *
@@ -445,6 +502,58 @@ class Game
 		}
 
 		return $this->isMemberInfoHidden;
+	}
+
+	public function getAlternatives(){
+		
+		global $User;
+		
+		$alternatives=array();
+		$alternatives[]=$this->Variant->link();
+
+		if ( $this->pressType=='NoPress')
+			$alternatives[]=l_t('No messaging');
+		elseif( $this->pressType=='RulebookPress')
+			$alternatives[]='<a href="press.php#rulebook">'.l_t('Rulebook press').'</a>';
+		elseif( $this->pressType=='PublicPressOnly' )
+			$alternatives[]='<a href="press.php#publicPress">'.l_t('Public messaging only').'</a>';
+		
+		if($this->playerTypes=='Mixed')
+			$alternatives[]=l_t('Fill with Bots');
+
+		if($this->playerTypes=='MemberVsBots')
+			$alternatives[]=l_t('Bot Game');
+		
+		if( $this->anon=='Yes' )
+			$alternatives[]=l_t('Anon');
+
+		$alternatives[]=$this->Scoring->abbr();
+
+		if( $this->drawType=='draw-votes-hidden')
+			$alternatives[]=l_t('Hidden draw votes');
+
+		if( $this->missingPlayerPolicy=='Wait' )
+			$alternatives[]=l_t('Wait for orders');
+
+
+		if( !is_null($this->sandboxCreatedByUserID) ){
+			$alternatives[] = l_t( 'Sandbox game' );
+		}
+
+		//	Show the end of the game in the options if set.
+		if(( $this->targetSCs > 0) && ($this->maxTurns > 0))
+			$alternatives[]='EoG: '.$this->targetSCs.' SCs or "'.$this->Variant->turnAsDate($this->maxTurns -1).'"';
+		elseif( $this->maxTurns > 0)
+			$alternatives[]='EoG: "'.$this->Variant->turnAsDate($this->maxTurns -1).'"';
+		elseif( $this->targetSCs > 0)
+			$alternatives[]='EoG: '.$this->targetSCs.' SCs';
+		if( $this->chooseYourCountry=='Yes' )
+			$alternatives[]=l_t('ChooseYourCountry');
+			
+		if( $this->noProcess != '')
+			$alternatives[]=l_t('noProcess:'.str_replace(array('1', '2', '3', '4', '5', '6', '0'), 
+					array(l_t('Mon'), l_t('Tue'), l_t('Wed'), l_t('Thu'), l_t('Fri'), l_t('Sat'), l_t('Sun')), $this->noProcess));
+
 	}
 
 	/**
@@ -477,14 +586,27 @@ class Game
 		$this->private = isset($this->password);
 
 		$this->Variant = $GLOBALS['Variants'][$this->variantID];
-	}                         
+	}   
+	
+	function isClassicGame()
+	{
+		return $this->Variant->name == 'Classic' || $this->Variant->name == 'ClassicGvI' || $this->Variant->name == 'ClassicFvA';
+	}
+	function usePointAndClickUI()
+	{
+		global $User;
+
+		return $this->isClassicGame() 
+			&& (defined('PLAYNOW') || !isset($User) || !$User->type['User'] || $User->isMapUIPointAndClick() || (isset($_REQUEST['view']) && $_REQUEST['view'] == 'pointAndClick') )
+			&& !(isset($_REQUEST['view']) && $_REQUEST['view'] == 'dropDown');
+			//&& is_null($this->sandboxCreatedByUserID); // Sandbox games currently not supported for build mode in point and click UI
+	}
 
 	function watched() 
 	{
-        global $DB, $User;
+        global $User;
 
-		$row = $DB->sql_row('SELECT * from wD_WatchedGames WHERE gameID='.$this->id.' AND userID=' . $User->id);
-		return $row != false;
+		return $User->isWatchingGame($this->id);
 	}
 	function watch() 
 	{
@@ -521,15 +643,12 @@ class Game
 		}
 	}
 
-	/**
-	 * Reload the variables which are stored within this object specificially, ie everything
-	 * except aggregates
-	 */
-	function load()
+	// Get a game row with all the expected columns etc, using the locking mode given
+	public static function fetchRow($gameID, $lockMode = NOLOCK)
 	{
 		global $DB;
 
-		$row = $DB->sql_hash("SELECT
+		return $DB->sql_hash("SELECT
 			g.id,
 			g.variantID,
 			LOWER(HEX(g.password)) as password,
@@ -542,6 +661,7 @@ class Game
 			g.pot,
 			g.potType,
 			g.phaseMinutes,
+			g.phaseMinutesRB,
 			g.nextPhaseMinutes,
 			g.phaseSwitchPeriod,
 			g.processStatus,
@@ -555,6 +675,10 @@ class Game
 			g.excusedMissedTurns,
 			g.playerTypes,
 			g.startTime,
+			g.directorUserID,
+			g.sandboxCreatedByUserID,
+			t.directorID tournamentDirectorUserID,
+			t.coDirectorID tournamentCodirectorUserID,
 			g.maxTurns,
 			g.targetSCs,
 			g.minPhases,
@@ -563,7 +687,6 @@ class Game
 			g.rlPolicy,
 			g.chessTime,
 			g.adminLock,
-			g.directorUserID,
 			g.chooseYourCountry,
 			g.description,
 			g.noProcess,
@@ -573,9 +696,19 @@ class Game
 			g.missingPlayerPolicy,
 			g.playerTypes
 			FROM wD_Games g
-			WHERE g.id=".$this->id.' '.$this->lockMode);
-
-		if ( ! isset($row['id']) or ! $row['id'] )
+			LEFT JOIN wD_TournamentGames tg ON g.id = tg.gameID
+			LEFT JOIN wD_Tournaments t ON t.id = tg.tournamentID
+			WHERE g.id=".$gameID.' '.$lockMode);
+	}
+	/**
+	 * Reload the variables which are stored within this object specificially, ie everything
+	 * except aggregates
+	 */
+	function load()
+	{
+		$row = self::fetchRow($this->id, $this->lockMode);
+		
+		if ( $row === false || (! isset($row['id'])) || (! $row['id']) )
 		{
 			libHTML::error(l_t("Game not found; ensure a valid game ID has been given. Check that this game hasn't been canceled, you may have received a message about it on your <a href='index.php' class='light'>home page</a>."));
 		}
@@ -679,6 +812,50 @@ class Game
 		return $this->phaseMinutes < 60;
 	}
 
+	protected function getMissedTurnMinutes()
+	{
+		if ($this->phaseMinutesRB != -1) {
+			return $this->phaseMinutesRB;
+		}
+		else
+		{
+			return $this->phaseMinutes;
+		}
+	}
+
+	/**
+	 * Return the total number of minutes for the current phase
+	 * 
+	 * @return int
+	 */
+	protected function getCurPhaseMinutes()
+	{
+		if ($this->phaseMinutesRB != -1 && ($this->phase == "Retreats" || $this->phase == "Builds")) {
+			return $this->phaseMinutesRB;
+		}
+		else
+		{
+			return $this->phaseMinutes;
+		}
+	}
+
+	/**
+	 * Return the minimum number of minutes for a phase.
+	 * This should be used for calculating grace period.
+	 * 
+	 * @return int
+	 */
+	protected function getMinPhaseMinutes()
+	{
+		if ($this->phaseMinutesRB != -1) {
+			return $this->phaseMinutesRB;
+		}
+		else
+		{
+			return $this->phaseMinutes;
+		}
+	}
+
 	/**
 	 * Return the next process time in textual format, in terms of time remaining
 	 *
@@ -756,5 +933,3 @@ class Game
     }
 }
 
-
-?>

@@ -361,11 +361,19 @@ div.memberBoardHeader {
 	font-weight:normal !important;
 }
 
+.archiveBar {
+	float:left;
+}
+
 .homeGameLinks {
 	font-size:12px;
 }
 .homeGameLinks a {
 	margin:0 4px;
+}
+.homeGameLinksForm {
+	display: flex;
+	justify-content: space-between;
 }
 
 /* --- Home game panel --- */

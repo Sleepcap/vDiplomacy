@@ -349,6 +349,7 @@ div.memberBoardHeader {
 /* ---- .archiveBar, .joinBar, .openBar ---- */
 .archiveBar {
 	color: rgba(255, 255, 255, 0.8);
+	float:left;
 }
 .enterBar em {
 	font-style:normal;
@@ -370,6 +371,10 @@ div.memberBoardHeader {
 }
 .homeGameLinks a {
 	margin:0 4px;
+}
+.homeGameLinksForm {
+	display: flex;
+	justify-content: space-between;
 }
 
 /* --- Home game panel --- */
@@ -443,6 +448,7 @@ div.memberBoardHeader {
 	}
 	.archiveBar{
 		text-align: center;
+		float:left;
 	}
 	.memberName{
 		white-space: normal;
@@ -472,5 +478,12 @@ div.memberBoardHeader {
 	}
 	#mapImage{
 		width: 100%;
+	}
+	.timestampGamesWrapper {
+		display: block;
+	}
+	.gameTimeRemaining {
+		float: left;
+		text-align: left;
 	}
 }

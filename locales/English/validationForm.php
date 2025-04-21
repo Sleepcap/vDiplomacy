@@ -39,28 +39,125 @@ defined('IN_CODE') or die('This script can not be run by itself.');
 
 <h2>Register and Anti-bot Validation</h2>
 
-<form method="post" action="register.php">
+<form method="post" action="register.php" id="wd-register-form">
 
 	<ul class="formlist">
+		<?php 
+		/*if( !(isset(Config::$recaptchaSiteKey) && Config::$recaptchaSiteKey != null) )
+		{
+			?>
+			<li class="formlisttitle">Anti-bot code</li>
+			<li class="formlistfield">
+					<img alt="EasyCaptcha image" src="<?php print STATICSRV; ?>contrib/easycaptcha.php" /><br />
+					<input type="text" name="imageText" />
+			</li>
+			<li class="formlistdesc">
+				By entering the above code you protect our forum from spam-bots and other scripts
+			</li>
+			<?php 
+		}
+		else if (isset($_REQUEST['antiBotTest']))
+		{*/
+			$Variant = libVariant::loadFromVariantID(1);
+			$countryIDChallenge = array_rand($Variant->countries) + 1;
+			$countryIDChallengeName = $Variant->countries[$countryIDChallenge-1];
+			?>
+			
+			<li class="formlisttitle">Anti-bot challenge</li>
+			<li class="formlistdesc variantClassic">
+				To prevent bots from joining please verify you are human by clicking 
+				the supply centers for <strong><span class="country<?php print $countryIDChallenge;?>"><?php print $countryIDChallengeName; ?></span></strong>
+				in the map below: 
 
-		<li class="formlisttitle">Rules check</li>
-		<li class="formlistfield"><input type="text" name="rulesValidate" size="50" value="<?php
-		        if ( isset($_REQUEST['rulesValidate'] ) )
-					print $_REQUEST['rulesValidate'];
-		        ?>"></li>
-		<li class="formlistdesc">
-			Please enter the two things that are really not allowed (see the last two paragraphs) on this server in the text field above to prove you did read and understand these.
-		</li>
-		
-		<li class="formlisttitle">Anti-script code</li>
-		<li class="formlistfield">
-		        <img alt="EasyCaptcha image" src="<?php print STATICSRV; ?>contrib/easycaptcha.php" /><br />
-		        <input type="text" name="imageText" />
-		</li>
-		<li class="formlistdesc">
-			By entering the above code you protect our forum from spam-bots and other scripts
-		</li>
+				<strong><span id="antiBotRequest" class="country<?php print $countryIDChallenge;?>"></span></strong>.<br />
+				<em>If you are having trouble with this anti-bot challenge please contact <a href="mailto:admin@webdiplomacy.net">admin@webdiplomacy.net</a></em>.
+			</li>
+			<li class="formlistfield">
+				<input type="hidden" name="antiBotCountryID" value="<?php print $countryIDChallenge;?>"  />
+				<input type="hidden" name="antiBotTerritoryIDs" id="antiBotTerritoryIDs" value=""  />
+				<canvas id="boardCanvasBase" style="display:none"></canvas>
+				<canvas id="boardCanvasOptions" style="display:none"></canvas>
+				<div style="text-align:center">
+					<canvas id="boardCanvas"></canvas>
+					<div id="antiBotRequestStatus" class="variantClassic"></div>
+				</div>
+			</li>
+<script>
+	// Contains default assignments, code to generate a summary table, variant specific data
+	let canvasBoardConfigJS = {};
+<?php
+	print 'canvasBoardConfigJS['.$Variant->id.'] = '.$Variant->canvasBoardConfigJS().';';
+	// Select a random countryID:
+?>
 
+	let countryIDChallenge = <?php print $countryIDChallenge; ?>;
+
+	function initializeAntiBotBoard() {
+		// Load the default variant
+		variantID = "1";
+
+		let supplyCenters = [];
+
+		function refreshAntiBotRequestText() {
+			var tick = '<img src="/images/icons/tick.png" alt="(Selected)" />';
+			var cross = '<img src="/images/icons/cross.png" alt="(Not selected)" />';
+			var isAllSelected = true;
+			var supplyCenterIDs = [];
+			let supplyCenterNames = supplyCenters.sort((a, b) => a.id - b.id).map((supplyCenter) => {
+				// Check if the currentUnitSCState has a record where unitPostitionTerrID = supplyCenter.id
+				let isSelected = false;
+				currentUnitSCState.find((unitPosition) => {
+					if( unitPosition.unitPositionTerrID == supplyCenter.id )
+					{
+						isSelected = true;
+					}
+				});
+				
+				if( !isSelected )
+					isAllSelected = false;
+				else
+					supplyCenterIDs.push(supplyCenter.id);
+
+				return supplyCenter.name + ' ' + ( isSelected ? tick : cross );
+			});
+			// Combine into a comma seperated string:
+			var supplyCenterList = supplyCenterNames.join(', ');
+			document.getElementById('antiBotRequest').innerHTML = supplyCenterList;
+
+			var challengeText = 'Supply centers to select: <strong>' + supplyCenterList + '</strong>';
+			if( isAllSelected )
+				challengeText += ' <strong><em>Challenge passed!</em></strong>';
+			else
+				challengeText += ' <strong><em>Challenge not passed.</em></strong>';
+			document.getElementById('antiBotRequestStatus').innerHTML = challengeText;
+			
+			document.getElementById('antiBotTerritoryIDs').value = supplyCenterIDs.join(',');
+		}
+
+		// When the map is clicked apply an assignment, redraw the map, and save the new options
+		canvasElement.addEventListener('click', (event) => {
+			applyAssignment();
+			drawMap();
+			refreshAntiBotRequestText();
+		});
+
+		loadVariant(() => {
+			currentUnitSCState = canvasBoardConfigJS[variantID].getEmptyOptions()
+			assigningCountryID = countryIDChallenge;
+			drawMap();
+			supplyCenters = Object.values(canvasBoardConfigJS[variantID].getSupplyCenters()).filter((supplyCenter) => {
+				return supplyCenter.countryID == countryIDChallenge && supplyCenter.coastParentID == supplyCenter.id;
+			});
+			refreshAntiBotRequestText();
+		});
+	}
+</script>
+
+<?php
+libHTML::$footerIncludes[] = l_j('canvasBoard.js');
+libHTML::$footerScript[] = 'initializeAntiBotBoard();';
+		//}
+		?>
 		<li class="formlisttitle">E-mail address</li>
 		<li class="formlistfield"><input type="text" name="emailValidate" value="<?php
 		        if ( isset($_REQUEST['emailValidate'] ) )
@@ -68,14 +165,41 @@ defined('IN_CODE') or die('This script can not be run by itself.');
 		        ?>"></li>
 		<li class="formlistdesc">
 			By making sure every user has a real e-mail address we stop cheaters from creating many users for themselves. 
-			This will not be spammed, shared, or released. <strong>Please make sure your email 
-			address is current so that the moderators can contact you if needed!</strong>
+			This will not be spammed, shared, or released.
 		</li>
 </ul>
 
 <div class="hr"></div>
 
 <p class="notice">
-	<input type="submit" class="green-Submit" value="This is my first and only account, please validate me">
+	<?php 
+	if( isset(Config::$recaptchaSiteKey) && Config::$recaptchaSiteKey != null )
+	{
+	?>
+		<input type="hidden" name="recaptchaToken" id="recaptchaToken" value="" />
+		<script>
+		function onSubmit(e) {
+			//e.preventDefault();
+			grecaptcha.enterprise.ready(async () => {
+				const token = await grecaptcha.enterprise.execute('<?php print Config::$recaptchaSiteKey; ?>', {action: 'LOGIN'});
+				document.getElementById("recaptchaToken").value = token;
+				document.getElementById("wd-register-form").submit();
+			});
+		}
+		</script>
+		<button type="button" 
+			class="green-Submit" 
+			onClick="onSubmit()"
+			value="This is my first and only account, please validate me">Submit</button>
+
+	<?php
+	}
+	else
+	{
+	?>
+		<input type="submit" class="green-Submit" value="This is my first and only account, please validate me">
+	<?php
+	}
+	?>
 </p>
 </form>

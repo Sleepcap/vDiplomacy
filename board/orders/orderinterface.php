@@ -58,9 +58,11 @@ class OrderInterface
 			$OI->userID=AdminUserSwitch;
 		return $OI;
 	}
-	public static function newContext(Game $Game, userMember $Member, User $User) {
+	//	public static function newContext(Game $Game, userMember $Member, User $User) {
+	// Specifying that userMember was required would give a rare error that userMember is expected but processMember received from board.php(117)
+	public static function newContext(Game $Game, $Member, User $User) {
 		$OI = $Game->Variant->OrderInterface($Game->id, $Game->Variant->id, $User->id, $Member->id, $Game->turn, $Game->phase, $Member->countryID,
-			$Member->orderStatus, $Game->processTime+6*60*60);
+			$Member->orderStatus, $Game->processTime+6*60*60, false, !is_null($Game->sandboxCreatedByUserID));
 		return $OI;
 	}
 
@@ -78,9 +80,19 @@ class OrderInterface
 		libVariant::setGlobals($Variant);
 
 		require_once(l_r('objects/basic/set.php'));
-		$OI = $Variant->OrderInterface($inContext['gameID'],$inContext['variantID'],$inContext['userID'],$inContext['memberID'],
-			$inContext['turn'],$inContext['phase'],$inContext['countryID'],
-			new setMemberOrderStatus($inContext['orderStatus']), $inContext['tokenExpireTime'], $inContext['maxOrderID']);
+		$OI = $Variant->OrderInterface(
+			$inContext['gameID'],
+			$inContext['variantID'],
+			$inContext['userID'],
+			$inContext['memberID'],
+			$inContext['turn'],
+			$inContext['phase'],
+			$inContext['countryID'],
+			new setMemberOrderStatus($inContext['orderStatus']), 
+			$inContext['tokenExpireTime'], 
+			$inContext['maxOrderID'], 
+			isset($inContext['isSandboxMode']) ? $inContext['isSandboxMode'] : false
+		);
 
 		return $OI;
 	}
@@ -95,9 +107,10 @@ class OrderInterface
 	public $orderStatus;
 	protected $tokenExpireTime;
 	protected $maxOrderID;
+	protected $isSandboxMode;
 
 	public function __construct($gameID, $variantID, $userID, $memberID, $turn, $phase, $countryID,
-		setMemberOrderStatus $orderStatus, $tokenExpireTime, $maxOrderID=false)
+		setMemberOrderStatus $orderStatus, $tokenExpireTime, $maxOrderID=false, $isSandboxMode=false)
 	{
 		$this->gameID=(int)$gameID;
 		$this->variantID=(int)$variantID;
@@ -109,15 +122,20 @@ class OrderInterface
 		$this->orderStatus=$orderStatus;
 		$this->tokenExpireTime=$tokenExpireTime;
 		$this->maxOrderID=$maxOrderID;
+		$this->isSandboxMode=$isSandboxMode;
 	}
 
 	protected $Orders;
 
-	public function load()
+	/**
+	 * Load the orders from the database. Specify false to suppress locking the members table for update, which is required if 
+	 * loading orders in order to update them.)
+	 */
+	public function load($forUpdate=true)
 	{
 		global $DB, $Game, $User;
 		
-		$DB->sql_put("SELECT * FROM wD_Members WHERE gameID = ".$this->gameID." AND countryID=".$this->countryID." ".UPDATE);
+		$DB->sql_put("SELECT * FROM wD_Members WHERE gameID = ".$this->gameID." ".($this->isSandboxMode ? "" : " AND countryID=".$this->countryID." ")." ".($forUpdate ? UPDATE : ""));
 
 		if ( isset($Game) && isset($User) && ($this->phase=="Diplomacy" || $this->phase=="Retreats") )
 		{
@@ -125,7 +143,7 @@ class OrderInterface
 					INNER JOIN wD_Units u ON (u.id = o.unitID) 
 					INNER JOIN wD_Games g ON (g.id = o.gameID) 
 					INNER JOIN wD_Territories t ON (t.mapID=".$Game->Variant->mapID." && t.id=u.terrID) 
-				WHERE o.gameID = ".$this->gameID." AND o.countryID=".$this->countryID."
+				WHERE o.gameID = ".$this->gameID." AND ".($this->isSandboxMode ? "" : " AND o.countryID=".$this->countryID." ")."
 				ORDER BY ";
 				
 			if ($User->unitOrder == 'FA') $sql .= "u.type DESC, ";
@@ -139,7 +157,7 @@ class OrderInterface
 		else
 		{
 			$sql = "SELECT id, type, unitID, toTerrID, fromTerrID, viaConvoy FROM wD_Orders 
-						WHERE gameID = ".$this->gameID." AND countryID=".$this->countryID;
+						WHERE gameID = ".$this->gameID." ".($this->isSandboxMode ? "" : " AND countryID=".$this->countryID." ");
 		}
 		
 		$tabl = $DB->sql_tabl($sql);
@@ -150,8 +168,8 @@ class OrderInterface
 		{
 			if( $row['id'] > $maxOrderID ) $maxOrderID = $row['id'];
 
-			$Order = userOrder::load($this->phase,$row['id'],$this->gameID, $this->countryID);
-
+			$Order = userOrder::load($this->phase, $row['id'],$this->gameID, $row['countryID']);
+			$Order->isSandboxMode = $this->isSandboxMode; // This is done rather than as an arg as it would otherwise potentially break variants by providing an unrequested arg
 			$Order->loadFromDB($row);
 
 			$this->Orders[] = $Order;
@@ -173,6 +191,8 @@ class OrderInterface
 		//elseif( $this->maxOrderID < $maxOrderID )
 
 		//if( $this->tokenExpireTime < time() ) throw new Exception("The game has moved on, you can no longer alter these orders, please refresh.");
+
+		return $this;
 	}
 
 	public function set($orderUpdates)
@@ -277,7 +297,9 @@ class OrderInterface
 			if( isset($Member) && $Member instanceof Member && $Member->id == $this->memberID )
 				$Member->orderStatus = $this->orderStatus;
 
-			$DB->sql_put("UPDATE wD_Members SET orderStatus = '".$this->orderStatus."' WHERE id = ".$this->memberID);
+			// If in sandbox mode and setting the moves to ready set all other members to ready too
+			$DB->sql_put("UPDATE wD_Members SET orderStatus = '".$this->orderStatus."', orderStatusChanged=UNIX_TIMESTAMP() WHERE ".
+				($this->isSandboxMode && $this->orderStatus->Ready ? "gameID = ".$this->gameID : "id = ".$this->memberID));
 
 			$newContext = $this->getContext($this);
 			$this->results['newContext'] = $newContext['context'];
@@ -289,7 +311,7 @@ class OrderInterface
 		return $this->results;
 	}
 
-	protected static $contextVars=array('gameID','userID','memberID','variantID','turn','phase','countryID','tokenExpireTime','maxOrderID');
+	protected static $contextVars=array('gameID','userID','memberID','variantID','turn','phase','countryID','tokenExpireTime','maxOrderID','isSandboxMode','countryID');
 	public static function getContext($contextOf) {
 
 		$context=array();
@@ -310,12 +332,21 @@ class OrderInterface
 		return array('context'=>$context, 'json'=>$json, 'key'=>md5(Config::$jsonSecret.$json).sha1(Config::$jsonSecret.$json));
 	}
 
-	protected function jsContextVars() {
+	public function getContextVars(){
 		$context = self::getContext($this);
+		return [
+			'context' => $context['json'],
+			'contextKey' => $context['key'],
+			'ordersData' => $this->Orders
+		];
+	}
+
+	protected function jsContextVars() {
+		$contextVars = $this->getContextVars();
 		libHTML::$footerScript[] = '
-	context='.$context['json'].';
-	contextKey="'.$context['key'].'";
-	ordersData = '.json_encode($this->Orders).';
+	context='.$contextVars['context'].';
+	contextKey="'.$contextVars['contextKey'].'";
+	ordersData = '.json_encode($contextVars['ordersData']).';
 	';
 	}
 
@@ -331,6 +362,19 @@ class OrderInterface
 
 		foreach(array('loadTerritories','loadBoardTurnData','loadModel','loadBoard','loadOrdersModel','loadOrdersForm','loadOrdersPhase') as $jf)
 			libHTML::$footerScript[] = l_jf($jf).'();';
+
+		if( isset(Config::$pusherAppKey) && Config::$pusherAppKey )
+		{
+			//(appKey, host, wsPort, wssPort, gameID, countryID)
+			libHTML::$footerScript[] = "configurePusher('".
+				Config::$pusherAppKey."','".
+				Config::$pusherHost."',".
+				Config::$pusherPort.",".
+				Config::$pusherPort.",".
+				$this->gameID.",".
+				$this->countryID.
+			");";
+		}
 			
 		if($User->pointNClick=='Yes' && !(defined('DATC'))) {
 			require_once(l_r('interactiveMap/php/interactiveMap.php'));
@@ -376,11 +420,20 @@ class OrderInterface
 		$alternate = false;
 		foreach($this->Orders as $Order)
 		{
+			$html .= '<tr class="barAlt'.($alternate ? '1' : '2').'">';
 			$alternate = ! $alternate;
-			$html .= '<tr class="barAlt'.($alternate ? '1' : '2').'">
-				<td class="uniticon"><span id="orderID'.$Order->id.'UnitIconArea"></span></td>
-				<td class="order"><div id="orderID'.$Order->id.'">'.l_t('Loading order').'...</div></td>
-				</tr>';
+			
+			// If it's a sandbox game show the country color:
+			if(!is_null($Game->sandboxCreatedByUserID)) $class = 'occupationBar'.$Order->countryID;
+			else $class = '';
+
+			$html .= '<td class="uniticon '.$class.'">';
+			$html .= '<span id="orderID'.$Order->id.'UnitIconArea"></span>';
+			$html .= '</td>';
+
+			$html .= '<td class="order"><div id="orderID'.$Order->id.'">'.l_t('Loading order').'...</div></td>';
+			
+			$html .= '</tr>';
 		}
 
 		$html .= "</table></div>".'

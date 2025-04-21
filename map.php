@@ -27,6 +27,9 @@ if( !isset($_REQUEST['variantID']) && ( !isset($_REQUEST['gameID']) || !isset($_
 
 define('IN_CODE', 1);
 
+require_once('config.php');
+require_once('objects/memcached.php');
+
 if( isset($_REQUEST['DATC'])||isset($_REQUEST['nocache'])||isset($_REQUEST['uncache'])||isset($_REQUEST['profile']) )
 	define('IGNORECACHE',1);
 else
@@ -36,6 +39,12 @@ if( isset($_REQUEST['uncache'])||isset($_REQUEST['profile']) )
 	define('DELETECACHE',1);
 else
 	define('DELETECACHE',0);
+
+// This game was recently processed so suppress cacheing in case we save only half the units etc
+if( isset($_REQUEST['gameID']) && $MC->get('processing'.((int)$_REQUEST['gameID'])) !== false )
+	define('DONOTCACHE',1);
+else
+	define('DONOTCACHE',0);
     
 // Check if we should hide the move arrows. (Preview do not need the old move-arrows too...)
 if( isset($_REQUEST['hideMoves']) || isset($_REQUEST['preview']))
@@ -68,7 +77,7 @@ if( isset($_REQUEST['countryNames']))
 else
 	define('COUNTRYNAMES',0);
 
-if( !IGNORECACHE && !PREVIEW && !isset($_REQUEST['variantID']))
+if( !IGNORECACHE && !PREVIEW && !isset($_REQUEST['variantID']) && !DONOTCACHE )
 {
 	// We might be able to fetch the map from the cache
 	
@@ -108,7 +117,7 @@ if( !IGNORECACHE && !PREVIEW && !isset($_REQUEST['variantID']))
 require_once('header.php');
 
 if( DELETECACHE && !$User->type['Admin'] )
-	die(l_t('Disable-cacheing flags set, but you are not an admin.'));
+	die(l_t('Delete-cache flags set, but you are not an admin.'));
 
 if ( isset($_REQUEST['DATC']) )
 {
@@ -185,9 +194,23 @@ if ( $mapType == 'xml' )
 elseif ( $mapType == 'json' )
 {
 	require_once(l_r('board/orders/jsonBoardData.php'));
-	$filename=Game::mapFilename($Game->id, $turn, 'json');
-	file_put_contents($filename, jsonBoardData::getBoardTurnData($Game->id) );
-	libHTML::serveImage($filename, 'text/plain');
+	
+	$jsonData = jsonBoardData::getBoardTurnData($Game->id);
+	if( !DONOTCACHE )
+	{
+		$filename=Game::mapFilename($Game->id, $turn, 'json');
+		file_put_contents($filename,  $jsonData);
+		libHTML::serveImage($filename, 'text/plain');
+	}
+	else
+	{
+		header('Content-Length: '.strlen($jsonData));
+		header('Content-Type: text/plain');
+
+		print $jsonData;
+	}
+	die();
+
 }
 else
 {
@@ -195,11 +218,10 @@ else
 	$drawMap = $Variant->drawMap($mapType=='small');
 }
 
-
 /*
  * Draw TerrStatus
  */
-if( $turn==-1 )
+if( $turn==-1 && is_null($Game->sandboxCreatedByUserID) )
 {
 	// Pre-game; just draw country default terrstatus
 	$sql = "SELECT t.id, t.name, t.type, t.countryID, 'No' as standoff
@@ -214,7 +236,7 @@ else
 			, t.supply
 			FROM wD_Territories t
 			LEFT JOIN wD_TerrStatusArchive ts
-				ON ( ts.gameID = ".$Game->id." AND ts.turn = ".$turn." AND ts.terrID = t.id )
+				ON ( ts.gameID = ".$Game->id." AND ts.turn = ".($turn < 0 ? 0 : $turn)." AND ts.terrID = t.id )
 			/* TerrStatus is non-coastal */
 			WHERE (t.coast='No' OR t.coast='Parent') AND t.mapID=".$Variant->mapID." ORDER BY t.id";
 }
@@ -480,7 +502,8 @@ if (PREVIEW && $Game->Members->isJoined())
 	$sql = "SELECT u.type, u.terrID, o.type, o.toTerrID, o.fromTerrID, o.viaConvoy	
 				FROM wD_Orders o
 			LEFT JOIN wD_Units u ON (u.id = o.unitID)
-				WHERE o.gameID = ".$Game->id." AND o.countryID = ".$Game->Members->ByUserID[$User->id]->countryID."
+				WHERE o.gameID = ".$Game->id." ".
+					(!is_null($Game->sandboxCreatedByUserID) && isset($User) && $User->id == $Game->sandboxCreatedByUserID ? "" : " AND o.countryID = ".$Game->Members->ByUserID[$User->id]->countryID)."
 				ORDER BY FIELD(o.type, 'Move')";
 
 	$tabl = $DB->sql_tabl($sql);
@@ -534,7 +557,6 @@ if (PREVIEW && $Game->Members->isJoined())
 		}
 		
 		$drawMap->caption('Preview');
-		$drawMap->drawRedBox();
 		
 	}
 	
@@ -587,7 +609,7 @@ if (COLORCORRECT)
 if (COUNTRYNAMES)
 	$filename = str_replace(".map","-names.map",$filename);
 
-if (PREVIEW)
+if ( PREVIEW || DONOTCACHE )
 {
 	$drawMap->writeToBrowser();
 }
@@ -597,5 +619,3 @@ else
 	libHTML::serveImage($filename);
 }
 unset($drawMap); // $drawMap is memory intensive and should be freed as soon as no longer needed
-
-?>

@@ -117,13 +117,43 @@ class adminActionsSeniorMod extends adminActionsForum
 		$excuseID   = (int)$params['excuseID'];
 
 		if( !isset($params['reason']) || strlen($params['reason'])==0 )
-			return l_t('Couldn\'t ban user; no reason was given.');
+			return l_t('Couldn\'t excuse delay for user; no reason was given.');
 
 		$modReason = $DB->msg_escape($params['reason']);
 
+		// Set the mod excused flag, and set the reliability period to -1 to trigger a recalculation
 		$DB->sql_put("UPDATE wD_MissedTurns SET modExcused = 1, modExcusedReason = '".$modReason."' WHERE id=".$excuseID);
+		
+		require_once(l_r('gamemaster/gamemaster.php'));
+		 
+		libGameMaster::updateReliabilityRatings(false, array($userID));
 
-		return 'This user\'s missed turn has been excused.';
+		return 'This user\'s missed turn has been excused and RRs have been recalculated.';
+	}
+
+	public function modExcuseDelayByPeriod(array $params)
+	{
+		global $DB;
+
+		$periodStartTime = (int)$params['periodStartTime'];
+		$periodEndTime   = (int)$params['periodEndTime'];
+
+		if( !isset($params['reason']) || strlen($params['reason'])==0 )
+			return l_t('Couldn\'t excuse delay for period; no reason was given.');
+
+		$modReason = $DB->msg_escape($params['reason']);
+
+		// Set the mod excused flag, and set the reliability period to -1 to trigger a recalculation
+		$DB->sql_put("UPDATE wD_MissedTurns SET modExcused = 1, modExcusedReason = '".$modReason."' WHERE turnDateTime>=".$periodStartTime." AND turnDateTime <= ".$periodEndTime);
+
+		$tabl = $DB->sql_tabl("SELECT DISTINCT userID FROM wD_MissedTurns WHERE turnDateTime>=".$periodStartTime." AND turnDateTime <= ".$periodEndTime);
+		$userIDs = array();
+		while(list($userID) = $DB->tabl_row($tabl)) $userIDs[]=$userID;
+		 
+		require_once(l_r('gamemaster/gamemaster.php'));
+		libGameMaster::updateReliabilityRatings(false, $userIDs);
+
+		return 'Missed turns in this period have been excused and RRs have been recalculated.';
 	}
 
 	public function setProcessTimeToNowConfirm(array $params)

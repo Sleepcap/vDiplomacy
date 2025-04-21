@@ -115,7 +115,6 @@ class processOrderBuilds extends processOrder
 							VALUES ".implode(', ', $newOrders));
 		}
 	}
-
 	/**
 	 * Apply the adjudicated moves; retreat/disband units as decided
 	 */
@@ -152,6 +151,129 @@ class processOrderBuilds extends processOrder
 				SET success = 'Yes', toTerrID = ".$Game->Variant->deCoast($terrID)." WHERE gameID=".$GLOBALS['GAMEID']." AND orderID = ".$orderID);
 
 			$DB->sql_put("DELETE FROM wD_Units WHERE id = ".$unitID);
+		}
+
+		$DB->sql_put("INSERT INTO wD_Units ( gameID, countryID, type, terrID )
+					SELECT o.gameID, o.countryID, IF(o.type = 'Build Army','Army','Fleet') as type, o.toTerrID
+					FROM wD_Orders o INNER JOIN wD_Moves m ON ( m.orderID = o.id AND m.gameID=".$GLOBALS['GAMEID']." )
+					WHERE o.gameID=".$Game->id." AND o.type LIKE 'Build%' AND m.success = 'Yes'");
+		// All players have the correct amount of units
+	}
+	/**
+	 * Apply the adjudicated moves; retreat/disband units as decided
+	 */
+	public function apply_2023rules()
+	{
+		// Temporarily reverted to database lookup due to excessive CPU usage in gamemaster which may be related
+		global $Game, $DB;
+
+		$DB->sql_put(
+				"DELETE FROM u
+				USING wD_Units AS u
+				INNER JOIN wD_Orders AS o ON ( ".$Game->Variant->deCoastCompare('o.toTerrID','u.terrID')." AND u.gameID = o.gameID )
+				INNER JOIN wD_Moves m ON ( m.orderID = o.id AND m.gameID=".$GLOBALS['GAMEID']." )
+				WHERE o.gameID = ".$Game->id." AND o.type = 'Destroy'
+					AND m.success='Yes'");
+
+		// Remove units as per the destroyindex table for any destory orders that weren't successful
+		$tabl = $DB->sql_tabl(
+					"SELECT o.id, o.countryID FROM wD_Orders o
+					INNER JOIN wD_Moves m ON ( m.orderID = o.id AND m.gameID=".$GLOBALS['GAMEID']." )
+					WHERE o.type = 'Destroy' AND m.success = 'No' AND o.gameID = ".$Game->id
+				);
+		while(list($orderID, $countryID) = $DB->tabl_row($tabl))
+		{
+			// For the given failed destroy order / country we need to find the unit which is furthest from an owned supply center,
+			// where the distance is defined by number of hops between territories as if armies and fleets can both move anywhere.
+			// If two units are equally distant the territory that comes first alphabetically is chosen.
+
+			// Get all the supply center territories for the country:
+			$subTabl = $DB->sql_tabl("SELECT t.id FROM wD_Territories t
+				INNER JOIN wD_TerrStatus ts ON ( ts.terrID = t.id AND ts.gameID = ".$Game->id." AND ts.countryID = ".$countryID." )
+				WHERE t.supply = 'Yes' AND t.mapID=".$Game->Variant->mapID);
+			$supplyCenters = array();
+			while(list($terrID) = $DB->tabl_row($subTabl)) $supplyCenters[] = $terrID;
+			
+			// Get all the non-coastal territories for units of the country:
+			$subTabl = $DB->sql_tabl("SELECT u.id, t.coastParentID FROM wD_Units u INNER JOIN wD_Territories t ON t.id = u.terrID WHERE u.gameID = ".$Game->id." AND u.countryID = ".$countryID);
+			$units = array();
+			while(list($unitID, $terrID) = $DB->tabl_row($subTabl)) $units[$terrID] = $unitID;
+
+			// Get the non-coastal territory to territory links:
+			$subTabl = $DB->sql_tabl("SELECT fromTerrID, toTerrID FROM wD_Borders WHERE mapID=".$Game->Variant->mapID);
+			$links = array();
+			while(list($fromTerrID, $toTerrID) = $DB->tabl_row($subTabl))
+			{
+				if( !key_exists($fromTerrID, $links) ) $links[$fromTerrID] = array();
+				$links[$fromTerrID][] = $toTerrID;
+			}
+			
+			$maxDistance = 0;
+			$territoryDistances = array();
+			if( count($supplyCenters) == 0 )
+			{
+				// If there are no supply centers all units are equivalent
+				foreach($units as $terrID => $unitID)
+					$territoryDistances[$terrID] = 0;
+			}
+			else
+			{
+				// Find the distance of each territory from the supply centers, until we find one or more units
+				$distances = array();
+				$searchedDistances = array(); // Store t 
+				foreach($supplyCenters as $sc) $distances[$sc] = 0;
+				while( count($territoryDistances) < count($units) )
+				{
+					foreach($distances as $terrID => $distance)
+					{
+						if( key_exists($terrID, $searchedDistances) )
+						{
+							// If a distance isn't updated from this territory then no adjacent
+							// territories can be found to be closer to this terriotry later,
+							// so don't check again
+							$distanceUpdated = false;
+							foreach($links[$terrID] as $toTerrID)
+							{
+								if( !key_exists($toTerrID, $distances) || $distances[$toTerrID] > $distance + 1 )
+								{
+									$distances[$toTerrID] = $distance + 1;
+									$distanceUpdated = true;
+								}
+							}
+							if( !$distanceUpdated ) $searchedDistances[$terrID] = true;
+						}
+					}
+					// After each extra distance check whether we have found any distances to units:
+					foreach($units as $terrID => $unitID)
+					{
+						if( key_exists($terrID, $distances) )
+						{
+							$territoryDistances[$terrID] = $distances[$terrID];
+							if( $maxDistance < $distances[$terrID] ) $maxDistance = $distances[$terrID];
+						}
+					}
+				}
+			}
+
+			// Get the furthest territories as the candidate territories that can be deleted:
+			$candidateTerritories = array();
+			foreach($territoryDistances as $terrID => $distance)
+			{
+				if( $distance == $maxDistance ) $candidateTerritories[] = $terrID;
+			}
+
+			// Get the first territory from the candidate territories ordered by the territory name:
+			list($destroyTerrID) = $DB->sql_row("SELECT id FROM wD_Territories ".
+				"WHERE mapID=".$Game->Variant->mapID.
+					" AND id IN (".implode(',',$candidateTerritories).") ".
+				"ORDER BY name LIMIT 1");
+			$destroyUnitID = $units[$destroyTerrID];
+				
+			$DB->sql_put("UPDATE wD_Orders SET toTerrID = '".$destroyTerrID."' WHERE id = ".$orderID);
+			$DB->sql_put("UPDATE wD_Moves
+				SET success = 'Yes', toTerrID = ".$destroyTerrID." WHERE gameID=".$GLOBALS['GAMEID']." AND orderID = ".$orderID);
+
+			$DB->sql_put("DELETE FROM wD_Units WHERE id = ".$destroyUnitID);
 		}
 
 		$DB->sql_put("INSERT INTO wD_Units ( gameID, countryID, type, terrID )

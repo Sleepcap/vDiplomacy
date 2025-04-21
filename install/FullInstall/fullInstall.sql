@@ -28,7 +28,7 @@ CREATE TABLE `wD_AdminLog` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `wD_Backup_GameMessages` (
-  `id` bigint(20) unsigned NOT NULL DEFAULT '0',
+  `id` bigint(20) unsigned NOT NULL DEFAULT 0,
   `timeSent` int(10) unsigned NOT NULL,
   `message` text CHARACTER SET utf8 NOT NULL,
   `turn` smallint(5) unsigned NOT NULL,
@@ -41,8 +41,8 @@ CREATE TABLE `wD_Backup_GameMessages` (
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `wD_Backup_Games` (
   `variantID` tinyint(3) unsigned NOT NULL,
-  `id` mediumint(5) unsigned NOT NULL DEFAULT '0',
-  `turn` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `id` mediumint(5) unsigned NOT NULL DEFAULT 0,
+  `turn` smallint(5) unsigned NOT NULL DEFAULT 0,
   `phase` enum('Finished','Pre-game','Diplomacy','Retreats','Builds') CHARACTER SET utf8 NOT NULL DEFAULT 'Pre-game',
   `processTime` int(10) unsigned DEFAULT NULL,
   `pot` smallint(5) unsigned NOT NULL,
@@ -56,24 +56,24 @@ CREATE TABLE `wD_Backup_Games` (
   `phaseMinutes` smallint(5) unsigned NOT NULL DEFAULT '1440',
   `anon` enum('Yes','No') CHARACTER SET utf8 NOT NULL DEFAULT 'No',
   `pressType` enum('Regular','PublicPressOnly','NoPress') CHARACTER SET utf8 NOT NULL DEFAULT 'Regular',
-  `attempts` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `attempts` smallint(5) unsigned NOT NULL DEFAULT 0,
   `missingPlayerPolicy` enum('Normal','Strict') CHARACTER SET utf8 NOT NULL DEFAULT 'Normal'
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `wD_Backup_Members` (
-  `id` mediumint(8) unsigned NOT NULL DEFAULT '0',
+  `id` mediumint(8) unsigned NOT NULL DEFAULT 0,
   `userID` mediumint(8) unsigned NOT NULL,
   `gameID` mediumint(8) unsigned NOT NULL,
   `countryID` tinyint(3) unsigned NOT NULL,
   `status` enum('Playing','Defeated','Left','Won','Drawn','Survived','Resigned') CHARACTER SET utf8 NOT NULL DEFAULT 'Playing',
   `timeLoggedIn` int(10) unsigned NOT NULL,
   `bet` mediumint(8) unsigned NOT NULL,
-  `missedPhases` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `missedPhases` tinyint(3) unsigned NOT NULL DEFAULT 0,
   `newMessagesFrom` set('0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','47','48','49','50','51','52','53','54','55','56','57','58','59','60','61','62','63') CHARACTER SET utf8 NOT NULL,
-  `supplyCenterNo` tinyint(3) unsigned NOT NULL DEFAULT '0',
-  `unitNo` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `supplyCenterNo` tinyint(3) unsigned NOT NULL DEFAULT 0,
+  `unitNo` tinyint(3) unsigned NOT NULL DEFAULT 0,
   `votes` set('Draw','Pause','Cancel') CHARACTER SET utf8 NOT NULL,
   `pointsWon` mediumint(8) unsigned DEFAULT NULL,
   `gameMessagesSent` mediumint(8) unsigned DEFAULT NULL,
@@ -99,7 +99,7 @@ CREATE TABLE `wD_Backup_MovesArchive` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `wD_Backup_Orders` (
-  `id` int(10) unsigned NOT NULL DEFAULT '0',
+  `id` int(10) unsigned NOT NULL DEFAULT 0,
   `gameID` mediumint(8) unsigned NOT NULL,
   `countryID` tinyint(3) unsigned NOT NULL,
   `type` enum('Hold','Move','Support hold','Support move','Convoy','Retreat','Disband','Build Army','Build Fleet','Wait','Destroy') CHARACTER SET utf8 NOT NULL,
@@ -112,7 +112,7 @@ CREATE TABLE `wD_Backup_Orders` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `wD_Backup_TerrStatus` (
-  `id` int(10) unsigned NOT NULL DEFAULT '0',
+  `id` int(10) unsigned NOT NULL DEFAULT 0,
   `terrID` smallint(5) unsigned NOT NULL,
   `occupiedFromTerrID` smallint(5) unsigned DEFAULT NULL,
   `standoff` enum('No','Yes') CHARACTER SET utf8 NOT NULL DEFAULT 'No',
@@ -135,7 +135,7 @@ CREATE TABLE `wD_Backup_TerrStatusArchive` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `wD_Backup_Units` (
-  `id` int(10) unsigned NOT NULL DEFAULT '0',
+  `id` int(10) unsigned NOT NULL DEFAULT 0,
   `type` enum('Army','Fleet') CHARACTER SET utf8 NOT NULL,
   `terrID` smallint(5) unsigned NOT NULL,
   `countryID` tinyint(3) unsigned NOT NULL,
@@ -259,7 +259,7 @@ CREATE TABLE `wD_GameMessages` (
 CREATE TABLE `wD_Games` (
   `variantID` tinyint(3) unsigned NOT NULL,
   `id` mediumint(5) unsigned NOT NULL AUTO_INCREMENT,
-  `turn` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `turn` smallint(5) unsigned NOT NULL DEFAULT 0,
   `phase` enum('Finished','Pre-game','Diplomacy','Retreats','Builds') NOT NULL DEFAULT 'Pre-game',
   `processTime` int(10) unsigned DEFAULT NULL,
   `pot` smallint(5) unsigned NOT NULL,
@@ -273,7 +273,7 @@ CREATE TABLE `wD_Games` (
   `phaseMinutes` smallint(5) unsigned NOT NULL DEFAULT '1440',
   `anon` enum('Yes','No') NOT NULL DEFAULT 'No',
   `pressType` enum('Regular','PublicPressOnly','NoPress') NOT NULL DEFAULT 'Regular',
-  `attempts` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `attempts` smallint(5) unsigned NOT NULL DEFAULT 0,
   `missingPlayerPolicy` enum('Normal','Strict') NOT NULL DEFAULT 'Normal',
   PRIMARY KEY (`id`),
   UNIQUE KEY `gname` (`name`),
@@ -307,10 +307,10 @@ CREATE TABLE `wD_Members` (
   `status` enum('Playing','Defeated','Left','Won','Drawn','Survived','Resigned') NOT NULL DEFAULT 'Playing',
   `timeLoggedIn` int(10) unsigned NOT NULL,
   `bet` mediumint(8) unsigned NOT NULL,
-  `missedPhases` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `missedPhases` tinyint(3) unsigned NOT NULL DEFAULT 0,
   `newMessagesFrom` set('0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','47','48','49','50','51','52','53','54','55','56','57','58','59','60','61','62','63') NOT NULL,
-  `supplyCenterNo` tinyint(3) unsigned NOT NULL DEFAULT '0',
-  `unitNo` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `supplyCenterNo` tinyint(3) unsigned NOT NULL DEFAULT 0,
+  `unitNo` tinyint(3) unsigned NOT NULL DEFAULT 0,
   `votes` set('Draw','Pause','Cancel') NOT NULL,
   `pointsWon` mediumint(8) unsigned DEFAULT NULL,
   `gameMessagesSent` mediumint(8) unsigned DEFAULT NULL,
@@ -520,7 +520,7 @@ CREATE TABLE `wD_Users` (
   `timeJoined` int(10) unsigned NOT NULL,
   `locale` enum('English') NOT NULL,
   `timeLastSessionEnded` int(10) unsigned NOT NULL,
-  `lastMessageIDViewed` int(10) unsigned NOT NULL DEFAULT '0',
+  `lastMessageIDViewed` int(10) unsigned NOT NULL DEFAULT 0,
   `password` binary(16) NOT NULL,
   `type` set('Banned','Guest','System','User','Moderator','Admin','Donator') NOT NULL DEFAULT 'User',
   `notifications` set('PrivateMessage','GameMessage','Unfinalized','GameUpdate') NOT NULL DEFAULT '',
@@ -607,7 +607,7 @@ CHANGE `type` `type` SET(
 
 ALTER TABLE `wD_PointsTransactions` CHANGE `type` `type` ENUM( 'Supplement', 'Bet', 'Won', 'Returned', 'Trigger', 'Correction' ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
 
-ALTER TABLE `wD_ForumMessages`  ADD `likeCount` MEDIUMINT UNSIGNED NOT NULL DEFAULT '0';
+ALTER TABLE `wD_ForumMessages`  ADD `likeCount` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0;
 
 UPDATE wD_ForumMessages fm
 INNER JOIN (
@@ -622,26 +622,26 @@ ALTER TABLE `wD_Members` CHANGE `newMessagesFrom` `newMessagesFrom` SET( '0', '1
 ALTER TABLE `wD_Members` CHANGE `votes` `votes` set('Draw','Pause','Cancel') NOT NULL DEFAULT '';
 ALTER TABLE `wD_Members` CHANGE `countryID` `countryID` TINYINT( 3 ) UNSIGNED NOT NULL DEFAULT 0;
 
-ALTER TABLE `wD_Games`  ADD `directorUserID` MEDIUMINT UNSIGNED NOT NULL DEFAULT '0';
-ALTER TABLE `wD_Backup_Games`  ADD `directorUserID` MEDIUMINT UNSIGNED NOT NULL DEFAULT '0';
+ALTER TABLE `wD_Games`  ADD `directorUserID` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0;
+ALTER TABLE `wD_Backup_Games`  ADD `directorUserID` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0;
 
 ALTER TABLE `wD_Backup_Games` CHANGE `missingPlayerPolicy` `missingPlayerPolicy` ENUM( 'Normal', 'Strict', 'Wait' ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'Normal';
 ALTER TABLE `wD_Games` CHANGE `missingPlayerPolicy` `missingPlayerPolicy` ENUM( 'Normal', 'Strict', 'Wait' ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'Normal';
 
 CREATE TABLE `wD_VariantData` (
   `variantID` tinyint(3) unsigned NOT NULL,
-  `gameID` mediumint(8) unsigned NOT NULL DEFAULT '0',
-  `systemToken` int(10) unsigned NOT NULL DEFAULT '0',
-  `typeID` smallint(5) unsigned NOT NULL DEFAULT '0',
-  `userID` mediumint(8) unsigned NOT NULL DEFAULT '0',
-  `offset` int(10) unsigned NOT NULL DEFAULT '0',
-  `val_int` int(11) NOT NULL DEFAULT '0',
-  `val_float` float NOT NULL DEFAULT '0'
+  `gameID` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  `systemToken` int(10) unsigned NOT NULL DEFAULT 0,
+  `typeID` smallint(5) unsigned NOT NULL DEFAULT 0,
+  `userID` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  `offset` int(10) unsigned NOT NULL DEFAULT 0,
+  `val_int` int(11) NOT NULL DEFAULT 0,
+  `val_float` float NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 ALTER TABLE `wD_VariantData` ADD PRIMARY KEY ( `variantID` , `gameID`, `systemToken` , `typeID` , `userID` , `offset` ) ;
 
-INSERT INTO wD_VariantData (variantID, systemToken, userID, offset, val_float )
+INSERT INTO wD_VariantData (variantID, systemToken, userID, `offset`, val_float )
 SELECT 1, 948379409, u.id, 1, ChanceEngland
 FROM wD_Users u
 WHERE NOT ChanceEngland = 0.142857
@@ -664,13 +664,13 @@ UNION SELECT 1, 948379409, u.id, 7, ChanceTurkey
 FROM wD_Users u
 WHERE NOT ChanceTurkey = 0.142857;
 
-ALTER TABLE `wD_Users` ADD COLUMN `cdCount` mediumint(8) unsigned NOT NULL DEFAULT '0',
-  ADD COLUMN `nmrCount` mediumint(8) unsigned NOT NULL DEFAULT '0',
-  ADD COLUMN `cdTakenCount` mediumint(8) unsigned NOT NULL DEFAULT '0',
-  ADD COLUMN `phaseCount` int(10) unsigned NOT NULL DEFAULT '0',
-  ADD COLUMN `gameCount` mediumint(8) unsigned NOT NULL DEFAULT '0',
+ALTER TABLE `wD_Users` ADD COLUMN `cdCount` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  ADD COLUMN `nmrCount` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  ADD COLUMN `cdTakenCount` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  ADD COLUMN `phaseCount` int(10) unsigned NOT NULL DEFAULT 0,
+  ADD COLUMN `gameCount` mediumint(8) unsigned NOT NULL DEFAULT 0,
   ADD COLUMN `reliabilityRating` double NOT NULL DEFAULT '1',
-  ADD COLUMN `deletedCDs` int(11) DEFAULT '0';
+  ADD COLUMN `deletedCDs` int(11) DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS `wD_NMRs` (
 	  `gameID` mediumint(5) unsigned NOT NULL,
@@ -696,8 +696,8 @@ ALTER TABLE wD_Backup_Games ADD drawType enum('draw-votes-public','draw-votes-hi
 	  KEY `uid` (`userID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-ALTER TABLE wD_Games ADD `minimumReliabilityRating` tinyint(3) unsigned NOT NULL DEFAULT '0';
-ALTER TABLE wD_Backup_Games ADD `minimumReliabilityRating` tinyint(3) unsigned NOT NULL DEFAULT '0';
+ALTER TABLE wD_Games ADD `minimumReliabilityRating` tinyint(3) unsigned NOT NULL DEFAULT 0;
+ALTER TABLE wD_Backup_Games ADD `minimumReliabilityRating` tinyint(3) unsigned NOT NULL DEFAULT 0;
 
 CREATE TABLE `wD_UserOptions` (
 	  `userID` mediumint(8) unsigned NOT NULL,
@@ -978,4 +978,1375 @@ ALTER TABLE `wD_Backup_Games`
 ADD COLUMN `grCalculated` INT NOT NULL DEFAULT 0,
 ADD INDEX (`grCalculated`);
 
-UPDATE `wD_Misc` SET `value` = '166' WHERE `name` = 'Version';
+/**************************************** Version 1.67 ****************************************/
+
+UPDATE `wD_Misc` SET `value` = '167' WHERE `name` = 'Version';
+
+ALTER TABLE `wD_GameMessages` ADD `phaseMarker` ENUM('Finished','Pre-game','Diplomacy','Retreats','Builds') NULL DEFAULT NULL AFTER `gameID`; 
+ALTER TABLE `wD_Backup_GameMessages` ADD `phaseMarker` ENUM('Finished','Pre-game','Diplomacy','Retreats','Builds') NULL DEFAULT NULL AFTER `gameID`; 
+
+ALTER TABLE `wD_Users` ADD `optInFeatures` int(10) UNSIGNED NOT NULL DEFAULT 0 AFTER `tempBanReason`;
+
+/**************************************** Version 1.68 ****************************************/
+
+UPDATE `wD_Misc` SET `value` = '168' WHERE `name` = 'Version';
+CREATE TABLE `wD_PaypalIPN` ( 
+ `id` int(10) unsigned NOT NULL AUTO_INCREMENT, 
+ `userID` int(10) unsigned NOT NULL, 
+ `email` varchar(250) NOT NULL, 
+ `value` float NOT NULL, 
+ `currency` varchar(10) NOT NULL, 
+ `status` varchar(100) NOT NULL, 
+ `receivedTime` bigint(20) unsigned NOT NULL, 
+ PRIMARY KEY (`id`) 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE `wD_GameMessages_Redacted` (                                                                                                                                             
+  `id` bigint(20) unsigned NOT NULL,                                                                                                                                                  
+  `timeSent` int(10) unsigned NOT NULL,                                                                                                                                               
+  `message` text NOT NULL,                                                                                                                                                            
+  `turn` smallint(5) unsigned NOT NULL,                                                                                                                                               
+  `toCountryID` tinyint(3) unsigned NOT NULL,                                                                                                                                         
+  `fromCountryID` tinyint(3) unsigned NOT NULL,                                                                                                                                       
+  `gameID` mediumint(8) unsigned NOT NULL,                                                                                                                                            
+  `phaseMarker` enum('Finished','Pre-game','Diplomacy','Retreats','Builds') DEFAULT NULL,                                                                                             
+  PRIMARY KEY (`id`) USING BTREE,                                                                                                                                                     
+  KEY `toMember` (`gameID`,`toCountryID`) USING BTREE,                                                                                                                                
+  KEY `fromMember` (`gameID`,`fromCountryID`) USING BTREE                                                                                                                             
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;                  
+
+/**************************************** Version 1.69 ****************************************/
+
+ALTER TABLE `wD_Misc` CHANGE `value` `value` BIGINT(10) UNSIGNED NOT NULL; 
+UPDATE `wD_Misc` SET `value` = '169' WHERE `name` = 'Version';
+
+-- Group tags for quick flagging of relationships between players without needing to link to a bunch of tables
+ALTER TABLE `wD_Users` ADD COLUMN `groupTag` VARCHAR(30) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL; 
+ALTER TABLE `wD_Members` ADD COLUMN `groupTag` VARCHAR(30) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL; 
+ALTER TABLE `wD_Backup_Members` ADD COLUMN `groupTag` VARCHAR(30) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ;
+
+-- New browser fingerprinting for multi account detection
+ALTER TABLE `wD_AccessLog` ADD COLUMN `browserFingerprint` VARCHAR(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL; 
+ALTER TABLE `wD_Sessions` ADD COLUMN `browserFingerprint` VARCHAR(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL; 
+
+-- Optimizing the updating of phases per year for a user
+ALTER TABLE `wD_TurnDate` ADD `isInReliabilityPeriod` BOOLEAN NULL DEFAULT FALSE AFTER `id`; 
+ALTER TABLE `wD_TurnDate` CHANGE `turnDateTime` `turnDateTime` INT(10) UNSIGNED NOT NULL; 
+
+ALTER TABLE `wD_TurnDate` 
+    ADD INDEX `indUsersInReliabilityPeriod` (`isInReliabilityPeriod`, `userID`) USING BTREE,
+	ADD INDEX `indTimestamp` (`turnDateTime`) USING BTREE,
+	ADD INDEX `indIncludedInReliabilityPeriod` (`isInReliabilityPeriod`, `turnDateTime`) USING BTREE;
+
+    
+UPDATE wD_TurnDate SET isInReliabilityPeriod = 1 WHERE turnDateTime > UNIX_TIMESTAMP() - 365*24*60*60;
+
+-- A new type of notice that a user is suspected and should respond
+ALTER TABLE `wD_Notices` CHANGE `type` `type` ENUM('PM','Game','User','Group') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL; 
+
+-- A new type of forum message to facilitate discussions of user relationships
+ALTER TABLE `wD_ForumMessages` CHANGE `type` `type` ENUM('ThreadStart','ThreadReply','GroupDiscussion') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL; 
+
+-- A table to allow users to register relationships between each other
+CREATE TABLE `wD_Groups` (
+	`id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`name` VARCHAR(15) NOT NULL,
+	`type` ENUM('Person','Family','School','Work','Other','Unknown') NOT NULL,
+	`isActive` TINYINT(3) UNSIGNED NOT NULL DEFAULT 0,
+	`gameID` MEDIUMINT(8) UNSIGNED NULL,
+	`display` SET('Profile','Usertag','AnonGames','Moderators') NOT NULL DEFAULT '',
+	`timeCreated` BIGINT(20) UNSIGNED NOT NULL,
+	`ownerUserID` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`ownerCountryID` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
+	`description` VARCHAR(2000) NULL DEFAULT NULL,
+	`moderatorNotes` VARCHAR(2000) NULL DEFAULT NULL,
+	`timeChanged` BIGINT(20) UNSIGNED NOT NULL,
+	PRIMARY KEY (`id`) USING BTREE,
+	INDEX `indGroupsLastChanged` (`timeChanged`) USING BTREE
+)
+ENGINE=InnoDB
+;
+
+CREATE TABLE `wD_GroupUsers` (
+	`userID` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`countryID` TINYINT(3) UNSIGNED NULL DEFAULT NULL,
+	`groupID` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`isActive` TINYINT(1) NOT NULL,
+	`userWeighting` TINYINT(1) NOT NULL,
+	`ownerWeighting` TINYINT(1) NOT NULL,
+	`modWeighting` TINYINT(1) NOT NULL,
+	`modUserID` MEDIUMINT(8) UNSIGNED NULL DEFAULT NULL,
+	`timeChanged` BIGINT(20) UNSIGNED NOT NULL,
+	`timeCreated` BIGINT(20) UNSIGNED NOT NULL,
+	PRIMARY KEY (`userID`, `groupID`, `isActive`) USING BTREE,
+	UNIQUE INDEX `groupUsersByGroup` (`userID`, `groupID`, `isActive`) USING BTREE,
+	INDEX `groupUsersChanged` (`timeChanged`) USING BTREE
+)
+ENGINE=InnoDB
+;
+
+-- A table to allow users to link to external authentication providers, to help users verify their accounts are real and they aren't multi accounters
+CREATE TABLE `wD_UserOpenIDLinks` (
+  `userID` mediumint(8) UNSIGNED NOT NULL,
+  `source` enum('facebook','google','sms') NOT NULL,
+  `given_name` varchar(1000) DEFAULT NULL,
+  `family_name` varchar(1000) DEFAULT NULL,
+  `nickname` varchar(1000) DEFAULT NULL,
+  `name` varchar(1000) DEFAULT NULL,
+  `picture` varchar(1000) DEFAULT NULL,
+  `updated_at` varchar(1000) DEFAULT NULL,
+  `email_verified` varchar(1000) DEFAULT NULL,
+  `email` varchar(1000) DEFAULT NULL,
+  `sub` varchar(1000) DEFAULT NULL,
+  `aud` varchar(1000) DEFAULT NULL,
+  `locale` varchar(1000) DEFAULT NULL,
+  `timeCreated` bigint(20) UNSIGNED NOT NULL,
+  `timeUpdated` bigint(20) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE `wD_UserOpenIDLinks` ADD PRIMARY KEY (`userID`,`source`);
+
+-- Reliability no longer depends on bot only games
+DELETE d FROM wD_TurnDate d INNER JOIN wD_Games g ON g.id = d.gameID WHERE g.playerTypes = 'MemberVsBots';
+DELETE d FROM wD_MissedTurns d INNER JOIN wD_Games g ON g.id = d.gameID WHERE g.playerTypes = 'MemberVsBots';
+
+-- Default RR used to be 1, change to 100
+ ALTER TABLE wD_Users CHANGE `reliabilityRating` `reliabilityRating` double NOT NULL DEFAULT '100';
+
+-- Period tracking to allow quick detection of changes in RRs when a missed turn moves over a threshold from e.g. being under a week old to over a week old
+ ALTER TABLE wD_MissedTurns ADD COLUMN reliabilityPeriod TINYINT NULL DEFAULT -1;
+
+ /**************************************** Version 1.70 ****************************************/
+ 
+UPDATE `wD_Misc` SET `value` = '170' WHERE `name` = 'Version';
+
+ALTER TABLE `wD_Misc` CHANGE `value` `value` BIGINT(10) UNSIGNED NOT NULL;
+
+/**************************************** Version 1.71 ****************************************/
+
+UPDATE `wD_Misc` SET `value` = '171' WHERE `name` = 'Version';
+
+ALTER TABLE `wD_Games` ADD COLUMN `phaseMinutesRB` smallint(5) DEFAULT -1 AFTER `phaseMinutes`;
+ALTER TABLE `wD_Backup_Games` ADD COLUMN `phaseMinutesRB` smallint(5) DEFAULT -1 AFTER `phaseMinutes`;
+
+-- Change group types to be freetext for more flexibility
+ALTER TABLE `wD_Groups`
+	CHANGE COLUMN `type` `type` VARCHAR(50) NOT NULL DEFAULT 'Unknown' AFTER `name`;
+
+ALTER TABLE `wD_GroupUsers`
+	ADD COLUMN `isDirty` BIT(1) NOT NULL DEFAULT 0 AFTER `timeCreated`,
+	ADD COLUMN `messageCount` SMALLINT UNSIGNED NOT NULL DEFAULT 0 AFTER `isDirty`,
+	ADD COLUMN `timeLastMessageSent` BIGINT UNSIGNED NULL DEFAULT NULL AFTER `messageCount`,
+	ADD COLUMN `timeWeightingRequired` BIGINT UNSIGNED NULL DEFAULT NULL AFTER `timeLastMessageSent`,
+	ADD COLUMN `timeMessageRequired` BIGINT UNSIGNED NULL DEFAULT NULL AFTER `timeWeightingRequired`;
+ALTER TABLE `wD_GroupUsers`
+	ADD INDEX `isActive_isDirty` (`isActive`, `isDirty`);
+
+CREATE TABLE `wD_Group_UserByUserBySourceWeights` (
+	`fromUserID` MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 0,
+	`toUserID` MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 0,
+	`source` VARCHAR(5) NOT NULL DEFAULT '',
+	`weighting` DECIMAL(9,4) NULL DEFAULT NULL,
+	`judgeCount` MEDIUMINT(9) NOT NULL DEFAULT 0,
+	PRIMARY KEY (`fromUserID`, `toUserID`, `source`) USING BTREE
+) ENGINE=InnoDB;
+
+UPDATE `wD_Misc` SET `value` = '172' WHERE `name` = 'Version';
+
+
+CREATE TABLE `wD_FingerprintProRequests` (
+	`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+	`requestId` VARCHAR(50) NOT NULL,
+	`visitorId` VARCHAR(50) NOT NULL,
+	`linkedId` INT UNSIGNED NULL DEFAULT NULL,
+	`confidence` FLOAT NULL DEFAULT NULL,
+	`visitorFound` TINYINT NULL DEFAULT NULL,
+	`incognito` TINYINT NULL DEFAULT NULL,
+	`latitude` FLOAT NULL DEFAULT NULL,
+	`longitude` FLOAT NULL DEFAULT NULL,
+	`accuracyRadius` FLOAT NULL DEFAULT NULL,
+	PRIMARY KEY (`id`),
+	INDEX `linkedId` (`linkedId`),
+	INDEX `visitorId` (`visitorId`)
+)
+;
+
+ALTER TABLE `wD_Users`
+  ADD COLUMN `mobileCountryCode` mediumint(8) UNSIGNED DEFAULT NULL,
+  ADD COLUMN `mobileNumber` bigint(20) UNSIGNED DEFAULT NULL,
+  ADD COLUMN `isMobileValidated` bit(1) NOT NULL DEFAULT b'0',
+  ADD COLUMN `missedPhasesLiveLastWeek` MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 0, 
+  ADD COLUMN `missedPhasesLiveLastMonth` MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 0, 
+  ADD COLUMN `missedPhasesLiveLastYear` MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 0, 
+  ADD COLUMN `missedPhasesNonLiveLastWeek` MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 0, 
+  ADD COLUMN `missedPhasesNonLiveLastMonth` MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 0, 
+  ADD COLUMN `missedPhasesNonLiveLastYear` MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 0, 
+  ADD COLUMN `missedPhasesTotalLastWeek` MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 0, 
+  ADD COLUMN `missedPhasesTotalLastMonth` MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 0, 
+  ADD COLUMN `missedPhasesTotalLastYear` MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 0, 
+  ADD COLUMN `isPhasesDirty` TINYINT(8) UNSIGNED NOT NULL DEFAULT 0; 
+ALTER TABLE `wD_Users` ADD INDEX(`isPhasesDirty`); 
+ALTER TABLE `wD_MissedTurns` ADD INDEX `indUsersInReliabilityPeriod` (`reliabilityPeriod`, `userID`); 
+ALTER TABLE `wD_MissedTurns` ADD INDEX(`turnDateTime`); 
+ALTER TABLE `wD_MissedTurns` ADD INDEX `indIncludedInReliabilityPeriod` (`reliabilityPeriod`, `turnDateTime`); 
+
+ALTER TABLE wD_Games ADD INDEX `ind_gmLookup` (`gameOver`, `processStatus`, `processTime`); 
+
+-- This index was only on gameID which let deadlocks occur when two members lock their own record in the same game
+ALTER TABLE `wD_Members` DROP INDEX `gid`;
+ALTER TABLE `wD_Members` ADD INDEX `gid` (gameID, countryID);
+
+ALTER TABLE `wD_FingerprintProRequests` ADD `timestamp` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP AFTER `accuracyRadius`; 
+
+CREATE TABLE IF NOT EXISTS `wD_GroupSourceJudgeUserWeightings` (
+	`groupID` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`source` ENUM('Self','Peer','Mod') NOT NULL,
+	`judgeUserID` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`userID` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`weighting` DECIMAL(9,4) NOT NULL
+)
+ENGINE=InnoDB
+;
+CREATE TABLE IF NOT EXISTS `wD_GroupSourceJudgeUserToUserWeightings` (
+	`groupID` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`source` VARCHAR(5) NOT NULL,
+	`judgeUserID` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`fromUserID` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`toUserID` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`toWeighting` DECIMAL(9,4) NOT NULL
+)
+ENGINE=InnoDB
+;
+CREATE TABLE IF NOT EXISTS `wD_GroupSourceUserToUserLinks` (
+	`source` VARCHAR(5) NOT NULL,
+	`fromUserID` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`toUserID` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`avgPositiveWeighting` DECIMAL(9,4) NOT NULL,
+	`maxPositiveWeighting` DECIMAL(9,4) NOT NULL,
+	`countPositiveWeighting` DECIMAL(9,4) NOT NULL,
+	`avgNegativeWeighting` DECIMAL(9,4) NOT NULL,
+	`maxNegativeWeighting` DECIMAL(9,4) NOT NULL,
+	`countNegativeWeighting` DECIMAL(9,4) NOT NULL
+)
+ENGINE=InnoDB
+;
+
+CREATE TABLE `wD_GroupUserToUserLinks` (
+	`fromUserID` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`toUserID` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`peerAvgScore` DECIMAL(9,4) NOT NULL DEFAULT 0,
+	`peerCount` DECIMAL(9,4) NOT NULL DEFAULT 0,
+	`modAvgScore` DECIMAL(9,4) NOT NULL DEFAULT 0,
+	`modCount` DECIMAL(9,4) NOT NULL DEFAULT 0,
+	`selfAvgScore` DECIMAL(9,4) NOT NULL DEFAULT 0,
+	`selfCount` DECIMAL(9,4) NOT NULL DEFAULT 0
+)
+ENGINE=InnoDB
+;
+
+ALTER TABLE `wD_GroupUsers`
+	CHANGE COLUMN `timeWeightingRequired` `isWeightingNeeded` BIT NOT NULL DEFAULT 0 AFTER `timeLastMessageSent`,
+	CHANGE COLUMN `timeMessageRequired` `isMessageNeeded` BIT NOT NULL DEFAULT 0 AFTER `isWeightingNeeded`,
+	ADD COLUMN `isWeightingWaiting` BIT NOT NULL DEFAULT 0 AFTER `isMessageNeeded`,
+	ADD COLUMN `isMessageWaiting` BIT NOT NULL DEFAULT 0 AFTER `isWeightingWaiting`,
+	ADD INDEX `userNeedsWeighting` (`isWeightingNeeded`, `userID`),
+	ADD INDEX `userNeedsMessage` (`isMessageNeeded`, `userID`),
+	ADD INDEX `modMessageWaiting` (`isMessageWaiting`, `modUserID`),
+	ADD INDEX `modWeightingWaiting` (`isWeightingWaiting`, `modUserID`);
+
+ALTER TABLE `wD_Groups`
+	ADD COLUMN `modUserID` MEDIUMINT UNSIGNED NULL DEFAULT NULL,
+	ADD COLUMN `isMessageNeeded` BIT NOT NULL DEFAULT 0,
+	ADD COLUMN `isMessageWaiting` BIT NOT NULL DEFAULT 0,
+	ADD INDEX `indMessageNeeded` (`isMessageNeeded`, `ownerUserID`),
+	ADD INDEX `indMessageWaiting` (`isMessageWaiting`, `modUserID`);
+
+
+ALTER TABLE `wD_Misc` CHANGE COLUMN `Name` `Name` ENUM('Version','Hits','Panic','Notice','Maintenance','LastProcessTime','GamesNew','GamesActive','GamesFinished','RankingPlayers','OnlinePlayers','ActivePlayers','TotalPlayers','ErrorLogs','GamesPaused','GamesOpen','GamesCrashed','LastModAction','ForumThreads','ThreadActiveThreshold','ThreadAliveThreshold','GameFeaturedThreshold','LastGroupUpdate','LastStatsUpdate') NOT NULL;
+INSERT INTO wD_Misc (`Name`,`Value`) VALUES ('LastGroupUpdate',0);
+INSERT INTO wD_Misc (`Name`,`Value`) VALUES ('LastStatsUpdate',0);
+
+
+CREATE TABLE `wD_ModForumMessages` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `toID` int(10) unsigned NOT NULL,
+  `fromUserID` mediumint(8) unsigned NOT NULL,
+  `timeSent` int(10) unsigned NOT NULL,
+  `message` text NOT NULL,
+  `subject` varchar(100) NOT NULL,
+  `type` enum('ThreadStart','ThreadReply') NOT NULL,
+  `replies` smallint(5) unsigned NOT NULL,
+  `latestReplySent` int(10) unsigned NOT NULL,
+  `silenceID` INT UNSIGNED NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `latest` (`timeSent`),
+  KEY `threadReplies` (`type`,`toID`,`timeSent`),
+  KEY `latestReplySent` (`latestReplySent`),
+  KEY `profileLinks` (`type`,`fromUserID`,`timeSent`),
+  KEY `type` (`type`,`latestReplySent`)
+) ENGINE=InnoDB;
+ALTER TABLE `wD_Users` MODIFY `notifications` set('PrivateMessage','GameMessage','Unfinalized','GameUpdate','ModForum','CountrySwitch','ForceModMessage');
+
+ALTER TABLE `wD_ModForumMessages` ADD `adminReply` enum('Yes','No') NOT NULL DEFAULT 'No';
+ALTER TABLE `wD_ModForumMessages` ADD `status` enum('New','Open','Resolved') NOT NULL DEFAULT 'New';
+
+ALTER TABLE `wD_ModForumMessages` MODIFY `status` enum('New','Open','Resolved','Bugs','Sticky') NOT NULL DEFAULT 'New';
+ALTER TABLE `wD_ModForumMessages` ADD `toUserID` mediumint(8) unsigned DEFAULT 0;
+ALTER TABLE `wD_ModForumMessages` ADD  `forceReply` enum('Yes','No','Done') NOT NULL DEFAULT 'No';
+
+ALTER TABLE `wD_ModForumMessages` DROP `toUserID`;	
+ALTER TABLE `wD_ModForumMessages` DROP `forceReply`;	
+ALTER TABLE `wD_ModForumMessages` ADD `assigned` mediumint(8) unsigned DEFAULT 0;
+
+ALTER TABLE wD_AccessLog 
+	ADD INDEX `indBrowserFingerprint` (`browserFingerprint`);
+
+ALTER TABLE `wD_ModForumMessages`
+	ADD COLUMN `gameID` MEDIUMINT UNSIGNED NULL DEFAULT NULL,
+	ADD COLUMN `requestType` VARCHAR(150) NULL DEFAULT NULL;
+
+ALTER TABLE `wD_Games`
+	ADD COLUMN `gameMasterUserID` MEDIUMINT UNSIGNED NULL DEFAULT NULL,
+	ADD COLUMN `relationshipLimit` FLOAT NULL DEFAULT NULL,
+	ADD COLUMN `suspicionLimit` FLOAT NULL DEFAULT NULL,
+	ADD COLUMN `identityRequirement` SET('Facebook','Google','SMS','Paypal') NULL DEFAULT NULL;
+
+ALTER TABLE `wD_Backup_Games`
+	ADD COLUMN `gameMasterUserID` MEDIUMINT UNSIGNED NULL DEFAULT NULL,
+	ADD COLUMN `relationshipLimit` FLOAT NULL DEFAULT NULL,
+	ADD COLUMN `suspicionLimit` FLOAT NULL DEFAULT NULL,
+	ADD COLUMN `identityRequirement` SET('Facebook','Google','SMS','Paypal') NULL DEFAULT NULL;
+
+
+CREATE TABLE wD_UserCodeConnections (
+  `userID` mediumint(8) unsigned ,
+  `type` ENUM('Cookie','IP','Fingerprint','FingerprintPro') NOT NULL,
+  `code` BINARY(16) NOT NULL,
+  `earliest` TIMESTAMP NOT NULL,
+  `latest` TIMESTAMP NOT NULL,
+  `count` int unsigned NOT NULL DEFAULT 0,
+  PRIMARY KEY (`userID`,`type`,`code`)
+) ENGINE=InnoDB;
+
+
+ALTER TABLE wD_AccessLog ADD COLUMN browserFingerprintBin BINARY(16) NULL DEFAULT NULL;
+UPDATE wD_AccessLog SET browserFingerprintBin=HEX(browserFingerprint) WHERE browserFingerprint IS NOT NULL;
+ALTER TABLE wD_AccessLog DROP COLUMN browserFingerprint;
+ALTER TABLE wD_AccessLog CHANGE COLUMN browserFingerprintBin browserFingerprint BINARY(16) NULL DEFAULT NULL;
+ALTER TABLE wD_AccessLog ADD INDEX `indBrowserFingerprint` (`browserFingerprint`);
+
+ALTER TABLE wD_AccessLog CHANGE COLUMN ip ip BINARY(16) NOT NULL;
+ALTER TABLE wD_AccessLog ADD INDEX `indIP` (`ip`);
+ALTER TABLE wD_AccessLog ADD INDEX `lastRequest` (`lastRequest`);
+
+ALTER TABLE wD_Sessions CHANGE COLUMN browserFingerprint browserFingerprint BINARY(16) NULL DEFAULT NULL;
+ALTER TABLE wD_Sessions CHANGE COLUMN ip ip BINARY(16) NULL DEFAULT NULL;
+
+ALTER TABLE `wD_UserConnections`
+	ADD COLUMN `countMatchedFingerprintUsers` MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `countMatchedFingerprintProUsers` MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 0;
+
+ALTER TABLE `wD_UserConnections`
+	ADD COLUMN `day0hour0` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour1` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour2` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour3` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour4` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour5` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour6` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour7` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour8` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour9` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour10` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour11` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour12` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour13` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour14` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour15` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour16` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour17` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour18` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour19` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour20` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour21` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour22` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day0hour23` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour0` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour1` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour2` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour3` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour4` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour5` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour6` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour7` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour8` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour9` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour10` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour11` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour12` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour13` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour14` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour15` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour16` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour17` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour18` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour19` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour20` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour21` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour22` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day1hour23` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour0` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour1` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour2` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour3` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour4` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour5` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour6` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour7` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour8` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour9` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour10` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour11` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour12` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour13` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour14` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour15` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour16` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour17` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour18` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour19` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour20` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour21` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour22` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day2hour23` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour0` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour1` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour2` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour3` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour4` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour5` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour6` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour7` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour8` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour9` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour10` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour11` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour12` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour13` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour14` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour15` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour16` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour17` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour18` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour19` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour20` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour21` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour22` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day3hour23` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour0` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour1` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour2` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour3` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour4` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour5` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour6` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour7` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour8` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour9` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour10` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour11` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour12` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour13` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour14` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour15` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour16` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour17` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour18` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour19` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour20` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour21` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour22` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day4hour23` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour0` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour1` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour2` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour3` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour4` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour5` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour6` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour7` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour8` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour9` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour10` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour11` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour12` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour13` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour14` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour15` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour16` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour17` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour18` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour19` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour20` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour21` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour22` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day5hour23` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour0` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour1` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour2` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour3` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour4` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour5` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour6` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour7` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour8` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour9` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour10` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour11` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour12` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour13` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour14` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour15` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour16` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour17` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour18` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour19` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour20` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour21` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour22` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `day6hour23` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `totalHits` INT UNSIGNED NOT NULL DEFAULT 0
+	;
+ALTER TABLE wD_UserCodeConnections ADD INDEX (type,code);
+ALTER TABLE wD_UserCodeConnections ADD COLUMN isNew TINYINT UNSIGNED NOT NULL DEFAULT 1;
+ALTER TABLE wD_UserCodeConnections ADD INDEX (isNew);
+
+INSERT INTO wD_UserConnections (userID)
+SELECT id FROM wD_Users u
+LEFT JOIN wD_UserConnections c ON c.userID = u.id
+WHERE c.userID IS NULL;
+
+INSERT INTO wD_UserCodeConnections (userID, type, code, earliest, latest, count)
+SELECT userID, type, code , earliestRequest, latestRequest, requestCount
+FROM (
+	SELECT userID, 'Cookie' type, CAST(cookieCode AS BINARY) code, MIN(lastRequest) earliestRequest, MAX(lastRequest) latestRequest, SUM(hits) requestCount
+	FROM wD_AccessLog
+	GROUP BY userID, cookieCode
+) r
+ON DUPLICATE KEY UPDATE latest=greatest(latestRequest, latest), count=count+requestCount;
+
+INSERT INTO wD_UserCodeConnections (userID, type, code, earliest, latest, count)
+SELECT userID, type, code , earliestRequest, latestRequest, requestCount
+FROM (
+	SELECT userID, 'IP' type, ip code, MIN(lastRequest) earliestRequest, MAX(lastRequest) latestRequest, SUM(hits) requestCount
+	FROM wD_AccessLog
+	GROUP BY userID, ip
+) r
+ON DUPLICATE KEY UPDATE latest=greatest(latestRequest, latest), count=count+requestCount;
+
+INSERT INTO wD_UserCodeConnections (userID, type, code, earliest, latest, count)
+SELECT userID, type, code , earliestRequest, latestRequest, requestCount
+FROM (
+	SELECT userID, 'Fingerprint' type, browserFingerprint code, MIN(lastRequest) earliestRequest, MAX(lastRequest) latestRequest, SUM(hits) requestCount
+	FROM wD_AccessLog
+	WHERE browserFingerprint IS NOT NULL AND browserFingerprint <> 0
+	GROUP BY userID, browserFingerprint
+) r
+ON DUPLICATE KEY UPDATE latest=greatest(latestRequest, latest), count=count+requestCount;
+
+INSERT INTO wD_UserCodeConnections (userID, type, code, earliest, latest, count)
+SELECT userID, type, code , earliestRequest, latestRequest, requestCount
+FROM (
+	SELECT linkedId userId, 'FingerprintPro' type, 
+		FROM_BASE64(visitorId) code, FROM_UNIXTIME(CAST(LEFT(requestId,10) AS INT)) earliestRequest, 
+		FROM_UNIXTIME(CAST(LEFT(requestId,10) AS INT)) latestRequest, 
+		1 requestCount
+ 	FROM wD_FingerprintProRequests f
+) r
+ON DUPLICATE KEY UPDATE latest=greatest(latestRequest, latest), count=count+requestCount;
+
+UPDATE wD_UserConnections SET countMatchedIPUsers = 0, countMatchedCookieUsers = 0, countMatchedFingerprintUsers = 0, countMatchedFingerprintProUsers = 0;
+
+UPDATE wD_UserConnections uc
+INNER JOIN (
+	SELECT a.userID, a.type, COUNT(*) matches
+	FROM wD_UserCodeConnections a
+	INNER JOIN wD_UserCodeConnections b ON a.type = b.type AND a.code = b.code AND a.userID <> b.userID
+  WHERE a.type = 'IP'
+	GROUP BY a.userID, a.type
+) rec ON rec.userID = uc.userId
+SET countMatchedIPUsers = countMatchedIPUsers + rec.matches;
+UPDATE wD_UserConnections uc
+INNER JOIN (
+	SELECT a.userID, a.type, COUNT(*) matches
+	FROM wD_UserCodeConnections a
+	INNER JOIN wD_UserCodeConnections b ON a.type = b.type AND a.code = b.code AND a.userID <> b.userID
+  WHERE a.type = 'Cookie'
+	GROUP BY a.userID, a.type
+) rec ON rec.userID = uc.userId
+SET countMatchedCookieUsers = countMatchedCookieUsers + rec.matches;
+UPDATE wD_UserConnections uc
+INNER JOIN (
+	SELECT a.userID, a.type, COUNT(*) matches
+	FROM wD_UserCodeConnections a
+	INNER JOIN wD_UserCodeConnections b ON a.type = b.type AND a.code = b.code AND a.userID <> b.userID
+  WHERE a.type = 'Fingerprint'
+	GROUP BY a.userID, a.type
+) rec ON rec.userID = uc.userId
+SET countMatchedFingerprintUsers = countMatchedFingerprintUsers + rec.matches;
+UPDATE wD_UserConnections uc
+INNER JOIN (
+	SELECT a.userID, a.type, COUNT(*) matches
+	FROM wD_UserCodeConnections a
+	INNER JOIN wD_UserCodeConnections b ON a.type = b.type AND a.code = b.code AND a.userID <> b.userID
+  WHERE a.type = 'FingerprintPro'
+	GROUP BY a.userID, a.type
+) rec ON rec.userID = uc.userId
+SET countMatchedFingerprintProUsers = countMatchedFingerprintProUsers + rec.matches;
+
+UPDATE wD_UserConnections uc
+SET uc.day0hour0  = 0,
+	uc.day0hour1  = 0,
+	uc.day0hour2  = 0,
+	uc.day0hour3  = 0,
+	uc.day0hour4  = 0,
+	uc.day0hour5  = 0,
+	uc.day0hour6  = 0,
+	uc.day0hour7  = 0,
+	uc.day0hour8  = 0,
+	uc.day0hour9  = 0,
+	uc.day0hour10 = 0,
+	uc.day0hour11 = 0,
+	uc.day0hour12 = 0,
+	uc.day0hour13 = 0,
+	uc.day0hour14 = 0,
+	uc.day0hour15 = 0,
+	uc.day0hour16 = 0,
+	uc.day0hour17 = 0,
+	uc.day0hour18 = 0,
+	uc.day0hour19 = 0,
+	uc.day0hour20 = 0,
+	uc.day0hour21 = 0,
+	uc.day0hour22 = 0,
+	uc.day0hour23 = 0,
+	uc.day1hour0  = 0,
+	uc.day1hour1  = 0,
+	uc.day1hour2  = 0,
+	uc.day1hour3  = 0,
+	uc.day1hour4  = 0,
+	uc.day1hour5  = 0,
+	uc.day1hour6  = 0,
+	uc.day1hour7  = 0,
+	uc.day1hour8  = 0,
+	uc.day1hour9  = 0,
+	uc.day1hour10 = 0,
+	uc.day1hour11 = 0,
+	uc.day1hour12 = 0,
+	uc.day1hour13 = 0,
+	uc.day1hour14 = 0,
+	uc.day1hour15 = 0,
+	uc.day1hour16 = 0,
+	uc.day1hour17 = 0,
+	uc.day1hour18 = 0,
+	uc.day1hour19 = 0,
+	uc.day1hour20 = 0,
+	uc.day1hour21 = 0,
+	uc.day1hour22 = 0,
+	uc.day1hour23 = 0,
+	uc.day2hour0  = 0,
+	uc.day2hour1  = 0,
+	uc.day2hour2  = 0,
+	uc.day2hour3  = 0,
+	uc.day2hour4  = 0,
+	uc.day2hour5  = 0,
+	uc.day2hour6  = 0,
+	uc.day2hour7  = 0,
+	uc.day2hour8  = 0,
+	uc.day2hour9  = 0,
+	uc.day2hour10 = 0,
+	uc.day2hour11 = 0,
+	uc.day2hour12 = 0,
+	uc.day2hour13 = 0,
+	uc.day2hour14 = 0,
+	uc.day2hour15 = 0,
+	uc.day2hour16 = 0,
+	uc.day2hour17 = 0,
+	uc.day2hour18 = 0,
+	uc.day2hour19 = 0,
+	uc.day2hour20 = 0,
+	uc.day2hour21 = 0,
+	uc.day2hour22 = 0,
+	uc.day2hour23 = 0,
+	uc.day3hour0  = 0,
+	uc.day3hour1  = 0,
+	uc.day3hour2  = 0,
+	uc.day3hour3  = 0,
+	uc.day3hour4  = 0,
+	uc.day3hour5  = 0,
+	uc.day3hour6  = 0,
+	uc.day3hour7  = 0,
+	uc.day3hour8  = 0,
+	uc.day3hour9  = 0,
+	uc.day3hour10 = 0,
+	uc.day3hour11 = 0,
+	uc.day3hour12 = 0,
+	uc.day3hour13 = 0,
+	uc.day3hour14 = 0,
+	uc.day3hour15 = 0,
+	uc.day3hour16 = 0,
+	uc.day3hour17 = 0,
+	uc.day3hour18 = 0,
+	uc.day3hour19 = 0,
+	uc.day3hour20 = 0,
+	uc.day3hour21 = 0,
+	uc.day3hour22 = 0,
+	uc.day3hour23 = 0,
+	uc.day4hour0  = 0,
+	uc.day4hour1  = 0,
+	uc.day4hour2  = 0,
+	uc.day4hour3  = 0,
+	uc.day4hour4  = 0,
+	uc.day4hour5  = 0,
+	uc.day4hour6  = 0,
+	uc.day4hour7  = 0,
+	uc.day4hour8  = 0,
+	uc.day4hour9  = 0,
+	uc.day4hour10 = 0,
+	uc.day4hour11 = 0,
+	uc.day4hour12 = 0,
+	uc.day4hour13 = 0,
+	uc.day4hour14 = 0,
+	uc.day4hour15 = 0,
+	uc.day4hour16 = 0,
+	uc.day4hour17 = 0,
+	uc.day4hour18 = 0,
+	uc.day4hour19 = 0,
+	uc.day4hour20 = 0,
+	uc.day4hour21 = 0,
+	uc.day4hour22 = 0,
+	uc.day4hour23 = 0,
+	uc.day5hour0  = 0,
+	uc.day5hour1  = 0,
+	uc.day5hour2  = 0,
+	uc.day5hour3  = 0,
+	uc.day5hour4  = 0,
+	uc.day5hour5  = 0,
+	uc.day5hour6  = 0,
+	uc.day5hour7  = 0,
+	uc.day5hour8  = 0,
+	uc.day5hour9  = 0,
+	uc.day5hour10 = 0,
+	uc.day5hour11 = 0,
+	uc.day5hour12 = 0,
+	uc.day5hour13 = 0,
+	uc.day5hour14 = 0,
+	uc.day5hour15 = 0,
+	uc.day5hour16 = 0,
+	uc.day5hour17 = 0,
+	uc.day5hour18 = 0,
+	uc.day5hour19 = 0,
+	uc.day5hour20 = 0,
+	uc.day5hour21 = 0,
+	uc.day5hour22 = 0,
+	uc.day5hour23 = 0,
+	uc.day6hour0  = 0,
+	uc.day6hour1  = 0,
+	uc.day6hour2  = 0,
+	uc.day6hour3  = 0,
+	uc.day6hour4  = 0,
+	uc.day6hour5  = 0,
+	uc.day6hour6  = 0,
+	uc.day6hour7  = 0,
+	uc.day6hour8  = 0,
+	uc.day6hour9  = 0,
+	uc.day6hour10 = 0,
+	uc.day6hour11 = 0,
+	uc.day6hour12 = 0,
+	uc.day6hour13 = 0,
+	uc.day6hour14 = 0,
+	uc.day6hour15 = 0,
+	uc.day6hour16 = 0,
+	uc.day6hour17 = 0,
+	uc.day6hour18 = 0,
+	uc.day6hour19 = 0,
+	uc.day6hour20 = 0,
+	uc.day6hour21 = 0,
+	uc.day6hour22 = 0,
+	uc.day6hour23 = 0,
+  uc.totalHits = 0
+	;
+
+INSERT INTO wD_UserConnections (userID)
+SELECT userID
+FROM (
+	SELECT userID, DAYOFWEEK(lastRequest)-1 d, HOUR(lastRequest) h, SUM(hits) c
+	FROM wD_AccessLog
+	GROUP BY userID, DAYOFWEEK(lastRequest), HOUR(lastRequest)
+) rec
+ON DUPLICATE KEY UPDATE  
+	day0hour0  = day0hour0  + IF(d=0 AND h=0 ,c,0),
+	day0hour1  = day0hour1  + IF(d=0 AND h=1 ,c,0),
+	day0hour2  = day0hour2  + IF(d=0 AND h=2 ,c,0),
+	day0hour3  = day0hour3  + IF(d=0 AND h=3 ,c,0),
+	day0hour4  = day0hour4  + IF(d=0 AND h=4 ,c,0),
+	day0hour5  = day0hour5  + IF(d=0 AND h=5 ,c,0),
+	day0hour6  = day0hour6  + IF(d=0 AND h=6 ,c,0),
+	day0hour7  = day0hour7  + IF(d=0 AND h=7 ,c,0),
+	day0hour8  = day0hour8  + IF(d=0 AND h=8 ,c,0),
+	day0hour9  = day0hour9  + IF(d=0 AND h=9 ,c,0),
+	day0hour10 = day0hour10 + IF(d=0 AND h=10,c,0),
+	day0hour11 = day0hour11 + IF(d=0 AND h=11,c,0),
+	day0hour12 = day0hour12 + IF(d=0 AND h=12,c,0),
+	day0hour13 = day0hour13 + IF(d=0 AND h=13,c,0),
+	day0hour14 = day0hour14 + IF(d=0 AND h=14,c,0),
+	day0hour15 = day0hour15 + IF(d=0 AND h=15,c,0),
+	day0hour16 = day0hour16 + IF(d=0 AND h=16,c,0),
+	day0hour17 = day0hour17 + IF(d=0 AND h=17,c,0),
+	day0hour18 = day0hour18 + IF(d=0 AND h=18,c,0),
+	day0hour19 = day0hour19 + IF(d=0 AND h=19,c,0),
+	day0hour20 = day0hour20 + IF(d=0 AND h=20,c,0),
+	day0hour21 = day0hour21 + IF(d=0 AND h=21,c,0),
+	day0hour22 = day0hour22 + IF(d=0 AND h=22,c,0),
+	day0hour23 = day0hour23 + IF(d=0 AND h=23,c,0),
+	day1hour0  = day1hour0  + IF(d=1 AND h=0 ,c,0),
+	day1hour1  = day1hour1  + IF(d=1 AND h=1 ,c,0),
+	day1hour2  = day1hour2  + IF(d=1 AND h=2 ,c,0),
+	day1hour3  = day1hour3  + IF(d=1 AND h=3 ,c,0),
+	day1hour4  = day1hour4  + IF(d=1 AND h=4 ,c,0),
+	day1hour5  = day1hour5  + IF(d=1 AND h=5 ,c,0),
+	day1hour6  = day1hour6  + IF(d=1 AND h=6 ,c,0),
+	day1hour7  = day1hour7  + IF(d=1 AND h=7 ,c,0),
+	day1hour8  = day1hour8  + IF(d=1 AND h=8 ,c,0),
+	day1hour9  = day1hour9  + IF(d=1 AND h=9 ,c,0),
+	day1hour10 = day1hour10 + IF(d=1 AND h=10,c,0),
+	day1hour11 = day1hour11 + IF(d=1 AND h=11,c,0),
+	day1hour12 = day1hour12 + IF(d=1 AND h=12,c,0),
+	day1hour13 = day1hour13 + IF(d=1 AND h=13,c,0),
+	day1hour14 = day1hour14 + IF(d=1 AND h=14,c,0),
+	day1hour15 = day1hour15 + IF(d=1 AND h=15,c,0),
+	day1hour16 = day1hour16 + IF(d=1 AND h=16,c,0),
+	day1hour17 = day1hour17 + IF(d=1 AND h=17,c,0),
+	day1hour18 = day1hour18 + IF(d=1 AND h=18,c,0),
+	day1hour19 = day1hour19 + IF(d=1 AND h=19,c,0),
+	day1hour20 = day1hour20 + IF(d=1 AND h=20,c,0),
+	day1hour21 = day1hour21 + IF(d=1 AND h=21,c,0),
+	day1hour22 = day1hour22 + IF(d=1 AND h=22,c,0),
+	day1hour23 = day1hour23 + IF(d=1 AND h=23,c,0),
+	day2hour0  = day2hour0  + IF(d=2 AND h=0 ,c,0),
+	day2hour1  = day2hour1  + IF(d=2 AND h=1 ,c,0),
+	day2hour2  = day2hour2  + IF(d=2 AND h=2 ,c,0),
+	day2hour3  = day2hour3  + IF(d=2 AND h=3 ,c,0),
+	day2hour4  = day2hour4  + IF(d=2 AND h=4 ,c,0),
+	day2hour5  = day2hour5  + IF(d=2 AND h=5 ,c,0),
+	day2hour6  = day2hour6  + IF(d=2 AND h=6 ,c,0),
+	day2hour7  = day2hour7  + IF(d=2 AND h=7 ,c,0),
+	day2hour8  = day2hour8  + IF(d=2 AND h=8 ,c,0),
+	day2hour9  = day2hour9  + IF(d=2 AND h=9 ,c,0),
+	day2hour10 = day2hour10 + IF(d=2 AND h=10,c,0),
+	day2hour11 = day2hour11 + IF(d=2 AND h=11,c,0),
+	day2hour12 = day2hour12 + IF(d=2 AND h=12,c,0),
+	day2hour13 = day2hour13 + IF(d=2 AND h=13,c,0),
+	day2hour14 = day2hour14 + IF(d=2 AND h=14,c,0),
+	day2hour15 = day2hour15 + IF(d=2 AND h=15,c,0),
+	day2hour16 = day2hour16 + IF(d=2 AND h=16,c,0),
+	day2hour17 = day2hour17 + IF(d=2 AND h=17,c,0),
+	day2hour18 = day2hour18 + IF(d=2 AND h=18,c,0),
+	day2hour19 = day2hour19 + IF(d=2 AND h=19,c,0),
+	day2hour20 = day2hour20 + IF(d=2 AND h=20,c,0),
+	day2hour21 = day2hour21 + IF(d=2 AND h=21,c,0),
+	day2hour22 = day2hour22 + IF(d=2 AND h=22,c,0),
+	day2hour23 = day2hour23 + IF(d=2 AND h=23,c,0),
+	day3hour0  = day3hour0  + IF(d=3 AND h=0 ,c,0),
+	day3hour1  = day3hour1  + IF(d=3 AND h=1 ,c,0),
+	day3hour2  = day3hour2  + IF(d=3 AND h=2 ,c,0),
+	day3hour3  = day3hour3  + IF(d=3 AND h=3 ,c,0),
+	day3hour4  = day3hour4  + IF(d=3 AND h=4 ,c,0),
+	day3hour5  = day3hour5  + IF(d=3 AND h=5 ,c,0),
+	day3hour6  = day3hour6  + IF(d=3 AND h=6 ,c,0),
+	day3hour7  = day3hour7  + IF(d=3 AND h=7 ,c,0),
+	day3hour8  = day3hour8  + IF(d=3 AND h=8 ,c,0),
+	day3hour9  = day3hour9  + IF(d=3 AND h=9 ,c,0),
+	day3hour10 = day3hour10 + IF(d=3 AND h=10,c,0),
+	day3hour11 = day3hour11 + IF(d=3 AND h=11,c,0),
+	day3hour12 = day3hour12 + IF(d=3 AND h=12,c,0),
+	day3hour13 = day3hour13 + IF(d=3 AND h=13,c,0),
+	day3hour14 = day3hour14 + IF(d=3 AND h=14,c,0),
+	day3hour15 = day3hour15 + IF(d=3 AND h=15,c,0),
+	day3hour16 = day3hour16 + IF(d=3 AND h=16,c,0),
+	day3hour17 = day3hour17 + IF(d=3 AND h=17,c,0),
+	day3hour18 = day3hour18 + IF(d=3 AND h=18,c,0),
+	day3hour19 = day3hour19 + IF(d=3 AND h=19,c,0),
+	day3hour20 = day3hour20 + IF(d=3 AND h=20,c,0),
+	day3hour21 = day3hour21 + IF(d=3 AND h=21,c,0),
+	day3hour22 = day3hour22 + IF(d=3 AND h=22,c,0),
+	day3hour23 = day3hour23 + IF(d=3 AND h=23,c,0),
+	day4hour0  = day4hour0  + IF(d=4 AND h=0 ,c,0),
+	day4hour1  = day4hour1  + IF(d=4 AND h=1 ,c,0),
+	day4hour2  = day4hour2  + IF(d=4 AND h=2 ,c,0),
+	day4hour3  = day4hour3  + IF(d=4 AND h=3 ,c,0),
+	day4hour4  = day4hour4  + IF(d=4 AND h=4 ,c,0),
+	day4hour5  = day4hour5  + IF(d=4 AND h=5 ,c,0),
+	day4hour6  = day4hour6  + IF(d=4 AND h=6 ,c,0),
+	day4hour7  = day4hour7  + IF(d=4 AND h=7 ,c,0),
+	day4hour8  = day4hour8  + IF(d=4 AND h=8 ,c,0),
+	day4hour9  = day4hour9  + IF(d=4 AND h=9 ,c,0),
+	day4hour10 = day4hour10 + IF(d=4 AND h=10,c,0),
+	day4hour11 = day4hour11 + IF(d=4 AND h=11,c,0),
+	day4hour12 = day4hour12 + IF(d=4 AND h=12,c,0),
+	day4hour13 = day4hour13 + IF(d=4 AND h=13,c,0),
+	day4hour14 = day4hour14 + IF(d=4 AND h=14,c,0),
+	day4hour15 = day4hour15 + IF(d=4 AND h=15,c,0),
+	day4hour16 = day4hour16 + IF(d=4 AND h=16,c,0),
+	day4hour17 = day4hour17 + IF(d=4 AND h=17,c,0),
+	day4hour18 = day4hour18 + IF(d=4 AND h=18,c,0),
+	day4hour19 = day4hour19 + IF(d=4 AND h=19,c,0),
+	day4hour20 = day4hour20 + IF(d=4 AND h=20,c,0),
+	day4hour21 = day4hour21 + IF(d=4 AND h=21,c,0),
+	day4hour22 = day4hour22 + IF(d=4 AND h=22,c,0),
+	day4hour23 = day4hour23 + IF(d=4 AND h=23,c,0),
+	day5hour0  = day5hour0  + IF(d=5 AND h=0 ,c,0),
+	day5hour1  = day5hour1  + IF(d=5 AND h=1 ,c,0),
+	day5hour2  = day5hour2  + IF(d=5 AND h=2 ,c,0),
+	day5hour3  = day5hour3  + IF(d=5 AND h=3 ,c,0),
+	day5hour4  = day5hour4  + IF(d=5 AND h=4 ,c,0),
+	day5hour5  = day5hour5  + IF(d=5 AND h=5 ,c,0),
+	day5hour6  = day5hour6  + IF(d=5 AND h=6 ,c,0),
+	day5hour7  = day5hour7  + IF(d=5 AND h=7 ,c,0),
+	day5hour8  = day5hour8  + IF(d=5 AND h=8 ,c,0),
+	day5hour9  = day5hour9  + IF(d=5 AND h=9 ,c,0),
+	day5hour10 = day5hour10 + IF(d=5 AND h=10,c,0),
+	day5hour11 = day5hour11 + IF(d=5 AND h=11,c,0),
+	day5hour12 = day5hour12 + IF(d=5 AND h=12,c,0),
+	day5hour13 = day5hour13 + IF(d=5 AND h=13,c,0),
+	day5hour14 = day5hour14 + IF(d=5 AND h=14,c,0),
+	day5hour15 = day5hour15 + IF(d=5 AND h=15,c,0),
+	day5hour16 = day5hour16 + IF(d=5 AND h=16,c,0),
+	day5hour17 = day5hour17 + IF(d=5 AND h=17,c,0),
+	day5hour18 = day5hour18 + IF(d=5 AND h=18,c,0),
+	day5hour19 = day5hour19 + IF(d=5 AND h=19,c,0),
+	day5hour20 = day5hour20 + IF(d=5 AND h=20,c,0),
+	day5hour21 = day5hour21 + IF(d=5 AND h=21,c,0),
+	day5hour22 = day5hour22 + IF(d=5 AND h=22,c,0),
+	day5hour23 = day5hour23 + IF(d=5 AND h=23,c,0),
+	day6hour0  = day6hour0  + IF(d=6 AND h=0 ,c,0),
+	day6hour1  = day6hour1  + IF(d=6 AND h=1 ,c,0),
+	day6hour2  = day6hour2  + IF(d=6 AND h=2 ,c,0),
+	day6hour3  = day6hour3  + IF(d=6 AND h=3 ,c,0),
+	day6hour4  = day6hour4  + IF(d=6 AND h=4 ,c,0),
+	day6hour5  = day6hour5  + IF(d=6 AND h=5 ,c,0),
+	day6hour6  = day6hour6  + IF(d=6 AND h=6 ,c,0),
+	day6hour7  = day6hour7  + IF(d=6 AND h=7 ,c,0),
+	day6hour8  = day6hour8  + IF(d=6 AND h=8 ,c,0),
+	day6hour9  = day6hour9  + IF(d=6 AND h=9 ,c,0),
+	day6hour10 = day6hour10 + IF(d=6 AND h=10,c,0),
+	day6hour11 = day6hour11 + IF(d=6 AND h=11,c,0),
+	day6hour12 = day6hour12 + IF(d=6 AND h=12,c,0),
+	day6hour13 = day6hour13 + IF(d=6 AND h=13,c,0),
+	day6hour14 = day6hour14 + IF(d=6 AND h=14,c,0),
+	day6hour15 = day6hour15 + IF(d=6 AND h=15,c,0),
+	day6hour16 = day6hour16 + IF(d=6 AND h=16,c,0),
+	day6hour17 = day6hour17 + IF(d=6 AND h=17,c,0),
+	day6hour18 = day6hour18 + IF(d=6 AND h=18,c,0),
+	day6hour19 = day6hour19 + IF(d=6 AND h=19,c,0),
+	day6hour20 = day6hour20 + IF(d=6 AND h=20,c,0),
+	day6hour21 = day6hour21 + IF(d=6 AND h=21,c,0),
+	day6hour22 = day6hour22 + IF(d=6 AND h=22,c,0),
+	day6hour23 = day6hour23 + IF(d=6 AND h=23,c,0),
+ 	totalHits = totalHits + c
+	;
+
+ALTER TABLE `wD_Sessions` ADD COLUMN `firstRequest` TIMESTAMP NOT NULL DEFAULT current_timestamp() AFTER `lastRequest`;
+ALTER TABLE `wD_AccessLog` ADD COLUMN `firstRequest` TIMESTAMP NOT NULL DEFAULT current_timestamp() AFTER `lastRequest`;
+UPDATE wD_AccessLog SET firstRequest = lastRequest;
+
+ALTER TABLE `wD_Misc` CHANGE COLUMN `Name` `Name` ENUM('Version','Hits','Panic','Notice','Maintenance','LastProcessTime','GamesNew','GamesActive','GamesFinished','RankingPlayers','OnlinePlayers','ActivePlayers','TotalPlayers','ErrorLogs','GamesPaused','GamesOpen','GamesCrashed','LastModAction','ForumThreads','ThreadActiveThreshold','ThreadAliveThreshold','GameFeaturedThreshold','LastGroupUpdate','LastStatsUpdate','LastMessageID') NOT NULL COLLATE 'utf8mb3_general_ci' FIRST;
+INSERT INTO wD_Misc (Name,value) VALUES ('LastMessageID', 0);
+
+ALTER TABLE `wD_UserConnections`
+ADD COLUMN `gameMessageCount` INT(11) NOT NULL DEFAULT 0 AFTER `totalHits`,
+ADD COLUMN `gameMessageLength` INT(11) NOT NULL DEFAULT 0 AFTER `gameMessageCount`;
+
+ALTER TABLE `wD_UserCodeConnections`
+CHANGE COLUMN `type` `type` ENUM('Cookie','IP','Fingerprint','FingerprintPro','MessageCount','MessageLength') NOT NULL COLLATE 'utf8mb4_unicode_ci' AFTER `userID`;
+
+DELETE FROM wD_Sessions;
+ALTER TABLE `wD_Sessions` CHANGE `cookieCode` `cookieCode` BINARY(16) NULL;  
+
+ALTER TABLE `wD_Sessions` 
+	ADD `fingerprintPro` BINARY(16) NULL;
+
+ALTER TABLE `wD_AccessLog` DROP INDEX `userID`,DROP INDEX `cookieCode`,DROP INDEX `indBrowserFingerprint`,DROP INDEX `indIP`,DROP INDEX `lastRequest`;
+
+ALTER TABLE `wD_AccessLog` 
+	ADD `cookieCodeTemp` BINARY(16) NULL, 
+	ADD `fingerprintPro` BINARY(16) NULL;
+ALTER TABLE `wD_AccessLog` CHANGE `cookieCode` cookieCode32 BIGINT UNSIGNED NOT NULL; 
+ALTER TABLE `wD_AccessLog` CHANGE `cookieCodeTemp` cookieCode BINARY(16) NOT NULL; 
+UPDATE `wD_AccessLog` SET `cookieCode` = UNHEX(LPAD(CONV(cookieCode32,10,16),16,'0')) WHERE cookieCode32 <> 0;
+
+UPDATE wD_AccessLog SET ip = UNHEX(RPAD(CONV(INET_ATON(INET_NTOA(ip)),10,16),32,'0'));
+
+ALTER TABLE `wD_AccessLog` DROP `cookieCode32`;
+ALTER TABLE `wD_AccessLog` ADD INDEX(`lastRequest`); 
+ALTER TABLE `wD_ApiKeys` ADD hits INT UNSIGNED DEFAULT 0 NULL,
+	ADD lastHit INT UNSIGNED DEFAULT 0 NULL,
+	ADD isChecked TINYINT UNSIGNED DEFAULT 0 NULL;
+UPDATE wD_ApiKeys SET hits = 0, lastHit = 0, isChecked = 0;
+ALTER TABLE `wD_ApiKeys` CHANGE hits hits INT UNSIGNED DEFAULT 0,
+	CHANGE lastHit lastHit INT UNSIGNED DEFAULT 0,
+	CHANGE isChecked isChecked TINYINT UNSIGNED DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS `wD_IPLookups` (
+  `ipCode` binary(16) NOT NULL,
+  `ip` varchar(50) NOT NULL,
+  `security` set('vpn','proxy','tor','relay') DEFAULT NULL,
+  `city` varchar(50) DEFAULT NULL,
+  `region` varchar(50) DEFAULT NULL,
+  `country` varchar(50) DEFAULT NULL,
+  `continent` varchar(50) DEFAULT NULL,
+  `latitude` double DEFAULT NULL,
+  `longitude` double DEFAULT NULL,
+  `network` varchar(50) DEFAULT NULL,
+  `autonomous_system_number` varchar(50) DEFAULT NULL,
+  `autonomous_system_organization` varchar(50) DEFAULT NULL,
+  `timeInserted` bigint(20) UNSIGNED NOT NULL,
+  `timeLastHit` bigint(20) UNSIGNED NOT NULL,
+  `timeLookedUp` bigint(20) UNSIGNED DEFAULT NULL,
+  `hits` int(10) UNSIGNED DEFAULT 0,
+  PRIMARY KEY (`ipCode`)
+) ENGINE=InnoDB;
+
+DELETE FROM wD_AccessLog WHERE userID IN (SELECT id FROM wD_Users WHERE username LIKE 'diplonow_%' OR id <= 1);
+
+ALTER TABLE `wD_UserCodeConnections` CHANGE `type` `type` ENUM('Cookie','IP','Fingerprint','FingerprintPro','MessageCount','MessageLength','LatLon','Network','City','UserTurn','Region','UserTurnMissed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL; 
+
+DROP TABLE IF EXISTS wD_UserConnections;
+CREATE TABLE IF NOT EXISTS `wD_UserConnections` (
+  `userID` mediumint(8) UNSIGNED NOT NULL,
+  `modLastCheckedBy` mediumint(8) UNSIGNED DEFAULT NULL,
+  `modLastCheckedOn` int(10) UNSIGNED DEFAULT NULL,
+  `matchesLastUpdatedOn` int(10) UNSIGNED DEFAULT NULL,
+  `totalHits` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `period0` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period1` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period2` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period3` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period4` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period5` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period6` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period7` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period8` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period9` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period10` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period11` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period12` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period13` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period14` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period15` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period16` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period17` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period18` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period19` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period20` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period21` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period22` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period23` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedCookie` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedCookieTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherCookie` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherCookieTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countCookie` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countCookieTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedIP` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedIPTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherIP` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherIPTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countIP` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countIPTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedFingerprint` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedFingerprintTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherFingerprint` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherFingerprintTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countFingerprint` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countFingerprintTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedFingerprintPro` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedFingerprintProTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherFingerprintPro` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherFingerprintProTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countFingerprintPro` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countFingerprintProTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedLatLon` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedLatLonTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherLatLon` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherLatLonTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countLatLon` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countLatLonTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedNetwork` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedNetworkTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedNetworkCookie` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedNetworkCookieTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countNetwork` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countNetworkTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedCity` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedCityTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherCity` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherCityTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countCity` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countCityTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedUserTurn` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedUserTurnTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherUserTurn` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherUserTurnTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countUserTurn` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countUserTurnTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedRegion` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedRegionTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherRegion` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherRegionTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countRegion` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countRegionTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedMessageLength` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedMessageLengthTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherMessageLength` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherMessageLengthTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countMessageLength` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countMessageLengthTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedMessageCount` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedMessageCountTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherMessage` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherMessageTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countMessageCount` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countMessageCountTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedUserTurnMissed` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedUserTurnMissedTotal` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `countUserTurnMissed` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `countUserTurnMissedTotal` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `suspicionRelationshipsMod` mediumint(8) UNSIGNED DEFAULT NULL,
+  `suspicionRelationshipsPeer` mediumint(8) UNSIGNED DEFAULT NULL,
+  `suspicionIPLookup` mediumint(8) UNSIGNED DEFAULT NULL,
+  `suspicionLocationLookup` mediumint(8) UNSIGNED DEFAULT NULL,
+  `suspicionCookieCode` mediumint(8) UNSIGNED DEFAULT NULL,
+  `suspicionBrowserFingerprint` mediumint(8) UNSIGNED DEFAULT NULL,
+  `suspicionFingerprintPro` mediumint(8) UNSIGNED DEFAULT NULL,
+  `suspicionGameActivity` mediumint(8) UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`userID`)
+) ENGINE=InnoDB ;
+
+
+ALTER TABLE `wD_Games` ADD COLUMN `minimumIdentityScore` TINYINT(3) UNSIGNED NOT NULL DEFAULT 0;
+ALTER TABLE `wD_Games` ADD COLUMN `minimumNMRScore` TINYINT(3) UNSIGNED NOT NULL DEFAULT 0;
+ALTER TABLE `wD_Backup_Games` ADD COLUMN `minimumIdentityScore` TINYINT(3) UNSIGNED NOT NULL DEFAULT 0;
+ALTER TABLE `wD_Backup_Games` ADD COLUMN `minimumNMRScore` TINYINT(3) UNSIGNED NOT NULL DEFAULT 0;
+
+ALTER TABLE `wD_Users` ADD COLUMN `identityScore` TINYINT(3) UNSIGNED;
+
+-- Add a column to allow a single bot to play as multiple bot user accounts to reduce memory requirements by adding an offset
+-- to game IDs.
+ALTER TABLE wD_ApiKeys ADD COLUMN multiplexOffset INT UNSIGNED NULL;
+
+ ALTER TABLE `wD_ApiKeys` DROP PRIMARY KEY; 
+ ALTER TABLE `wD_ApiKeys` ADD PRIMARY KEY(`apiKey`, `userID`); 
+  ALTER TABLE `wD_ApiKeys` DROP INDEX `apiKey`; 
+  
+CREATE TABLE IF NOT EXISTS `wD_Member_Delegate` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `userID` mediumint(8) UNSIGNED NOT NULL,
+  `userIDDelegatedTo` mediumint(8) UNSIGNED NOT NULL,
+  `gameID` mediumint(8) UNSIGNED NOT NULL,
+  `countryID` mediumint(8) UNSIGNED NOT NULL,
+  `delegationStartTime` int(8) UNSIGNED DEFAULT NULL,
+  `delegationEndTime` int(10) UNSIGNED DEFAULT NULL,
+  `createdTime` int(10) UNSIGNED DEFAULT NULL,
+  `acceptedTime` int(10) UNSIGNED DEFAULT NULL,
+  `cancelledTime` int(10) UNSIGNED DEFAULT NULL,
+  `expiredTime` int(10) UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`id`),
+	INDEX ( `userID` ) ,
+	INDEX ( `userIDDelegatedTo` ),
+	INDEX ( `delegationEndTime` )
+) ENGINE=InnoDB ;
+
+ALTER TABLE `wD_ApiKeys`
+	ADD COLUMN `description` VARCHAR(500) NULL DEFAULT NULL,
+	ADD COLUMN `label` VARCHAR(500) NULL DEFAULT NULL;
+
+ALTER TABLE `wD_ApiPermissions`
+	CHANGE COLUMN `submitOrdersForUserInCD` `submitOrdersForUserInCD` ENUM('No','Yes') NOT NULL DEFAULT 'No',
+	CHANGE COLUMN `listGamesWithPlayersInCD` `listGamesWithPlayersInCD` ENUM('No','Yes') NOT NULL DEFAULT 'No',
+	ADD COLUMN `getRedactedMessages` ENUM('No','Yes') NULL DEFAULT 'No',
+	ADD COLUMN `submitOrdersForDelegatedMembers` ENUM('No','Yes') NULL DEFAULT 'No',
+	ADD COLUMN `submitMessages` ENUM('No','Yes') NULL DEFAULT 'No',
+	ADD COLUMN `voteDraw` ENUM('No','Yes') NULL DEFAULT 'No',
+	ADD COLUMN `playBotsVsHuman` ENUM('No','Yes') NULL DEFAULT 'No',
+	ADD COLUMN `playBotVsHuman` ENUM('No','Yes') NULL DEFAULT 'No',
+	ADD COLUMN `minimumPhaseLength` MEDIUMINT NULL DEFAULT 3600,
+	ADD COLUMN `variantIDs` VARCHAR(50) NULL DEFAULT '';
+
+UPDATE wD_ApiPermissions SET getRedactedMessages='No', submitOrdersForDelegatedMembers='No', submitMessages='No', voteDraw='No', playBotsVsHuman='No', playBotVsHuman='No', minimumPhaseLength=3600, variantIDs='';
+
+
+ALTER TABLE `wD_ApiPermissions`
+	CHANGE COLUMN `getRedactedMessages` `getRedactedMessages` ENUM('No','Yes') NOT NULL DEFAULT 'No',
+	CHANGE COLUMN `submitOrdersForDelegatedMembers` `submitOrdersForDelegatedMembers` ENUM('No','Yes') NOT NULL DEFAULT 'No',
+	CHANGE COLUMN `submitMessages` `submitMessages` ENUM('No','Yes') NOT NULL DEFAULT 'No',
+	CHANGE COLUMN `voteDraw` `voteDraw` ENUM('No','Yes') NOT NULL DEFAULT 'No',
+	CHANGE COLUMN `playBotsVsHuman` `playBotsVsHuman` ENUM('No','Yes') NOT NULL DEFAULT 'No',
+	CHANGE COLUMN `playBotVsHuman` `playBotVsHuman` ENUM('No','Yes') NOT NULL DEFAULT 'No',
+	CHANGE COLUMN `minimumPhaseLength` `minimumPhaseLength` MEDIUMINT NOT NULL DEFAULT 3600,
+	CHANGE COLUMN `variantIDs` `variantIDs` VARCHAR(50) NOT NULL DEFAULT '';
+	
+DROP TABLE IF EXISTS wD_UserCodeConnections;
+CREATE TABLE `wD_UserCodeConnections` (
+	`type` ENUM('Cookie','IP','IPVPN','Fingerprint','FingerprintPro','MessageCount','MessageLength','LatLon','Network','City','UserTurn','UserTurnMissed') NOT NULL,
+	`userID` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`code` BINARY(16) NOT NULL,
+	`earliest` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
+	`latest` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00',
+	`count` INT(10) UNSIGNED NOT NULL DEFAULT 0,
+	`previousCount` INT(10) UNSIGNED NOT NULL DEFAULT 0,
+	`isNew` TINYINT(3) UNSIGNED NOT NULL DEFAULT 1,
+	`isUpdated` TINYINT(3) UNSIGNED NOT NULL DEFAULT 1,
+	PRIMARY KEY (`userID`, `type`, `code`) USING BTREE,
+	INDEX `typeCode` (`type`, `code`) USING BTREE,
+	INDEX `updatedTypeCode` (`type`, `isUpdated`, `code`) USING BTREE
+)
+ENGINE=InnoDB
+;
+DROP TABLE IF EXISTS wD_UserCodeConnectionMatches;
+CREATE TABLE `wD_UserCodeConnectionMatches` (
+	`type` ENUM('Cookie','IP','IPVPN','Fingerprint','FingerprintPro','MessageCount','MessageLength','LatLon','Network','City','UserTurn','UserTurnMissed') NOT NULL,
+	`userIDFrom` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`userIDTo` MEDIUMINT(8) UNSIGNED NOT NULL,
+	`matches` INT(10) UNSIGNED NOT NULL DEFAULT 0,
+	`previousMatches` INT(10) UNSIGNED NOT NULL DEFAULT 0,
+	`matchCount` INT(10) UNSIGNED NOT NULL DEFAULT 0,
+	`previousMatchCount` INT(10) UNSIGNED NOT NULL DEFAULT 0,
+	`isNew` TINYINT(3) UNSIGNED NOT NULL DEFAULT 1,
+	`isUpdated` TINYINT(3) UNSIGNED NOT NULL DEFAULT 1,
+	PRIMARY KEY (`type`,`userIDFrom`,`userIDTo`) USING BTREE,
+	INDEX `typeUpdatedFrom` (`type`, `isUpdated`, `userIDFrom`) USING BTREE,
+	INDEX `typeUpdatedTo` (`type`, `isUpdated`, `userIDTo`) USING BTREE
+)
+ENGINE=InnoDB
+;
+DROP TABLE IF EXISTS wD_UserConnections;
+CREATE TABLE IF NOT EXISTS `wD_UserConnections` (
+  `userID` mediumint(8) UNSIGNED NOT NULL,
+  `modLastCheckedBy` mediumint(8) UNSIGNED DEFAULT NULL,
+  `modLastCheckedOn` int(10) UNSIGNED DEFAULT NULL,
+  `matchesLastUpdatedOn` int(10) UNSIGNED DEFAULT NULL,
+  `totalHits` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `period0` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period1` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period2` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period3` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period4` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period5` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period6` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period7` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period8` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period9` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period10` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period11` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period12` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period13` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period14` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period15` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period16` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period17` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period18` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period19` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period20` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period21` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period22` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `period23` mediumint(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedCookie` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedCookieTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherCookieTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countCookie` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countCookieTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedIP` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedIPTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherIPTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countIP` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countIPTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countIPVPN` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countIPVPNTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedFingerprint` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedFingerprintTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherFingerprintTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countFingerprint` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countFingerprintTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedFingerprintPro` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedFingerprintProTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherFingerprintProTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countFingerprintPro` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countFingerprintProTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countLatLon` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countLatLonTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countNetwork` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countNetworkTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countCity` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countCityTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countUserTurn` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countUserTurnTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countMessageLength` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countMessageLengthTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countMessageCount` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `countMessageCountTotal` int(8) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedUserTurnMissed` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedUserTurnMissedTotal` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `matchedOtherUserTurnMissedTotal` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `countUserTurnMissed` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `countUserTurnMissedTotal` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `suspicionRelationshipsMod` mediumint(8) UNSIGNED DEFAULT NULL,
+  `suspicionRelationshipsPeer` mediumint(8) UNSIGNED DEFAULT NULL,
+  `suspicionIPLookup` mediumint(8) UNSIGNED DEFAULT NULL,
+  `suspicionLocationLookup` mediumint(8) UNSIGNED DEFAULT NULL,
+  `suspicionCookieCode` mediumint(8) UNSIGNED DEFAULT NULL,
+  `suspicionBrowserFingerprint` mediumint(8) UNSIGNED DEFAULT NULL,
+  `suspicionFingerprintPro` mediumint(8) UNSIGNED DEFAULT NULL,
+  `suspicionGameActivity` mediumint(8) UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (`userID`)
+) ENGINE=InnoDB ;
+
+-- Prevent full table scanes in phpBB like module
+ALTER TABLE IF EXISTS `phpbb_posts_likes` ADD INDEX `CountLikes` (`user_id`, `post_id`);
+
+ALTER TABLE `wD_UserOptions` ADD COLUMN `mapUI` enum('Point and click','Dropdown menus') NOT NULL DEFAULT 'Point and click';
+ALTER TABLE `wD_UserOptions` CHANGE COLUMN `displayUpcomingLive` `displayUpcomingLive` enum('No','Yes') NOT NULL DEFAULT 'No';
+
+UPDATE wD_UserOptions SET mapUI = 'Point and click';
+UPDATE wD_UserOptions SET displayUpcomingLive = 'No';
+
+ALTER TABLE wD_Sessions ADD COLUMN `webPushrSID` INTEGER UNSIGNED DEFAULT NULL;
+ALTER TABLE wD_Users ADD COLUMN `webPushrSID` INTEGER UNSIGNED DEFAULT NULL;
+ALTER TABLE `wD_Games` ADD COLUMN `sandboxCreatedByUserID` MEDIUMINT NULL DEFAULT NULL;
+ALTER TABLE `wD_Games` ADD INDEX `sandboxList` (`sandboxCreatedByUserID`);
+
+
+CREATE TABLE `wD_Backup_Log` (
+	`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+	`gameID` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	`turn` MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	`timestamp` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+	`isExported` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+	PRIMARY KEY (`id`),
+	INDEX `timestamp` (`timestamp`)
+)
+;
+
+ALTER TABLE `wD_Backup_Games` ADD INDEX `gameID` (`id`);
+ALTER TABLE `wD_Backup_Members` ADD INDEX `gameID` (`gameID`);
+ALTER TABLE `wD_Backup_MovesArchive` ADD INDEX `gameID` (`gameID`);
+ALTER TABLE `wD_Backup_Orders` ADD INDEX `gameID` (`gameID`);
+ALTER TABLE `wD_Backup_TerrStatus` ADD INDEX `gameID` (`gameID`);
+ALTER TABLE `wD_Backup_TerrStatusArchive` ADD INDEX `gameID` (`gameID`);
+ALTER TABLE `wD_Backup_Units` ADD INDEX `gameID` (`gameID`);
+ALTER TABLE `wD_Backup_GameMessages` ADD INDEX `gameID` (`gameID`);
+
+ALTER TABLE `wD_Misc` CHANGE COLUMN `Name` `Name` ENUM('Version','Hits','Panic','Notice','Maintenance','LastProcessTime','GamesNew','GamesActive','GamesFinished','RankingPlayers','OnlinePlayers','ActivePlayers','TotalPlayers','ErrorLogs','GamesPaused','GamesOpen','GamesCrashed','LastModAction','ForumThreads','ThreadActiveThreshold','ThreadAliveThreshold','GameFeaturedThreshold','LastGroupUpdate','LastStatsUpdate','LastMessageID','LastNMRWarningUpdate','LastConnectionUpdate','LastBackupUpdate') NOT NULL COLLATE 'utf8mb3_general_ci' FIRST;
+INSERT INTO wD_Misc (`Name`,`Value`) VALUES ('LastNMRWarningUpdate',0);
+INSERT INTO wD_Misc (`Name`,`Value`) VALUES ('LastConnectionUpdate',0);
+INSERT INTO wD_Misc (`Name`,`Value`) VALUES ('LastBackupUpdate',0);
+
+ALTER TABLE wD_ApiKeys ADD username varchar(150) NULL, ADD description varchar(500) NULL, ADD lastActive bigint UNSIGNED NULL, ADD lastOrder bigint unsigned NULL, ADD lastMessage bigint unsigned null, ADD lastVote bigint unsigned null, ADD messagesSent int unsigned null, ADD phasesPlayed int unsigned null, ADD gamesPlaying int unsigned null, ADD gamesWon int unsigned null, ADD gamesDrawn int unsigned null, ADD gamesLostToHuman int unsigned null, ADD gamesLostToBot int unsigned null;

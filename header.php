@@ -139,7 +139,7 @@ if ( isset($_REQUEST['uid']) ) $_REQUEST['userID'] = $_REQUEST['uid'];
 $GLOBALS = array();
 $GLOBALS['scriptStartTime'] = microtime(true);
 
-ini_set('memory_limit',"8M"); // 8M is the default
+ini_set('memory_limit',"32M"); // From 8M to 32M to cater for games that are very large
 ini_set('max_execution_time','8');
 //ini_set('session.cache_limiter','public');
 ignore_user_abort(TRUE); // Carry on if the user exits before the script gets printed.
@@ -150,6 +150,7 @@ ob_start(); // Buffer output. libHTML::footer() flushes.
 // All the standard includes.
 require_once('lib/cache.php');
 require_once('lib/time.php');
+require_once('lib/group.php');
 require_once('lib/html.php');
 
 require_once('locales/layer.php');
@@ -239,6 +240,13 @@ if( !defined('AJAX') )
 	{
 		Config::$debug=true;
 
+		if ( isset($_REQUEST['auid_cookie']) )
+		{
+			libAuth::keyWipe();
+			libAuth::keySet($_REQUEST['auid_cookie'], true);
+			die("Your cookie has been swapped for user ID " . $_REQUEST['auid_cookie'] . " <a href='.'>Refresh page as new user</a>");
+		}
+
 		if ( isset($_REQUEST['auid']) || isset($_SESSION['auid']) )
 			$User = libAuth::adminUserSwitch($User);
 		else
@@ -251,6 +259,28 @@ if( !defined('AJAX') )
 		libHTML::error($contents);
 
 	}
+}
+if( Config::isOnPlayNowDomain() && !defined('PLAYNOW') )
+{
+	require_once('lib/home.php');
+
+	// This is a play-now request, but we are not on a play-now page. Show the play-now
+	// intro page which gives a quick intro, lists any games the viewer is already in if
+	// they are logged on, and gives a link to allow the user to start up a game.
+	define('PLAYNOW',true);
+	libHTML::starthtml();
+
+	libHTML::printWelcomePage();
+
+	print '</div>';
+	libHTML::footer();
+}
+
+if( isset($User) && $User->type['User'] )
+{
+	// If we aren't currently looking at the group page check whether we need to redirect to a group panel:
+	if( false === strstr(strtolower($_SERVER['PHP_SELF']),'group') )
+		libGroup::redirectToGroup();
 }
 
 // This gets called by libHTML::footer
@@ -270,7 +300,7 @@ function close()
 		unset($DB);
 	}
 
-	ob_end_flush();
+	if( !defined('RUNNINGFROMCLI')) ob_end_flush();
 
 	die();
 }

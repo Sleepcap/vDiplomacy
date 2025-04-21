@@ -29,6 +29,7 @@ require_once('header.php');
 
 require_once(l_r('objects/mailer.php'));
 
+// Test commit #2, on staging branch
 global $Mailer;
 $Mailer = new Mailer();
 
@@ -37,11 +38,26 @@ if(!$User->type['User'])
 	libHTML::error(l_t("You can't use the user control panel, you're using a guest account."));
 }
 
+if( isset(Config::$auth0conf) )
+{
+	// Do login/logout before sending any other headers (though it does work anyway?)
+	require_once('contrib/auth0.php');
+
+	if( isset($_REQUEST['auth0Login']))
+	{
+		libOpenID::logIn();
+	}
+	else if( isset($_REQUEST['auth0Logout']) )
+	{
+		libOpenID::logOut();
+	}
+}
+
 libHTML::starthtml();
 
 if ( isset($_REQUEST['emailToken']))
 {
-	libAuth::formToken_Valid();
+	// libAuth::formToken_Valid(); I think this is linked from e-mail so don't require a form token
 
 	if( !($email = libAuth::emailToken_email($_REQUEST['emailToken'])) )
 		libHTML::notice(l_t("Email change validation"), l_t("A bad email token was given, please check the validation link try again"));
@@ -49,7 +65,7 @@ if ( isset($_REQUEST['emailToken']))
 	$email = $DB->escape($email);
 
 	if( User::findEmail($email) )
-		libHTML::notice(l_t("Email change validation"), l_t("The email address '%s', is already in use. Please contact the moderators at %s for assistance.",$email, Config::$modEMail));
+		libHTML::notice(l_t("Email change validation"), l_t("The email address '%s', is already in use. Please contact the moderators in the <a href='modforum.php'>moderator forum</a> for assistance.",$email));
 
 	$DB->sql_put("UPDATE wD_Users SET email='".$email."' WHERE id = ".$User->id);
 
@@ -84,12 +100,14 @@ if ( isset($_REQUEST['userForm']) )
 		
 	$formOutput = '';
 	
+	require_once('lib/sms.php');
+
 	try
 	{
 		
 		$errors = array();
 		$SQLVars = User::processForm($_REQUEST['userForm'], $errors);
-
+		
 		if( count($errors) )
 			throw new Exception(implode('. ',$errors));
 
@@ -108,10 +126,9 @@ if ( isset($_REQUEST['userForm']) )
 				'forceDesktop'=>'forceDesktop',
 				'Remove scrollbars from smallmap'=>'scrollbars',
 				'Button size'=>'buttonWidth',
-				'E-mail'=>'email','E-mail hiding'=>'hideEmail', 'Homepage'=>'homepage','Comment'=>'comment');
+				'E-mail'=>'email', 'Homepage'=>'homepage','Comment'=>'comment');
 
-		$User->options->set($_REQUEST['userForm']);
-		$User->options->load();
+		$User->getOptions()->set($_REQUEST['userForm']);
 
 		$set = '';
 		foreach( $allowed as $name=>$SQLName )
@@ -148,6 +165,30 @@ if ( isset($_REQUEST['userForm']) )
 
 			$set .= $SQLName." = '".$SQLVars[$SQLName]."'";
 			$formOutput .= l_t('%s updated successfully.',$name).' ';
+		}
+
+		// Check if there are any changes to the opt-in features:
+		if( isset(Config::$enabledOptInFeatures) && Config::$enabledOptInFeatures > 0 )
+		{
+			$previousOptInFeatures = $User->optInFeatures;
+			for( $featureFlag=1; pow(2, $featureFlag) < Config::$enabledOptInFeatures; $featureFlag *= 2 )
+			{
+				if( ( $featureFlag & Config::$enabledOptInFeatures ) == 0 ) continue;
+
+				if( key_exists('optInFeature_' . $featureFlag, $_REQUEST['userForm']) )
+				{
+					if( $_REQUEST['userForm']['optInFeature_' . $featureFlag ] == "1" )
+						$User->optInFeatures = $User->optInFeatures | $featureFlag;
+					else
+						$User->optInFeatures = $User->optInFeatures & ~$featureFlag;
+				}
+			}
+			if( $previousOptInFeatures != $User->optInFeatures )
+			{
+				if ( $set != '' ) $set .= ', ';
+				$set .= "optInFeatures = " . $User->optInFeatures;
+				$formOutput .= l_t('Optional feature set selection updated.').' ';
+			}
 		}
 		
 		if ( $set != '' )
@@ -194,7 +235,35 @@ if (isset($_COOKIE['wD-Tutorial-Settings']))
 	libHTML::help('Settings', $tutorialMessage);
 
 	unset($_COOKIE['wD-Tutorial-Settings']);
-	setcookie('wD-Tutorial-Settings', '', time()-3600);
+	setcookie('wD-Tutorial-Settings', '', ['expires'=>time()-3600,'samesite'=>'Lax']);
+}
+
+function printAndFindTab()
+{
+	global $User, $Misc;
+
+	$tabs = array();
+
+	$tabs['General']=l_t("General settings");
+	$tabs['Features']=l_t("Special features");
+	$tabs['IAmap']=l_t("Interactive map");
+	$tabs['CountrySwitch']=l_t("Send your games to other players");
+
+	$tab = 'General';
+	$tabNames = array_keys($tabs);
+
+	if( isset($_REQUEST['tab']) && in_array($_REQUEST['tab'], $tabNames) )
+		$tab = $_REQUEST['tab'];
+
+	print '<div class="gamelistings-tabs">';
+	foreach($tabs as $tabChoice=>$tabTitle)
+	{
+		print '<a title="'.$tabTitle.'" href="usercp.php?tab='.$tabChoice;
+		print ( ( $tab == $tabChoice ) ?  '" class="current"' : '"');
+		print '>'.l_t($tabChoice).'</a>';
+	}
+	print '</div>';
+	return $tab;
 }
 
 function printAndFindTab()

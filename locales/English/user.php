@@ -39,11 +39,6 @@ defined('IN_CODE') or die('This script can not be run by itself.');
 		?>" <?php if ( isset($_REQUEST['emailToken']) ) print 'readonly '; ?> >
 	</p>
 
-	<p><strong>Hide e-mail address?</strong></br>
-		<input type="radio" name="userForm[hideEmail]" value="Yes" <?php if($User->hideEmail=='Yes') print "checked"; ?>>Yes
-		<input type="radio" name="userForm[hideEmail]" value="No" <?php if($User->hideEmail=='No') print "checked"; ?>>No
-	</p>
-
 	<p><strong>Password:</strong></br>
 		<input type="password" name="userForm[password]" maxlength=30 autocomplete="new-password" class = "settings">
 	</p>
@@ -51,35 +46,63 @@ defined('IN_CODE') or die('This script can not be run by itself.');
 	<p><strong>Confirm Password:</strong></br>
 		<input type="password" name="userForm[passwordcheck]" maxlength=30 autocomplete="new-password" class = "settings">
 	</p>
-
-	<p><strong>Comment:</strong></br>
+	<form
+	<p>
+		<div style="float:right"><i>Profile quote visible to others. Consider favorite quotes or links to games.</i></div>
+		<strong>Comment:</strong></br>
 		<TEXTAREA NAME="userForm[comment]" ROWS="3" COLS="50" class = "settings"><?php
 			print str_replace('<br />', "\n", $User->comment);
 		?></textarea>
-	</br>
-		<?php if ( !$User->type['User'] ) print '<strong>(Optional)</strong>: '; ?>
-		Profile quote visible to others. Consider favorite quotes or links to games.
 	</p>
 
-<?php 
-	if (isset(Config::$customForumURL))
+<?php
+	
+
+if (isset(Config::$customForumURL))
+{
+	list($newForumID) = $DB->sql_row("SELECT user_id FROM `phpbb_users` WHERE webdip_user_id = ".$User->id);
+	if ($newForumID > 0)
 	{
-		list($newForumId) = $DB->sql_row("SELECT user_id FROM `phpbb_users` WHERE webdip_user_id = ".$User->id);
-		if ($newForumId > 0)
+		print '<p class="profileCommentURL"><strong><a href="/contrib/phpBB3/ucp.php?i=179">Forum User Settings</a></strong></p>';
+	}
+}
+
+if( isset(Config::$enabledOptInFeatures) && Config::$enabledOptInFeatures > 0 )
+	{
+		// Opt-in features are enabled in the config, so enumerate all the features this user can use
+		/*
+		This went unused and should be phased out
+		$optInFeatures = array(
+			0x1 => array(
+				'Early Access: show in-development features (may be buggy!)', 
+				''
+			),
+		);
+		foreach($optInFeatures as $featureFlag => $featureInfo)
 		{
-			print '<p class="profileCommentURL"><strong><a href="/contrib/phpBB3/ucp.php?i=179">Forum User Settings</a></strong></p>';
-		}
+			if( ( $featureFlag & Config::$enabledOptInFeatures ) == 0 ) continue;
+			list($header, $description) = $featureInfo;
+			print '
+			<p>
+				<div><li class="settings"><strong>'.$header.':</strong></li>
+				<div><i>'.$description.'</i></div>
+				<input type="radio" name="userForm[optInFeature_'.$featureFlag.']" value="1" ' . ( ($featureFlag & $User->optInFeatures) > 0 ? "checked" : "") . '>Yes
+				<input type="radio" name="userForm[optInFeature_'.$featureFlag.']" value="0" ' . ( ($featureFlag & $User->optInFeatures) == 0 ? "checked" : "") . '>No
+			</p>
+			';
+		}*/
+		print '<input type="hidden" name="userForm[optInFeature_1]" value="1" />';
 	}
 
-	foreach ($User->options->value as $name=>$val) 
+foreach ($User->options->value as $name=>$val) 
+{
+	print '<div><li class="settings"><strong>'.UserOptions::$titles[$name].':</strong></li>';
+	foreach (UserOptions::$possibleValues[$name] as $possible) 
 	{
-		print '<div><li class="settings"><strong>'.UserOptions::$titles[$name].':</strong></li>';
-		foreach (UserOptions::$possibleValues[$name] as $possible) 
-		{
-			print ' <input type="radio" name="userForm['.$name.']" value="'.$possible.'" '. ($val == $possible ? 'checked' :'') . ' > '. $possible;
-		}
-		print '</div></br>';
+		print ' <input type="radio" name="userForm['.$name.']" value="'.$possible.'" '. ($val == $possible ? 'checked' :'') . ' > '. $possible;
 	}
+	print '</div></br>';
+}
  	                               
 if( $User->type['User'] ) 
 {

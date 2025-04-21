@@ -71,10 +71,15 @@ class adminActions extends adminActionsForms
 				ban. <strong>The user will see the reason provided</strong>',
 				'params' => array('userID'=>'User ID', 'ban'=>'Days','reason'=>'Reason')
 			),
-			'recalculateUserRR' => array(
-				'name' => 'Recalculate RR for a User',
-				'description' => 'Reruns the RR calculation for the user provided.',
-				'params' => array('userID'=>'User ID')
+			'recalculateRR' => array(
+				'name' => 'Recalculate reliability ratings for all users',
+				'description' => 'Refreshes all reliability ratings.',
+				'params' => array()
+			),
+			'recalculateGroups' => array(
+				'name' => 'Recalculate the group panel user to user links',
+				'description' => 'Refreshes all group panel user to user links.',
+				'params' => array()
 			),
 			
 			'banUser' => array(
@@ -179,6 +184,11 @@ class adminActions extends adminActionsForms
 			'generateRegistrationLink' => array(
 				'name' => 'Generate Registration Link',
 				'description' => 'Generate a registration email link for a user having problems making an account.',
+				'params' => array('email'=>'Registration Email'),
+			),
+			'generateResetLink' => array(
+				'name' => 'Generate Password Reset Link',
+				'description' => 'Generate a password reset email link for a user having problems resetting their password. (Use with care of course.)',
 				'params' => array('email'=>'Registration Email'),
 			),
 		);
@@ -910,33 +920,27 @@ class adminActions extends adminActionsForms
 		}
 	}
 
-	public function recalculateUserRR(array $params)
+	public function recalculateRR(array $params)
 	{
 		global $DB;
 
-		$userIDtoUpdate = (int)$params['userID'];
-
 		require_once(l_r('gamemaster/gamemaster.php'));
 		 
-		$year = time() - 31536000;
-		$lastMonth = time() - 2419200;
-		$lastWeek = time() - 604800;
-
-		$RELIABILITY_QUERY = "
-		UPDATE wD_Users u 
-		set u.reliabilityRating = greatest(0, 
-		(100 *(1 - ((SELECT COUNT(1) FROM wD_MissedTurns t  WHERE t.userID = u.id AND t.modExcused = 0 and t.turnDateTime > ".$year.") / greatest(1,u.yearlyPhaseCount))))
-		-(6*(SELECT COUNT(1) FROM wD_MissedTurns t  WHERE t.userID = u.id AND t.liveGame = 0 AND t.modExcused = 0 and t.samePeriodExcused = 0 and t.systemExcused = 0 and t.turnDateTime > ".$lastMonth."))
-		-(6*(SELECT COUNT(1) FROM wD_MissedTurns t  WHERE t.userID = u.id AND t.liveGame = 1 AND t.modExcused = 0 and t.samePeriodExcused = 0 and t.systemExcused = 0 and t.turnDateTime > ".$lastWeek."))
-		-(5*(SELECT COUNT(1) FROM wD_MissedTurns t  WHERE t.userID = u.id AND t.liveGame = 1 AND t.modExcused = 0 and t.samePeriodExcused = 0 and t.systemExcused = 0 and t.turnDateTime > ".$lastMonth."))
-		-(5*(SELECT COUNT(1) FROM wD_MissedTurns t  WHERE t.userID = u.id AND t.liveGame = 0 AND t.modExcused = 0 and t.samePeriodExcused = 0 and t.systemExcused = 0 and t.turnDateTime > ".$year.")))
-		where u.id = ".$userIDtoUpdate;
-
-		$DB->sql_put($RELIABILITY_QUERY);
-
-		return "This user's RR has been recalculated.";
+		libGameMaster::updateReliabilityRatings(true);
+		
+		return "Reliabiility ratings have been recalculated.";
 	}
+	public function recalculateGroups(array $params)
+	{
+		global $DB;
 
+		require_once(l_r('lib/group.php'));
+		 
+		libGroup::generateGameRelationCache(1);
+		
+		return "Group user link levels recalculated.";
+	}
+	
 	public function generateRegistrationLink(array $params)
 	{
 		global $DB;
@@ -961,6 +965,26 @@ class adminActions extends adminActionsForms
 		$emailToken = substr(md5(Config::$secret.$email.$timestamp),0,8).'%7C'.$timestamp.'%7C'.urlencode($email);
 
 		return "Please give the user the following link: <br>".$thisURL.'?emailToken='.$emailToken;
+	}
+
+	public function generateResetLink(array $params)
+	{
+		global $DB;
+
+		if (!isset($params['email']))
+			return "Please enter a valid email.";
+		
+		$email = $DB->msg_escape($params['email']);
+
+		list($emailAlreadyInUse) = $DB->sql_row("SELECT COUNT(*) FROM wD_Users WHERE email = '".$email."' AND NOT (type LIKE '%Mod%' OR type LIKE '%Admin%')");
+		if ($emailAlreadyInUse == 0)
+		{
+			return "Could not find this e-mail address, or this is a Mod/Admin e-mail which cannot be reset using this method.";
+		}
+		
+		$thisURL = libAuth::email_validateURL($email)."&forgotPassword=3";
+		
+		return "Please give the user the following link: <br>".$thisURL;
 	}
 
 	public function changeReliability(array $params)

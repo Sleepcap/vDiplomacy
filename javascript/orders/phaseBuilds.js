@@ -61,6 +61,21 @@ function loadOrdersPhase() {
 					case 'Build Army':
 					case 'Build Fleet':
 						this.toTerrChoices = SupplyCenters.select(function(sc){
+							if( ! (
+								// Either this SC is for our country (which to be honest should already be checked during the load routine.. not sure why this check is here)
+								(sc.countryID == this.countryID || sc.coastParent.countryID == this.countryID)
+								||
+								// .. but leaving the check in for the moment just to make sure it doesn't break any variants, but
+								// this extra exception is needed for if we're in Sandbox mode in build-anywhere variant
+								(context.isSandboxMode && sc.coastParent.ownerCountryID == this.countryID )
+								// The ideal solution would be to look through all the territories for SCs here,
+								// and have the SC filter logic all here, however there are several variants and
+								// likely variants not in the official repo that may rely on being able to change
+								// the SupplyCenters array before this function is called, so a solution will be
+								// tricky. For now, this is a quick fix.
+							) )
+							return false;
+
 							if( this.type=='Build Army' && ( sc.coast=='Parent'||sc.coast=='No') ) 
 								return true;
 							else if ( this.type=='Build Fleet' && ( sc.type != 'Land' && sc.coast!='Parent' ) )
@@ -70,7 +85,9 @@ function loadOrdersPhase() {
 						},this).pluck('id');
 						break;
 					case 'Destroy':
-						this.toTerrChoices = MyUnits.pluck('Territory').pluck('coastParent').pluck('id');
+						this.toTerrChoices = MyUnits.select(function(sc) {
+							return ( sc.countryID == this.countryID ); // For sandbox mode filter this specific order by countryID
+						},this).pluck('Territory').pluck('coastParent').pluck('id');
 						break;
 				}
 				

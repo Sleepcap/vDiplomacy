@@ -40,7 +40,7 @@ class Config
 	 *
 	 * @var string
 	 */
-	public static $database_socket='localhost';
+	public static $database_socket='webdiplomacy-db';
 
 	/**
 	 * The user who will perform all database actions. You should
@@ -312,6 +312,21 @@ class Config
 	public static $grActive = false;
 
 	/**
+	 * An array of variants where concede votes are allowed. If empty then all variants will allow concede voting.
+	 * @var array
+	 */
+	public static $concedeVariants=array(15,23);
+
+	/**
+	 * Play now domain; if not null the system will check whether it is being viewed as this
+	 * subdomain, e.g. play.webdiplomacy.net , and if it is the system will run in play-now
+	 * mode where no user account is needed and player vs bot games will be created and started
+	 * from any page.
+	 * @var string|null
+	 */
+	public static $playNowDomain = null;
+	
+	/**
 	 * An array of categories to use when calculating GhostRatings
 	 * @var array
 	 */
@@ -436,6 +451,28 @@ class Config
 		);
 
 	/**
+	 * An array of answers, indexed by the question, which are added to the FAQ page on this installation, adding it
+	 * to the list of generic webDiplomacy FAQs.
+	 *
+	 * If false no server-specific FAQ section will be displayed.
+	 *
+	 * @var array
+	 */
+	public static $faq=array('Have any extra questions been added?'=>'No, not yet.');
+
+	/**
+	 * A bit-mask that masks an int stored against wD_Users to allow users to opt-in to various experimental features
+	 * in a way that doesn't need any database changes to add/remove new features.
+	 *
+	 * If this is non-zero the user will see a list of options as defined in locales/[locale]/user.php
+	 *
+	 * @var int
+	 */
+	public static $enabledOptInFeatures = 0;
+	// Enable up to 24 opt-in features:
+	//public static $enabledOptInFeatures = 0b111111111111111111111111;
+
+	/**
 	 * The directory in which error logs are stored. If this returns false errors will not be logged.
 	 * *Must not be accessible to the web server, as sensitive info is stored in this folder.*
 	 *
@@ -469,12 +506,28 @@ class Config
 	}
 
 	/**
+	 * This is the folder that game backup JSON files will be written to when gamemaster.php is called with BACKUPGAMES.
+	 * Note that this will contain message data so should be somewhere private, and there should be code that will compress
+	 * and clean this folder up regularly.
+	 * It should be reset every time a full site backup is taken; this dataset is so if something happens to the site the
+	 * game data, which is the most important thing, can still be restored (without requiring constant downtime to take backups)
+	 */
+	public static $gameBackupDirectory = false;
+
+	/**
 	 * Where to log points before/after logs to, which log the points before/after games have ended.
 	 * If false points are not logged.
 	 *
 	 * @var string
 	 */
 	public static $pointsLogFile=false; //'../pointslog.txt';
+
+	/**
+	 * Where to log bot requests, for troubleshooting the bot API
+	 *
+	 * @var string
+	 */
+	public static $botsLogFile=false;//'botslog.txt'; 
 
 	/**
 	 * An array of e-mail settings, to validate e-mails etc.
@@ -499,15 +552,35 @@ class Config
 			"UseSMTP"=> false,
 			/* Use SMTP, if this is FALSE the variable below is ignored. */
 			"SMTPSettings"=> array(
-					"Host"=>"yourdiplomacyserver.com",
-					"Port"=>"25",
+					"Host"=>"mailhog",
+					"Port"=>"1025",
 					"SMTPAuth"=>false,
 					/* If this is FALSE the two variables below are ignored */
 					"Username"=>"webmaster",
 					"Password"=>"password123"
 				),
-			"UseDebug" => true // If this is set to true mail will be output to the browser instead of sent, useful for debugging
+			"UseDebug" => false // If this is set to true mail will be output to the browser instead of sent, useful for debugging
 		);
+	
+	/**
+	 * The configuration for sending SMS messages, currently only set up to use Twilio
+	 */
+	public static $smsConfig = array(
+		"isEnabled"				=> false,
+		"isValidationEnabled" 	=> false,
+		"isNotificationEnabled" => false,
+        "twilioSID"    			=> "",
+        "twilioToken"  			=> "",
+        "twilioServiceSID" 		=> ""
+	);
+
+	/**
+	 * Something to add into the header, within <head></head>, as analytics now needs to be embedded there.
+	 */
+	public static function customHeader()
+	{
+		return '';
+	}
 
 	/**
 	 * Something to add after everything else has been printed off (except '</body></html>'), useful for
@@ -518,6 +591,59 @@ class Config
 		return '';
 	}
 
+	/**
+	 * The username that the web hook with authenticate against
+	 * @var string
+	 */
+	public static $fingerPrintWebHookUsername = null;
+	/**
+	 * The password that the web hook will authenticate against
+	 * @var string
+	 */
+	public static $fingerPrintWebHookPassword = null;
+
+	/**
+	 * If using reCaptcha v3 instead of the built-in easyCaptcha (which can be unreliable) enter the site key here:
+	 * @var string
+	 */
+	public static $recaptchaSiteKey = null;
+	public static $recaptchaProject = null;
+	public static $recaptchaApiKey = null;
+
+	/**
+	 * Public Site key for a web pusher account, to allow users to subscribe to notifications
+	 * @var string
+	 */
+	public static $webpushrSiteKey = null;
+
+	/**
+	 * Private Auth key for a web pusher account, to allow pushing notifications to users
+	 * @var string
+	 */
+	public static $webpushrAuthKey = null;
+
+	/**
+	 * Private The auth token for a web pusher account to allow users to subscribe to notifications
+	 * @var string
+	 */
+	public static $webpushrAuthToken = null;
+
+	/**
+	 * Read /contrib/phpBB3-files/README.txt for instructions on enabling the phpBB3 integration support. The final step
+	 * is uncommenting the line below (assuming this is where it was installed to.)
+	 */
+	//public static $customForumURL='/contrib/phpBB3/';
+
+    /**
+    * Settings needed for auth0 to function
+    public static $auth0conf = array(
+		'domain' => '',
+		'client_id' => '',
+		'client_secret' => '',
+		'redirect_url' => '',
+	);
+    */
+	
 	// ---
 	// --- From here on down the default settings will probably be fine.
 	// ---
@@ -527,7 +653,7 @@ class Config
 	 * is set to true if viewing as admin)
 	 * @var boolean
 	 */
-	public static $debug=false;
+	public static $debug=true;
 
 	/**
 	 * The default locale for guest users.
@@ -636,6 +762,83 @@ class Config
 	 * @var bool
 	 */
 	public static $facebookDebug=false;
-}
 
+	/**
+	 * Returns true if this request is happening on a play-now server.
+	 * @return bool
+	 */
+	public static function isOnPlayNowDomain()
+	{
+		if( isset(self::$playNowDomain) && self::$playNowDomain != null ) 
+		{
+			if( isset($_SERVER['HTTP_HOST']) && strstr(strtolower($_SERVER['HTTP_HOST']), strtolower(Config::$playNowDomain)) !== false )
+				return true;
+		}
+		return false;	
+	}
+
+	// ---
+	// --- The following settings are for WebSockets using Pusher or Soketi
+	// --- https://docs.soketi.app/getting-started/backend-configuration/pusher-sdk
+	// --- Note that the client-side pusher config needs to be in sync with this
+	// --- config; see beta-src/.env.production
+	// ---
+
+	/**
+	 * The default app id for the pusher/soketi array driver.
+	 *
+	 * @var string
+	 */
+	public static $pusherAppKey = 'app-key';
+
+	/**
+	 * The default app key for the pusher/soketi array driver.
+	 *
+	 * @var string
+	 */
+	public static $pusherAppSecret = 'app-secret';
+
+	/**
+	 * The default app secret for the pusher/soketi array driver.
+	 *
+	 * @var string
+	 */
+	public static $pusherAppId = 'app-id';
+
+	/**
+	 * The default host for the pusher/soketi array driver.
+	 * By default it's the defined name of the docker 
+	 * container defined in docker-compose.yml
+	 *
+	 * @var string
+	 */
+	public static $pusherHost = 'webdiplomacy-websocket';
+
+	/**
+	 * The default port for the pusher/soketi array driver.
+	 *
+	 * @var int
+	 */
+	public static $pusherPort = 6001;
+
+	/**
+	 * The scheme to use for pusher
+	 *
+	 * @var int
+	 */
+	public static $pusherScheme = 'http';
+
+	/**
+	 * Force pusher to use TLS
+	 *
+	 * @var int
+	 */
+	public static $pusherForceTLS = false;
+
+	/**
+	 * If set to true bots are allowed to get messages directly from the unredacted messages table, for use
+	 * with testing bots in a development environment without needing a separate redaction process running.
+	 */
+	public static $allowBotsAccessToUnredactedMessages = true;
+}
 ?>

@@ -104,7 +104,7 @@ class processMember extends Member
 			$countryID = 0;
 			
 		$DB->sql_put("INSERT INTO wD_Members SET
-			userID = ".$userID.", gameID = ".$Game->id.", countryID=".$countryID.", orderStatus='None,Completed,Ready', bet = 0, timeLoggedIn = ".time().", excusedMissedTurns = ".$Game->excusedMissedTurns);
+			userID = ".$userID.", gameID = ".$Game->id.", countryID=".$countryID.", orderStatus='None,Completed,Ready', orderStatusChanged=UNIX_TIMESTAMP(), bet = 0, timeLoggedIn = ".time().", excusedMissedTurns = ".$Game->excusedMissedTurns);
 		
 		$DB->sql_put('DELETE FROM wD_WatchedGames WHERE gameID='.$Game->id.' AND userID='.$userID);
 
@@ -143,9 +143,9 @@ class processMember extends Member
 
 		$this->points -= $bet;
 		$this->Game->pot += $bet;
-
-		if($User instanceof User && $User->id == $this->userID) $User->points -= $bet;
-
+	
+		if($User instanceof User && $User->id == $this->userID) $User->points -= $bet;	
+		
 		return $bet;
 	}
 

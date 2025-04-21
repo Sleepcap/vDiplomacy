@@ -25,6 +25,8 @@
 require_once('header.php');
 
 require_once(l_r('objects/game.php'));
+require_once(l_r('objects/group.php'));
+require_once(l_r('objects/groupUser.php'));
 require_once(l_r('gamepanel/game.php'));
 
 if ( isset($_REQUEST['userID']) && intval($_REQUEST['userID'])>0 )
@@ -92,7 +94,7 @@ if ( $User->type['Moderator'] )
 			if( !$UserProfile->type['Admin'] && ( $User->type['Admin'] || !$UserProfile->type['Moderator'] ) )
 				$modActions[] = libHTML::admincp('banUser',array('userID'=>$UserProfile->id), 'Ban user');
 
-			$modActions[] = '<a href="admincp.php?tab=Multi-accounts&aUserID='.$UserProfile->id.'" class="light">Enter multi-account finder</a>';
+			$modActions[] = '<a href="admincp.php?tab=Account Analyzer&aUserID='.$UserProfile->id.'" class="light">Enter multi-account finder</a>';
 
 			if($modActions)
 			{
@@ -100,8 +102,8 @@ if ( $User->type['Moderator'] )
 			}
 		}
 
-		print '<strong>UserId:</strong> '.$UserProfile->id.'</br></br>';
-		print '<strong>Email:</strong></br>'.$UserProfile->email;
+		print '<strong>UserID:</strong> '.$UserProfile->id.'</br></br>';
+		print '<strong>Email:</strong></br>'.$UserProfile->email.'</br></br>';
 		
 		$lastCheckedBy = $UserProfile->modLastCheckedBy();
 		$modLastCheckedOn = $UserProfile->modLastCheckedOn();
@@ -207,12 +209,12 @@ print '<div class = "profile-show-inside-left">';
 	if ( $UserProfile->type['Moderator'] ||  $UserProfile->type['ForumModerator'] || $UserProfile->type['Admin'] )
 	{
 		print '<li><strong>Mod/Admin team</strong></li>';
-		print '<li>The best way to get moderator assistance is using our built in <a href="contactUsDirect.php">help page</a>. Please do not message
+		print '<li>The best way to get moderator assistance is using our built in <a href="modforum.php">moderator forum</a>. Please do not message
 		moderators directly for help.</li>';
 		print '<li>&nbsp;</li>';
 	}
 
-	if ( $UserProfile->online || time() - (24*60*60) < $UserProfile->timeLastSessionEnded)
+	if ( time() - (24*60*60) < $UserProfile->timeLastSessionEnded)
 		print '<li><strong>Visited in last 24 hours</strong></li>';
 	else
 		print '<li><strong>Last visited:</strong> '.libTime::text($UserProfile->timeLastSessionEnded).'</li>';
@@ -279,7 +281,7 @@ print '<strong>Ranking Info</strong>
 	$ghostRatingTrends = $UserProfile->getGRTrending(0,12);
 
 	// Determine user theme and set colors for use in the javascript for chart generation, Yes is Dark Mode, No is Light Mode.
-	if ($User->getTheme() == 'Yes') 
+	if ($User->isDarkMode()) 
 	{
 		$chartLineColor = 'white';
 		$chartBackgroundColor = '#757b81';
@@ -514,31 +516,21 @@ print '<div class = "profile-show-inside">';
 
 print '</div>';
 
-// Do all the RR calculations here
-$missedTurns = $UserProfile->getMissedTurns();
-$liveMissedTurns = $UserProfile->getLiveMissedTurns();
-$allMissedTurns = $missedTurns + $liveMissedTurns;
-
-$recentUnExcusedMissedTurns = $UserProfile->getRecentUnExcusedMissedTurns();
-$allUnExcusedMissedTurns = $UserProfile->getYearlyUnExcusedMissedTurns();
-
-$recentLiveUnExcusedMissedTurns = $UserProfile->getLiveRecentUnExcusedMissedTurns();
-$allLiveUnExcusedMissedTurns = $UserProfile->getLiveUnExcusedMissedTurns();
-
-$basePercentage = (100*(1- ($allMissedTurns/max($UserProfile->yearlyPhaseCount,1))));
-$yearlyPenalty = ($allUnExcusedMissedTurns*5);
-$recentPenalty = ($recentUnExcusedMissedTurns*6);
-$liveLongPenalty = ($allLiveUnExcusedMissedTurns*5);
-$liveShortPenalty = ($recentLiveUnExcusedMissedTurns*6);
-
-$totalRR = max(($basePercentage - $recentPenalty - $yearlyPenalty - $liveShortPenalty - $liveLongPenalty),0);
 
 // Print out relibality rating information here instead of having it a new link.
 
 print '<div class = "profile-show">';
 print '<div class = "rrInfo">';
 
-print '<div class = "profile_title"> Reliability Rating: '.$totalRR.'%</div>';
+// Fetch reliability info:
+$reliabilityData = $DB->sql_hash("SELECT yearlyPhaseCount, reliabilityRating, isPhasesDirty, 
+	missedPhasesTotalLastYear, missedPhasesTotalLastMonth, missedPhasesTotalLastWeek,
+	missedPhasesLiveLastYear, missedPhasesLiveLastMonth, missedPhasesLiveLastWeek,
+	missedPhasesNonLiveLastYear, missedPhasesNonLiveLastMonth, missedPhasesNonLiveLastWeek,
+	cdCount, nmrCount, cdTakenCount, phaseCount, gameCount, deletedCDs
+	FROM wD_Users WHERE id = ". $UserProfile->id);
+
+print '<div class = "profile_title"> Reliability Rating: '.round($reliabilityData['reliabilityRating'],1).'%</div>';
 print '<div class = "profile_content">';
 
 print '<h4>Reliability Explained:</h4>';
@@ -576,46 +568,88 @@ you will begin getting temporarily banned from making new games, joining existin
 	result in a 24 hour temp ban. The 2 warnings reset every 28 days resulting in significantly more yearly warnings for live game players then the normal system.
 </p></div>';
 
-print '<h4>Factors Impacting RR:</h4>';
+
+
+ /* RR calc, calculated in gamemaster/gamemaster.php updateReliabilityRatings:
+	greatest(0,
+	1.0
+	- ((u.missedPhasesTotalLastYear+u.missedPhasesTotalLastMonth+u.missedPhasesTotalLastWeek) / u.yearlyPhaseCount)
+	- 0.11 * u.missedPhasesLiveLastWeek
+	- 0.11 * (u.missedPhasesNonLiveLastWeek+u.missedPhasesNonLiveLastMonth)
+	- 0.05 * u.missedPhasesLiveLastMonth
+	- 0.05 * u.missedPhasesNonLiveLastYear)) */
 
 if ( $User->type['Moderator'] || $User->id == $UserProfile->id )
 {	
-	print '<p> <Strong>Yearly Turns:</Strong> '.$UserProfile->yearlyPhaseCount.'</br>';
-}
+	print '<h4>Reliability rating calculation info:</h4>';
 
-if ($allLiveUnExcusedMissedTurns > 0 ) 
-{ 
-	print '<Strong>Yearly Missed Turns:</Strong> '.$missedTurns.'</br>
-	<Strong>Past Month Live Missed Turns:</Strong> '.$liveMissedTurns.'</br>'; 
-}
+	if( $reliabilityData['isPhasesDirty'] == 1 )
+	{
+		print '<p class="notice">Warning: Your reliability rating does not factor in all data; this may be because games are not processing. Please contact the mod team.</p>';
+	}
+	/*
+	yearlyPhaseCount, reliabilityRating, isPhasesDirty, 
+	missedPhasesTotalLastYear, missedPhasesTotalLastMonth, missedPhasesTotalLastWeek,
+	missedPhasesLiveLastYear, missedPhasesLiveLastMonth, missedPhasesLiveLastWeek,
+	missedPhasesNonLiveLastYear, missedPhasesNonLiveLastMonth, missedPhasesNonLiveLastWeek,
+	*/
+	
+	print '<Strong>Phases in last year:</Strong> '.$reliabilityData['yearlyPhaseCount'].'</br>';
+	print '<table><tr><th></th><th>Week</th><th>Month</th><th>Year</th><th>Recent</th><th>Non-recent</th><th>Total</th><th>% Reliability</th></tr>';
 
-if ( $User->type['Moderator'] || $User->id == $UserProfile->id )
-{
-	print'<Strong>Total Counted Missed Turns:</Strong> '.$allMissedTurns.'</br>';
-}
+	$totalMissed = ($reliabilityData['missedPhasesTotalLastWeek']+$reliabilityData['missedPhasesTotalLastMonth']+$reliabilityData['missedPhasesTotalLastYear']);
+	
+	$baseReduction = round(100*$totalMissed/($reliabilityData['yearlyPhaseCount']==0 ? 1 : $reliabilityData['yearlyPhaseCount']),1);
+	print '<tr><th>Totals/Base (includes system/same-period excused)</th><td>'.
+		$reliabilityData['missedPhasesTotalLastWeek'].'</td><td>'.
+		$reliabilityData['missedPhasesTotalLastMonth'].'</td><td>'.
+		$reliabilityData['missedPhasesTotalLastYear'].'</td><td>'.
+		'N/A'.
+		'</td><td>'.
+		'N/A'.
+		'</td><td>'.
+		$totalMissed.'</td><td><strong>'.
+		-$baseReduction.'%</strong> '.
+		'('.$totalMissed.' / '.$reliabilityData['yearlyPhaseCount'].')'.'</td></tr>';
 
-print '</br><strong>Base Percentage:</strong> '.$basePercentage.'%</br>';
 
-if ($allLiveUnExcusedMissedTurns > 0 ) { print'(100* (1 - (Yearly Missed Turns + Live Missed Turns)/Yearly Turns))'; }
-else { print'(100* (1 - Yearly Missed Turns/Yearly Turns))'; }
+	$nonLiveRecent = ($reliabilityData['missedPhasesNonLiveLastWeek']+$reliabilityData['missedPhasesNonLiveLastMonth']);
+	$nonLivePenalty = (11*$nonLiveRecent+5*$reliabilityData['missedPhasesNonLiveLastYear']);
+	print '<tr><th>Non-live Penalties</th><td>'.
+		$reliabilityData['missedPhasesNonLiveLastWeek'].'</td><td>'.
+		$reliabilityData['missedPhasesNonLiveLastMonth'].'</td><td>'.
+		$reliabilityData['missedPhasesNonLiveLastYear'].'</td><td>'.
+		($reliabilityData['missedPhasesNonLiveLastWeek']+$reliabilityData['missedPhasesNonLiveLastMonth']).' ('.
+		-(11 * $nonLiveRecent).'%)'.
+		'</td><td>'.
+		$reliabilityData['missedPhasesNonLiveLastYear'].' ('.
+		-(5 * $reliabilityData['missedPhasesNonLiveLastYear']).'%)'.
+		'</td><td>'.
+		($reliabilityData['missedPhasesNonLiveLastWeek']+$reliabilityData['missedPhasesNonLiveLastMonth']+$reliabilityData['missedPhasesNonLiveLastYear']).'</td><td><strong>'.
+		-$nonLivePenalty.'%</strong> ('.
+		(11 * $nonLiveRecent).'% + '.(5*$reliabilityData['missedPhasesNonLiveLastYear']).'%)</td></tr>';
 
-print'<h4>Added Penalties:</h4>
-<Strong>Yearly Unexcused Missed Turns:</Strong> '.$allUnExcusedMissedTurns.' for a penalty of '.$yearlyPenalty.'%</br>
-<Strong>Recent Unexcused Missed Turns:</Strong> '.$recentUnExcusedMissedTurns.' for a penalty of '.$recentPenalty.'%</br>';
+	$livePenalty = (11*$reliabilityData['missedPhasesLiveLastWeek']+ 5*$reliabilityData['missedPhasesLiveLastMonth']);
+		print '<tr><th>Live Penalties</th><td>'.
+			$reliabilityData['missedPhasesLiveLastWeek'].'</td><td>'.
+			$reliabilityData['missedPhasesLiveLastMonth'].'</td><td>'.
+			'N/A'.'</td><td>'.
+			$reliabilityData['missedPhasesLiveLastWeek'].' ('.
+			-(11 * $reliabilityData['missedPhasesLiveLastWeek']).'%)'.
+			'</td><td>'.
+			$reliabilityData['missedPhasesLiveLastMonth'].' ('.
+			-(5 * $reliabilityData['missedPhasesLiveLastMonth']).'%)'.
+			'</td><td>'.
+			($reliabilityData['missedPhasesLiveLastWeek']+$reliabilityData['missedPhasesLiveLastMonth']).'</td><td><strong>'.
+			-$livePenalty.'%</strong> ('.
+			(11 * $reliabilityData['missedPhasesLiveLastWeek']).'% + '.(5*$reliabilityData['missedPhasesLiveLastMonth']).'%)</td></tr>';
 
-if ($allLiveUnExcusedMissedTurns > 0 )
-{
-	print' <h4>Added Live Game Penalties:</h4>
-	<Strong>Last Month Live Unexcused Missed Turns:</Strong> '.$allLiveUnExcusedMissedTurns.' for a penalty of '.$liveLongPenalty.'%</br>
-	<Strong>Last Week Live Unexcused Missed Turns:</Strong> '.$recentLiveUnExcusedMissedTurns.' for a penalty of '.$liveShortPenalty.'%</br>';
-}
+	print '</table>';
+	
+	print'<h4>Total:</h4>
+	<Strong>Reliability Rating:</Strong> 100% - Base/Total reduction ('.$baseReduction.'%) - Non-live penalty ('.$nonLivePenalty.'%) - Live penalty ('.$livePenalty.'%) = Reliability rating ('.round($reliabilityData['reliabilityRating'],1).'%)
+	</p>';
 
-print'<h4>Total:</h4>
-<Strong>Reliability Rating:</Strong> '.max(($basePercentage - $recentPenalty - $yearlyPenalty - $liveShortPenalty - $liveLongPenalty),0) .'%
-</p>';
-
-if ( $User->type['Moderator'] || $User->id == $UserProfile->id )
-{
 	print '<h4>Missed Turns:</h4>
 	<p>Red = Unexcused</p>';
 	$tabl = $DB->sql_tabl("SELECT n.gameID, n.countryID, n.turn, 
@@ -625,36 +659,46 @@ if ( $User->type['Moderator'] || $User->id == $UserProfile->id )
 	( CASE WHEN n.modExcused = 1 THEN 'Yes' ELSE 'No' END ),
 	( CASE WHEN n.samePeriodExcused = 1 THEN 'Yes' ELSE 'No' END ),
 	n.id,
-	n.turnDateTime
+	n.turnDateTime,
+	CASE n.reliabilityPeriod WHEN -1 THEN 'New' WHEN 3 THEN 'Week' WHEN 2 THEN 'Month' WHEN 1 THEN 'Year' ELSE 'Expired' END
 	FROM wD_MissedTurns n
 	LEFT JOIN wD_Games g ON n.gameID = g.id
-	WHERE n.userID = ".$UserProfile->id. " and n.turnDateTime > ".(time() - 31536000));
+	WHERE n.userID = ".$UserProfile->id. " and n.turnDateTime > ".(time() - 365*24*60*60));
 
 	if ($DB->last_affected() != 0)
 	{
 		print '<TABLE class="rrInfo">';
 		print '<tr>';
-		print '<th class= "rrInfo">ID:</th>';
+		//print '<th class= "rrInfo">ID:</th>';
 		print '<th class= "rrInfo">Game:</th>';
 		print '<th class= "rrInfo">Country</th>';
 		print '<th class= "rrInfo">Turn:</th>';
-		print '<th class= "rrInfo">LiveGame:</th>';
+		print '<th class= "rrInfo">Live Game:</th>';
 		print '<th class= "rrInfo">System Excused:</th>';
 		print '<th class= "rrInfo">Mod Excused:</th>';
 		print '<th class= "rrInfo">Same Period Excused:</th>';
 		print '<th class= "rrInfo">Turn Date:</th>';
+		print '<th class= "rrInfo">Period:</th>';
 		print '</tr>';
 
-		while(list($gameID, $countryID, $turn, $liveGame, $name, $systemExcused, $modExcused, $samePeriodExcused, $id, $turnDateTime)=$DB->tabl_row($tabl))
+		while(list($gameID, $countryID, $turn, $liveGame, $name, $systemExcused, $modExcused, $samePeriodExcused, $id, $turnDateTime, $period)=$DB->tabl_row($tabl))
 		{
 			if ($systemExcused == 'No' && $modExcused == 'No' && $samePeriodExcused == 'No') { print '<tr style="background-color:#F08080;">'; }
 			else { print '<tr>'; }
 
-			print '<td> <strong>'.$id.'</strong></td>';
+			//print '<td> <strong>'.$id.'</strong></td>';
 			if ($name != '')
 			{
 				$Variant=libVariant::loadFromGameID($gameID);
-				print '<td> <strong><a href="board.php?gameID='.$gameID.'">'.$name.'</a></strong></td>';
+				print '<td> <strong><a href="board.php?gameID='.$gameID.'">'.$name.'</a>';
+				if( $User->type['Moderator'] )
+				{
+					if( $modExcused == 'No' )
+						print '<br /> <a href="admincp.php?actionName=modExcuseDelay&userID='.$UserProfile->id.'&excuseID='.$id.'&reason=None">Excuse</a>';
+					else
+						print '<br /> <a href="admincp.php?actionName=modExcuseDelay&userID='.$UserProfile->id.'&excuseID='.$id.'&reason=None">Unexcuse</a>';
+				}
+				print '</strong></td>';
 				print '<td> <strong>'.$Variant->countries[$countryID-1].'</strong></td>';
 				print '<td> <strong>'.$Variant->turnAsDate($turn).'</strong></td>';
 				print '<td> <strong>'.$liveGame.'</strong></td>';
@@ -662,6 +706,7 @@ if ( $User->type['Moderator'] || $User->id == $UserProfile->id )
 				print '<td> <strong>'.$modExcused.'</strong></td>';
 				print '<td> <strong>'.$samePeriodExcused.'</strong></td>';
 				print '<td> <strong>'.libTime::detailedText($turnDateTime).'</strong></td>';
+				print '<td> <strong>'.$period.'</strong></td>';
 			}
 			else
 			{
@@ -673,6 +718,7 @@ if ( $User->type['Moderator'] || $User->id == $UserProfile->id )
 				print '<td> <strong>'.$modExcused.'</strong></td>';
 				print '<td> <strong>'.$samePeriodExcused.'</strong></td>';
 				print '<td> <strong>'.libTime::detailedText($turnDateTime).'</strong></td>';
+				print '<td> <strong>'.$period.'</strong></td>';
 			}
 			
 			print '</tr>';
@@ -690,6 +736,220 @@ print '</div>';
 print '</div>';
 print '</div>';
 
+// Display the Ghost Ratings Trend Google Chart generated in JS code below.
+
+{
+	print '</br><div class = "profile-show">';
+
+	print '<div class = "profile_title">User relationships</div>';
+
+	print '<div class = "profile_content_show">';
+	print '<p>User relationships serve two purposes:<ul><li>1. Allow users who have a relationship outside of the server to <strong>disclose 
+		and register</strong> the relationship.<br /><br />This lets other players account for possible bias in-game, lets players set their 
+		games to exclude close relationships between players, and <strong>helps the moderator team</strong> ignore otherwise suspicious usage patterns 
+		(e.g. a family / school using the same computer / network).<br /></li>
+		<li>2. Give users a way to <strong>register a suspicion</strong> that two or more users may have an undisclosed relationship, based on <strong>in-game
+		behavior</strong>.<br /><br />This gives the suspected user a chance to explain before needing moderators, allows users to exclude suspected-cheaters
+		from their games, gives an extra mechanism to help moderators identify cheaters by taking the <strong>suspicions of many users</strong> together,
+		provides a single place where a suspicion can be discussed directly, and allows <strong>repeat offenders to be tracked</strong> across new accounts
+		and excluded without requiring bans.</ul></p>';
+
+		$DB->sql_put("COMMIT");
+		$DB->sql_put("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");  // https://stackoverflow.com/a/918092
+		$groupUsers = Group::getUsers("gr.isActive = 1 AND g.userID = ".$UserProfile->id);
+		$DB->sql_put("COMMIT"); // This will revert back to READ COMMITTED.
+		
+		$userJoinedGroups = array();
+		$userJoinedGroupsUnverified = array();
+		foreach($groupUsers as $groupUser)
+		{
+			if( $groupUser->isUserHidden() ) continue;
+
+			if( $groupUser->isVerified() )
+			{
+				$userJoinedGroups[$groupUser->groupID] = $groupUser;
+			}
+			else if( !$groupUser->isDenied() )
+			{
+				$userJoinedGroupsUnverified[$groupUser->groupID] = $groupUser;
+			}
+		}
+		unset($groupUsers);
+		
+		print '<div>';
+		print GroupUserToUserLinks::loadFromUser($UserProfile)->outputTable();
+		print '</div>';
+
+		if( $User->type['User'] && $User->id != $UserProfile->id )
+		{
+			print '<div class="hr"></div>';
+			print '<p>';
+			print '<h4>Create / Add-to User Relationship:</h4>';
+
+
+			$declaredGroups = Group::declaredGroupNamesByID($User, true);
+			$suspectedGroups = Group::suspectedGroupNamesByID($User, true);
+			foreach($userJoinedGroups as $groupID => $groupName)
+			{
+				if( isset($declaredGroups[$groupID]) ) unset($declaredGroups[$groupID]);
+				if( isset($suspectedGroups[$groupID]) ) unset($suspectedGroups[$groupID]);
+			}
+
+			print '<div class = "profile_title">I have a relationship with this user</div>';
+			print '<div class = "profile_content">';
+			print '<form action="group.php" method="post">';
+			print '<input type="hidden" name="createGroup" value="on" />';
+			print '<input type="hidden" name="addSelf" value="on" />';
+			print '<input type="hidden" name="addUserID" value="'.$UserProfile->id.'" />';
+				print '<strong>New Name / Label:</strong> <input class="discloseNew" type="text" name="groupName" style="width:200px" /> ';
+				if( count($declaredGroups) > 0 )
+				{
+					print 'Or ';
+					print '<strong>Existing Name / Label:</strong> <select id="discloseExisting" name="groupID" style="width:200px"> ';
+					print '<option value="">(Create new)</option>';
+					foreach($declaredGroups as $groupID=>$groupName)
+					{
+						print '<option value="'.$groupID.'">'.$groupName.'</a>';
+					}
+					print '</select>';
+				}
+				print '<br />';
+				print 
+					'<strong>Type:</strong> <input type="radio" class="discloseNew" name="groupType" value="Person"> <label for="selfGroupTypePerson">Same person</label> / '.
+					'<input type="radio" class="discloseNew" id="selfGroupTypeFamily" name="groupType" value="Family"> <label for="selfGroupTypeFamily">Family</label> / '.
+					'<input type="radio" class="discloseNew" id="selfGroupTypeSchool" name="groupType" value="School"> <label for="selfGroupTypeSchool">School</label> / '.
+					'<input type="radio" class="discloseNew" id="selfGroupTypeWork" name="groupType" value="Work"> <label for="selfGroupTypeWork">Work</label> / '.
+					'<input type="radio" class="discloseNew" id="selfGroupTypeOther" name="groupType" value="Other"> <label for="selfGroupTypeOther">Other</label>';
+					print '<br />';
+				print '<strong>Description / Explanation:</strong><br /><TEXTAREA class="discloseNew" NAME="groupDescription" ROWS="4"></TEXTAREA> ';
+				print '<br />';
+				print '<strong>Relation strength:</strong> <select name="groupUserStrength">'.
+					'<option value="33">Weak</option>'.
+					'<option value="66">Mid</option>'.
+					'<option value="100" selected>Strong</option>'.
+					'</select> ';
+					print '<br />';
+				print '<input type="submit" class="form-submit" value="Create relationship"><br />';
+				print libAuth::formTokenHTML();
+			print '</form></div>';
+
+			print '<div class = "profile_title">I suspect there is a relationship between this user and another user</div>';
+			print '<div class = "profile_content">';
+			print '<form action="group.php" method="post">';
+			print '<input type="hidden" name="createGroup" value="on" />';
+			print '<input type="hidden" name="addUserID" value="'.$UserProfile->id.'" />';
+			print '<input type="hidden" name="groupType" value="Unknown" />';
+			print '<strong>New Name / Label:</strong> <input class="suspectNew" type="text" name="groupName" style="width:200px" /> ';
+			
+			if( count($suspectedGroups) > 0 )
+			{
+				print 'Or ';
+				print '<strong>Existing Name / Label:</strong> <select id="suspectExisting" name="groupID" style="width:200px"> ';
+				print '<option value="">(Create new)</option>';
+				foreach($suspectedGroups as $groupID=>$groupName)
+				{
+					print '<option value="'.$groupID.'">'.$groupName.'</option>';
+				}
+				print '</select>';
+			}
+			print '<br />';
+			print '<strong>Description / Explanation:</strong><br /><TEXTAREA class="suspectNew" NAME="groupDescription" ROWS="4"></TEXTAREA> ';
+			print '<br />';
+			print '<strong>Suspicion strength:</strong> <select name="groupUserStrength">'.
+				'<option value="33">Weak</option>'.
+				'<option value="66" selected>Mid</option>'.
+				'<option value="100">Strong</option>'.
+				'</select><br />';
+
+			print '<strong>Game reference:</strong> <select class="suspectNew" name="groupGameReference">'.
+				'<option value="">No reference</option>';
+			$tablActiveGamesShared = $DB->sql_tabl("SELECT g.id, g.name, g.turn FROM wD_Members a INNER JOIN wD_Games g ON g.id = a.gameID INNER JOIN wD_Members b ON g.id = b.gameID AND a.userID <> b.userID AND a.userID = " . $User->id." AND b.userID = ".$UserProfile->id." AND a.timeLoggedIn > ".(time() - 14*24*60*60)." AND b.timeLoggedIn > ".(time() - 14*24*60*60)." AND (g.anon='No' OR g.phase='Finished') ORDER BY a.timeLoggedIn DESC");
+			//$activeGamesShared = array();
+			$hasSharedGames = false;
+
+			while(list($gameID, $gameName, $gameTurn) = $DB->tabl_row($tablActiveGamesShared) )
+			{
+				//$activeGamesShared[] = array('gameID='.$gameID.',turn='.$gameTurn, $gameName );
+				print '<option value="gameID='.$gameID.',turn='.$gameTurn.'">'.$gameName.'</option>';
+				$hasSharedGames = true;
+			}
+			print '</select>';
+			print '<br />';
+
+			if( !$hasSharedGames && !$User->type['Moderator'] )
+			{
+				print '<em>Cannot create a relationship against this user as you do not share any active games with the user, so cannot provide a game reference.<br />'.
+					'Suspect relationships can only be considered from people who are in a game together.</em>';
+			}
+			else
+			{
+				print '<input type="submit" class="form-submit" value="Create relationship"><br />';
+				print libAuth::formTokenHTML();
+			}
+			print '</form>';
+			print '</div>';
+			
+			?>
+			<script>
+			document.observe("dom:loaded", function() {
+				$$('#suspectExisting').each(function(i) { i.observe('change', function() {
+					var toggleVal = ( this.value == "" );
+					$$('.suspectNew').each(function(i) { 
+						if( toggleVal )
+						{
+							i.enable();
+						}
+						else
+						{
+							i.disable();
+						}
+					});
+				});});
+				$$('#discloseExisting').each(function(i) { i.observe('change', function() {
+					var toggleVal = ( this.value == "" );
+					$$('.discloseNew').each(function(i) { 
+						if( toggleVal )
+						{
+							i.enable();
+						}
+						else
+						{
+							i.disable();
+						}
+					});
+				});});
+			});
+			</script>
+			<?php
+		}
+		
+		print '<div class="hr"></div>';
+		print '<h4>Verified Relationships</h4>';
+		if( count($userJoinedGroups) == 0 )
+		{
+			print '<p class="notice">No verified relationships exist for this user.</p>';
+		}
+		else
+		{
+			print Group::outputUserTable_static($userJoinedGroups, null, null);
+		}
+		
+		print '<h4>Unverified Relationships</h4>';
+		if( count($userJoinedGroupsUnverified) == 0 )
+		{
+			print '<p class="notice">No unverified relationships exist for this user.</p>';
+		}
+		else
+		{
+			print Group::outputUserTable_static($userJoinedGroupsUnverified, null, null);
+		}
+		
+		print '</table>';
+		print '</div>';
+	print '</div>';
+}
+
+print '<div id="profile-separator"></div>';
 
 // Display the Ghost Ratings Trend Google Chart generated in JS code below.
 if (count($ghostRatingTrends) > 2)
@@ -709,21 +969,21 @@ if( isset(Config::$customForumURL) )
 {
 	if ( $User->type['User'] && $User->id != $UserProfile->id)
 	{
-		list($newForumId) = $DB->sql_row("SELECT user_id FROM `phpbb_users` WHERE webdip_user_id = ".$UserProfile->id);
-		if ($newForumId > 0)
+		list($newForumID) = $DB->sql_row("SELECT user_id FROM `phpbb_users` WHERE webdip_user_id = ".$UserProfile->id);
+		if ($newForumID > 0)
 		{
 			print '
 			<div id="profile-forum-link-container">
 				<div class="profile-forum-links">
-					<a class="profile-link" href="/contrib/phpBB3/memberlist.php?mode=viewprofile&u='.$newForumId.'">
+					<a class="profile-link" href="/contrib/phpBB3/memberlist.php?mode=viewprofile&u='.$newForumID.'">
 						<button class="form-submit" id="view-forum-profile">
-							New Forum Profile
+							Forum Profile
 						</button>
 					</a>
 				</div>';
 			print '
 				<div class="profile-forum-links">
-					<a class="profile-link" href="/contrib/phpBB3/ucp.php?i=pm&mode=compose&u='.$newForumId.'">
+					<a class="profile-link" href="/contrib/phpBB3/ucp.php?i=pm&mode=compose&u='.$newForumID.'">
 						<button class="form-submit" id="send-pm">
 							Send a message to this user
 						</button>
@@ -733,7 +993,7 @@ if( isset(Config::$customForumURL) )
 		}
 		else
 		{
-			print '<p class="profileCommentURL">This user cannot currently receive messages.</p>';
+			print '<p class="profileCommentURL">This user has not yet used the forum.</p>';
 		}
 	}
 }
@@ -881,14 +1141,13 @@ if ( isset($_REQUEST['sortCol']))
 	else if ($_REQUEST['sortCol'] == 'phaseMinutes') { $sortCol='phaseMinutes'; }
 	else if ($_REQUEST['sortCol'] == 'minimumBet') {$sortCol='minimumBet'; }
 	else if ($_REQUEST['sortCol'] == 'minimumReliabilityRating') {$sortCol='minimumReliabilityRating'; }
-	else if ($_REQUEST['sortCol'] == 'watchedGames') {$sortCol='watchedGames'; }
 	else if ($_REQUEST['sortCol'] == 'turn') {$sortCol='turn'; }
 	else if ($_REQUEST['sortCol'] == 'processTime') {$sortCol='processTime'; }
 }
 if ( isset($_REQUEST['sortType'])) { if ($_REQUEST['sortType'] == 'asc') { $sortType='asc'; } }
 if ( isset($_REQUEST['pagenum'])) { $pagenum=(int)$_REQUEST['pagenum']; }
 
-$SQL = "SELECT g.*, (SELECT count(1) FROM wD_WatchedGames w WHERE w.gameID = g.id) AS watchedGames FROM wD_Games g INNER JOIN wD_Members m ON m.gameID = g.id WHERE m.userID = ".$UserProfile->id;
+$SQL = "SELECT g.* FROM wD_Games g INNER JOIN wD_Members m ON m.gameID = g.id WHERE m.userID = ".$UserProfile->id;
 $SQLCounter = "SELECT count(1) FROM wD_Games g INNER JOIN wD_Members m ON m.gameID = g.id WHERE m.userID = ".$UserProfile->id;
 
 if($User->id != $UserProfile->id && !$User->type['Moderator'])
@@ -898,7 +1157,7 @@ if($User->id != $UserProfile->id && !$User->type['Moderator'])
 }
 $SQL = $SQL . " ORDER BY ";
 
-if ($sortCol <> 'watchedGames' && $sortCol <> 'processTime' && $sortCol <> 'minimumBet') {$SQL .= "g.";}
+if ( $sortCol <> 'processTime' && $sortCol <> 'minimumBet') {$SQL .= "g.";}
 $ordering = $sortCol;
 
 if ($sortCol == 'processTime') {$ordering = "(CASE WHEN g.processStatus = 'Paused' THEN (g.pauseTimeRemaining + ".time().") ELSE g.processTime END)";}
@@ -987,7 +1246,6 @@ function printPageBar($pagenum, $maxPage, $sortCol, $sortType, $sortBar = False)
 				<option'.(($sortCol=='minimumBet') ? ' selected="selected"' : '').' value="minimumBet">Bet</option>
 				<option'.(($sortCol=='phaseMinutes') ? ' selected="selected"' : '').' value="phaseMinutes">Phase Length</option>
 				<option'.(($sortCol=='minimumReliabilityRating') ? ' selected="selected"' : '').' value="minimumReliabilityRating">Reliability Rating</option>
-				<option'.(($sortCol=='watchedGames') ? ' selected="selected"' : '').' value="watchedGames">Spectator Count</option>
 				<option'.(($sortCol=='turn') ? ' selected="selected"' : '').' value="turn">Game Turn</option>
 				<option'.(($sortCol=='processTime') ? ' selected="selected"' : '').' value="processTime">Time to Next Phase</option>
 			</select>

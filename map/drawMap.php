@@ -229,21 +229,25 @@ abstract class drawMap
 	 */
 	public function __construct($smallmap)
 	{
-		global $Game;
-
-		$this->mapID = MAPID;
-
 		$this->smallmap = (bool) $smallmap;
 
-		if ( !$this->smallmap )
-			ini_set('memory_limit',"20M");
+		// This is an annoying hack needed to extract the country colors which are protected, without
+		// loading unnecessary resources. If the variant is fully loaded MAPID will be set
+		if( defined('MAPID') )
+		{
+			// TODO: Remove the MAPID constant
+			$this->mapID = MAPID;
 
-		$this->loadTerritories();
-		$this->loadImages();
-		$this->loadColors();
-		$this->setTransparancies();
-		$this->loadFont();
-		$this->loadOrderArrows();
+			if ( !$this->smallmap )
+				ini_set('memory_limit',"20M");
+
+			$this->loadTerritories();
+			$this->loadImages();
+			$this->loadColors();
+			$this->setTransparancies();
+			$this->loadFont();
+			$this->loadOrderArrows();
+		}
 	}
 
 	protected $mapID;
@@ -274,8 +278,8 @@ abstract class drawMap
 		 * More could be deallocated here, but this is by far the largest, and the
 		 * script is probably about to end anyway.
 		 */
-
-		imagedestroy($this->map['image']);
+		if( isset($this->map['image']) )
+			imagedestroy($this->map['image']);
 	}
 
 	/**
@@ -736,19 +740,6 @@ abstract class drawMap
 		$this->drawOrderArrow(array($fromX, $fromY), array($toX, $toY), 'MoveGrey');
 
 		if ( !$success ) $this->drawFailure(array($fromX, $fromY), array($toX, $toY));
-	}
-	
-	/**
-	 * Draw a red alert boy around the image...
-	 * Usefull for the Preview-function 
-	 */	
-	public function drawRedBox()
-	{
-		$red=$this->color(array(240,20,20),$this->map['image']);
-		self::imagelinethick($this->map['image'],0, 0, 0, $this->map['height'], $red, 8);
-		self::imagelinethick($this->map['image'],0, $this->map['height'], $this->map['width'], $this->map['height'], $red, 8);
-		self::imagelinethick($this->map['image'],$this->map['width'], $this->map['height'], $this->map['width'], 0, $red, 8);
-		self::imagelinethick($this->map['image'], $this->map['width'], 0, 0, 0, $red, 8);
 	}
 
 	/**
@@ -1282,6 +1273,22 @@ abstract class drawMap
  			}
 		}
  	}
+
+	public function getColors() {
+		return $this->countryColors;
+	}
+	public function getArmyURL() {
+		return $this->resources()['army'];
+	}
+	public function getFleetURL() {
+		return $this->resources()['fleet'];
+	}
+	public function getMapURL() {
+		return $this->resources()['map'];
+	}
+	public function getNamesURL() {
+		return $this->resources()['names'];
+	}
 
  	public function addCountryName($terrID, $ownerCountryID, $unitCountryID=0, $unitName='')
 	{

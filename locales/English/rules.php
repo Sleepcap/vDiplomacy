@@ -132,15 +132,13 @@
    <div name="Circumventing Press Restrictions" class = "rules_title">5. Do not break press rules</div>
    <div class = "rules_content">
       <p>
-         Because press in gunboat games, rulebook press games, and public press games is restricted, discussing them on the forum while they are being played can jeopardise the fairness of the game and, if done by a player in the game, can classify as working around press restrictions. Even in an effort to draw or cancel a game, posting about an ongoing gunboat game is prohibited. If a player is stalemated and refuses to draw or refuses to unpause a paused game, please email the moderators at <a href="mailto:<?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?>" class="light">
-         <?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?></a>. 
+         Because press in gunboat games, rulebook press games, and public press games is restricted, discussing them on the forum while they are being played can jeopardise the fairness of the game and, if done by a player in the game, can classify as working around press restrictions. Even in an effort to draw or cancel a game, posting about an ongoing gunboat game is prohibited. If a player is stalemated and refuses to draw or refuses to unpause a paused game, please contact the moderators in the <a href="modforum.php">moderator forum</a>.
       </p>
    </div>
    <div name="Cheating Accusations" class = "rules_title">6. Do not make public cheating accusations</div>
    <div class = "rules_content">
       <p>
-         Cheating accusations should not be made publicly on the forums, in games, or via PM. Instead, reports of potential cheating should be sent directly to the moderators at <a href="mailto:<?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?>" class="light">
-         <?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?></a> with a specific summary of the situation and the players you believe are working around the rules. 
+         Cheating accusations should not be made publicly on the forums, in games, or via PM. Instead, reports of potential cheating should be submitted using the in-game "Lodge cheating suspicion" button, underneat the votes section, with a specific summary of the situation and the players you believe are working around the rules. 
       </p>
    </div>
    <div name="Self Moderation" class = "rules_title">7. Exercise self-moderation and use your common sense</div>
@@ -205,8 +203,8 @@
       <p>
          While the moderators always exercise appropriate discretion and discuss various options with one another prior to acting, there are sometimes no other options than to take immediate action on the forum. The moderators retain the right to issue varying penalties including shorter or longer silences based on the severity of the offense. The moderators also retain the right to lock forum threads, remove forum posts, or remove enter forum threads with or without penalty to offending users.
          <br></br>
-         Upon a first offense, a user will either receive an official warning OR a 48 hour forum ban. Subsequent offenses may result in further and lengthier forum bans. Constant or more severe rule infractions could result in harsher penalties at the discretion of the site moderators and the site owners. The moderators will record each action taken on the forum with an email to the offending user’s registered email. You are always welcome to appeal any moderator decision by emailing <a href="mailto:<?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?>" class="light">
-         <?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?></a>, which will prompt a different moderator or administrator to handle your case. The results of that appeal are final.
+         Upon a first offense, a user will either receive an official warning OR a 48 hour forum ban. Subsequent offenses may result in further and lengthier forum bans. Constant or more severe rule infractions could result in harsher penalties at the discretion of the site moderators and the site owners. The moderators will record each action taken on the forum with an email to the offending user’s registered email. You are always welcome to appeal any moderator decision via the <a href="modforum.php">moderator forum</a>,
+         which will prompt a different moderator or administrator to handle your case. The results of that appeal are final.
          <br><br>
          Some details regarding forum bans can be found below:
       </p>
@@ -218,7 +216,7 @@
          <li>Forum bans do not prevent a user from playing in games.</li>
       </ul>
       <p>
-         When in doubt about whether posting something is allowed, remember your first responsibility is to use common sense and respect other players. Please <a href='contactUs.php' class='light'>contact us</a> with questions if you have any. 
+         When in doubt about whether posting something is allowed, remember your first responsibility is to use common sense and respect other players. Please <a href='modforum.php' class='light'>contact us</a> with questions if you have any. 
       </p>
    </div>
    <div class = "rules_title">Appealing decisions</div>
@@ -228,17 +226,16 @@
          WebDiplomacy users, the moderators will be held accountable for disciplinary decisions. While judgement 
          regarding forum rule violations remains at the sole discretion of the moderator staff, users will be provided 
          with a clear warning regarding rules violations in either a forum post or private message. Users can appeal 
-         any moderator's decision by sending an email to <a href="mailto:<?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?>" class="light">
-         <?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?></a> specifying the grounds for the appeal. 
+         any moderator's decision via the <a href="modforum.php">moderator forum</a> specifying the grounds for the appeal. 
          The appeal will be dealt with by one of the admins who was not involved in the original decision or by the 
          site owner. Appeals made on behalf of other members will not be considered. The outcome of an appeal is final. 
          <br><br>
-         Please keep all appeals to email. When multiple forum threads are made about a moderation decision the resulting confusion becomes a frustration for members and moderators alike.
+         Please keep all appeals to the mod forum. When multiple forum threads are made about a moderation decision the resulting confusion becomes a frustration for members and moderators alike.
          There may be a formal explanation and discussion on moderator decisions in the forum, but the moderator staff will never disclose information that may contain personal information about members or about the methods used to enforce the rules.
          In situations where multiple threads are opened on a specific topic the site administrators may close the duplicate threads and open an official thread to 
          explain the issue and give the final determination on the appeal.
          <br><br>
-         See our <a href='contactUs.php' class='light'>contact us</a> page for more on mod and admin contact details.
+         See our <a href='modforum.php' class='light'>moderator forum</a> to get in contact with the moderator team.
       </p>
    </div>
 
@@ -256,7 +253,7 @@
             <strong>Please let us know when you sign up.</strong>
             <br>
             <p style="padding-right: 30px">
-               We are happy to host you and want to know when you arrive. Send us a quick email at <a href="mailto:<?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?>" class="light"><?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?></a> so that we can make sure you are properly set up. 
+               We are happy to host you and want to know when you arrive. Send us a request via the <a href="modforum.php">moderator forum</a> so that we can make sure you are properly set up. 
             </p>
          </li>
          <li>
@@ -270,7 +267,7 @@
             <strong>Students only need one account.</strong>
             <br>
             <p style="padding-right: 30px">
-               There is never a scenario where anyone needs more than one account to enjoy webDiplomacy. All new accounts are given 100 points, which is enough to enter up to 20 games if the bets are low. If a player loses a game and falls under 100 points, our site automatically tops off their points when the game is concluded, so our players never fall beneath 100 points. Likewise, we have multiple map options, or variants, so that games can start with as few as 2 players and as many as 17. If a student ever needs help recovering their account, they should <a href='contactUs.php' class='light'>contact us</a>.
+               There is never a scenario where anyone needs more than one account to enjoy webDiplomacy. All new accounts are given 100 points, which is enough to enter up to 20 games if the bets are low. If a player loses a game and falls under 100 points, our site automatically tops off their points when the game is concluded, so our players never fall beneath 100 points. Likewise, we have multiple map options, or variants, so that games can start with as few as 2 players and as many as 17. If a student ever needs help recovering their account, they should e-mail <a href='mailto:<?php print Config::$modEMail; ?>' class='light'><?php print Config::$modEMail; ?></a>.
             </p>
          </li>
          <li>
@@ -284,7 +281,7 @@
             <strong>Ask the moderators to be made a game director for your class games.</strong>
             <br>
             <p style="padding-right: 30px">
-               webDiplomacy has a feature that allows a teacher to be set as the game director over all of the games your class or club is playing. As a game director, you can pause the game, replace players that have given up or are not submitting orders, and keep the game on track. Simply email <a href="mailto:<?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?>" class="light"><?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?></a> with your username and the full URL to each of your class games to be set as the game director, and if you need any help as a game director, we will always be there to assist.
+               webDiplomacy has a feature that allows a teacher to be set as the game director over all of the games your class or club is playing. As a game director, you can pause the game, replace players that have given up or are not submitting orders, and keep the game on track. Simply contact us via the <a href="modforum.php">moderator forum</a> with your username and the full URL to each of your class games to be set as the game director, and if you need any help as a game director, we will always be there to assist.
             </p>
          </li>
          <li>
@@ -296,7 +293,7 @@
          </li>
       </ul>
       <p>
-         Keeping these guidelines in mind is critical in order to ensure that playing Diplomacy online is a good experience for you and your students. If you have any questions or concerns, feel free to <a href="mailto:<?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?>" class="light">send us an email any time</a>.
+         Keeping these guidelines in mind is critical in order to ensure that playing Diplomacy online is a good experience for you and your students. If you have any questions or concerns, feel free to contact us via the <a href="modforum.php">moderator forum</a>.
       </p>
    </div>
    <div class = "rules_title">For Students</div>
@@ -316,7 +313,7 @@
             <strong>You will never need more than one account.</strong>
             <br>
             <p style="padding-right: 30px">
-               webDiplomacy has games you can play with as few as 2 players and as many as 34. You can always find a way to play on our site regardless of how many of your classmates or friends can play. Likewise, you're given 100 points when you register your account, and you will never fall below 100 points. That is enough for 20 games playing with the minimum 5 point bet. If you bet more, you may win more, and as long as you have enough points to enter a game, you can play as many as you want. As such, there is no reason for you to ever create more than one account. Doing so will result in a permanent ban from webDiplomacy. If you ever forget your password and need help recovering your account, you should <a href='contactUs.php' class='light'>contact us</a> and we will help you.
+               webDiplomacy has games you can play with as few as 2 players and as many as 34. You can always find a way to play on our site regardless of how many of your classmates or friends can play. Likewise, you're given 100 points when you register your account, and you will never fall below 100 points. That is enough for 20 games playing with the minimum 5 point bet. If you bet more, you may win more, and as long as you have enough points to enter a game, you can play as many as you want. As such, there is no reason for you to ever create more than one account. Doing so will result in a permanent ban from webDiplomacy. If you ever forget your password and need help recovering your account, you should e-mail <a href='mailto:<?php print Config::$modEMail; ?>' class='light'><?php print Config::$modEMail; ?></a> and we will help you.
             </p>
          </li>
          <li>
@@ -342,7 +339,7 @@
          </li>
       </ul>
        <p>
-         Keeping these guidelines in mind is critical in order to ensure that playing Diplomacy online is a good experience for you, your friends, and your classmates. If you have any questions or concerns, feel free to <a href="mailto:<?php print (isset(Config::$modEMail) ? Config::$modEMail : Config::$adminEMail); ?>" class="light">send us an email any time</a>.
+         Keeping these guidelines in mind is critical in order to ensure that playing Diplomacy online is a good experience for you, your friends, and your classmates. If you have any questions or concerns, feel free to contact us via the <a href="modforum.php">moderator forum</a>.
       </p>
    </div>
 

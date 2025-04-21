@@ -4,7 +4,7 @@ webDiplomacy lets you play Diplomacy online.
 
 --- 
 
-README.txt - Installation information.
+install/README.txt - Installation information.
 
 AGPL.txt - The license webDiplomacy is distributed under.
 
@@ -23,8 +23,6 @@ When writing the text of your pull request, please include:
 * The details of the testing that you've performed
 * The github issue number that this pull request is a fix for
 
-Any questions, please email webdipmod@gmail.com, and a member of the dev team will answer.
-
 ---
 
 If you get errors for files within /javascript/ it is because some default Apache configurations use this as a shared folder by default. Disable this alias to resolve.
@@ -35,8 +33,15 @@ http://webdiplomacy.net/ - The official webDiplomacy server.
 
 https://github.com/kestasjk/webDiplomacy - The webDiplomacy github source repository.
 
-http://sourceforge.net/projects/phpdiplomacy - The webDiplomacy Sourceforge project page.
-
 ---
+
+To get Philippe Paquette's MILA bots working with the base webDip docker install do:
+Ensure that the IP address is the IP of the machine hosting docker (there is probably some docker context/network wizardry to do this..)
+
+docker pull public.ecr.aws/n4k3z7o3/webdiplomacy:latest
+docker run -d --env API_WEBDIPLOMACY=http://172.21.16.1:43000/api.php --env API_KEY_USER_01=bot1 --env API_KEY_USER_02=bot2 --env API_KEY_USER_03=bot3 --env API_KEY_USER_04=bot4 --env API_KEY_USER_05=bot5 --env API_KEY_USER_06=bot6 public.ecr.aws/n4k3z7o3/webdiplomacy:latest
+
+
+
 
 Kestas J. Kuliukas - kestas@kuliukas.com

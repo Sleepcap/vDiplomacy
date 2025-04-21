@@ -361,6 +361,10 @@ div.memberBoardHeader {
 .homeGameLinks a {
 	margin:0 4px;
 }
+.homeGameLinksForm {
+	display: flex;
+	justify-content: space-between;
+}
 
 /* --- Home game panel --- */
 .gamePanelHome {
@@ -373,6 +377,10 @@ div.memberBoardHeader {
 .memberVotePanel {
 	border-top: 1px solid #cecece!important;
 	padding:0 5%;
+}
+
+.archiveBar{
+	float:left;
 }
 
 @media only screen and (max-width: 800px) {
@@ -462,5 +470,12 @@ div.memberBoardHeader {
 	}
 	#mapImage{
 		width: 100%;
+	}
+	.timestampGamesWrapper {
+		display: block;
+	}
+	.gameTimeRemaining {
+		float: left;
+		text-align: left;
 	}
 }

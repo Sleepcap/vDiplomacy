@@ -38,11 +38,54 @@ class notice
 	private $linkName;
 	private $linkID;
 	private $linkURL;
-	private $timeSent;
+	public $timeSent;
 
 	private static $recent;
 	private static $new;
 	
+	public function webPush()
+	{
+		if( ! isset(Config::$webpushrSiteKey) || ! isset(Config::$webpushrAuthToken) || ! Config::$webpushrSiteKey || ! Config::$webpushrAuthToken )
+			return;
+		
+		$end_point = 'https://api.webpushr.com/v1/notification/send/sid';
+
+		$http_header = array( 
+			"Content-Type: Application/Json", 
+			"webpushrKey: ".Config::$webpushrSiteKey, 
+			"webpushrAuthToken: ".Config::$webpushrAuthToken
+		);
+
+		$req_data = array(
+			'title' 		=> "Notification title", //required
+			'message' 		=> "Notification message", //required
+			'target_url'	=> 'https://www.webpushr.com', //required
+			'sid'           => '41685975' //required
+
+			//following parameters are optional
+			//'name'		=> 'Test campaign',
+			//'icon'		=> 'https://cdn.webpushr.com/siteassets/wSxoND3TTb.png',
+			//'image'		=> 'https://cdn.webpushr.com/siteassets/aRB18p3VAZ.jpeg',
+			//'auto_hide'	=> 1,
+			//'expire_push'	=> '5m',
+			//'send_at'		=> '2022-01-04 11:01 +5:30',
+			//'action_buttons'=> array(	
+				//array('title'=> 'Demo', 'url' => 'https://www.webpushr.com/demo'),
+				//array('title'=> 'Rates', 'url' => 'https://www.webpushr.com/pricing')
+			//)
+
+		);
+
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $http_header);
+		curl_setopt($ch, CURLOPT_URL, $end_point );
+		curl_setopt($ch, CURLOPT_POST, 1);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($req_data) );
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+		$response = curl_exec($ch);
+		echo $response;
+	}
 	public function viewedSplitter()
 	{
 		global $User;
@@ -62,6 +105,8 @@ class notice
 				$this->linkURL = 'board.php?gameID='.$this->linkID;
 			elseif( $this->type=='PM' || $this->type=='User' )
 				$this->linkURL = 'profile.php?userID='.$this->linkID.'#message';
+			elseif( $this->type=='Group' )
+				$this->linkURL = 'group.php?groupID='.$this->linkID.'#message';
 			else
 				$this->linkURL = '';
 		}
@@ -205,13 +250,33 @@ class notice
 		return $this->text;
 	}
 
+	static public function getType($type=false, $limit=35, $linkID=0, $olderThan = 0)
+	{
+		global $DB, $User;
+
+		$notices=array();
+
+		$tabl=$DB->sql_tabl("SELECT n.*
+			FROM wD_Notices n
+			LEFT JOIN wD_Games g on g.name = n.linkName and n.type = 'Game'
+			LEFT JOIN wD_Members m on m.gameID = g.id and n.type = 'Game' and m.userID = ".$User->id."
+			WHERE (m.hideNotifications is null or m.hideNotifications = 0) and n.toUserID=".$User->id.($type ? " AND n.type='".$type."'" : '').($linkID>0?" AND n.fromID = ".$linkID." ":"")."
+				".($olderThan == 0 ? "" : "AND timeSent < ".((int)$olderThan))."
+			ORDER BY n.timeSent DESC ".($limit?'LIMIT '.$limit:''));
+		while($hash=$DB->tabl_hash($tabl))
+		{
+			$notices[] = new notice($hash);
+		}
+
+		return $notices;
+	}
 	public static function send($toUserID, $fromID, $type, $keep, $private, $text, $linkName, $linkID='NULL')
 	{
 		global $DB;
 		$linkName=$DB->escape($linkName,true);
 		$text=$DB->msg_escape($text,true);
 		$DB->sql_put("INSERT INTO wD_Notices
-			(toUserID, fromID, type, keep, private, `text`, linkName, linkID,timeSent)
+			(toUserID, fromID, type, keep, private, `text`, linkName, linkID, timeSent)
 			VALUES (
 			".$toUserID.", ".$fromID.", '".$type."', '".$keep."',
 				'".$private."', '".$text."', '".$linkName."', ".$linkID.",".time().")");

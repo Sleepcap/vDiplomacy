@@ -202,40 +202,40 @@ class panelGame extends Game
 
 		return $buf;
 	}
-	
+
 	function phaseSwitchInfo()
 	{
 		$buf = '';
-		
+
 		if ($this->phase == 'Finished' or $this->phaseSwitchPeriod <= 0 or $this->nextPhaseMinutes == $this->phaseMinutes)
 		{
 			return $buf;
 		}
-			
+
 		$buf .= '<div>Changing phase length: <span><strong>'.libTime::timeLengthText($this->nextPhaseMinutes * 60).'</strong> /phase</span></div>';
-		if ($this->startTime > 0) 
+		if ($this->startTime > 0)
 		{
 			$timeWhenSwitch = (($this->phaseSwitchPeriod * 60) + $this->startTime);
 
-			if (time() >= $timeWhenSwitch) 
+			if (time() >= $timeWhenSwitch)
 			{
 				$buf .= '<div><strong> At: End Of Phase</strong></div>';
-			} 
-			else 
+			}
+			else
 			{
 				$buf .= '<div> In: <strong>'.libTime::remainingText($timeWhenSwitch).'</strong>' . ' (' . libTime::detailedText($timeWhenSwitch) . ')</div>';
 			}
 		}
 
-		else 
+		else
 		{
 			$timeTillNextPhase = libTime::timeLengthText($this->phaseSwitchPeriod * 60);
-			
-			$buf .= '<div><span><strong>'.$timeTillNextPhase.'</strong> after game start</span></div></br>';	
+
+			$buf .= '<div><span><strong>'.$timeTillNextPhase.'</strong> after game start</span></div></br>';
 		}
-		
-		
-								
+
+
+
 		return $buf;
 	}
 
@@ -244,21 +244,23 @@ class panelGame extends Game
 	 *
 	 * @return string
 	 */
-	function titleBar()
+	function titleBar($isGameBoard = false)
 	{
 		$rightTop = '
 			<div class="titleBarRightSide">
-				<div>
-				<span class="gameTimeRemaining">'.$this->gameTimeRemaining().'</span></div>'.
-			'</div>';
+					<span class="gameTimeRemaining">'.$this->gameTimeRemaining().'</span>';
+
+		$rightTop .= '<div style="clear:both"></div></div>';
 
 		$rightMiddle = '<div class="titleBarRightSide">'.
 				'<div>'.
 					'<span class="gameHoursPerPhase">'.$this->gameHoursPerPhase().'</span>'.$this->phaseSwitchInfo().
 				'</div>';
-			
+
+
+
 		$rightMiddle .= '</div>';
-		
+
 		$rightBottom = '<div class="titleBarRightSide">'.
 					l_t('%s excused NMR','<span class="excusedNMRs">'.$this->excusedMissedTurns.'</span>');
 					if ($this->regainExcusesDuration == 99)
@@ -307,7 +309,7 @@ class panelGame extends Game
 		}
 		
 		$leftBottom .= $date.'</div>';
-		
+
 		$leftBottom .= '<div>'.$this->gameVariants().'</div>';
 
 		$leftTop .= '</div>';
@@ -322,55 +324,13 @@ class panelGame extends Game
 			<div style="clear:both"></div>
 			'.$rightBottom.'
 			<div style="clear:both"></div>';
-		
+
 		return $buf;
 	}
 
 	function gameVariants()
 	{
-	
-		global $User;
-		
-		$alternatives=array();
-		$alternatives[]=$this->Variant->link();
-
-		if ( $this->pressType=='NoPress')
-			$alternatives[]=l_t('No messaging');
-		elseif( $this->pressType=='RulebookPress')
-			$alternatives[]='<a href="press.php#rulebook">'.l_t('Rulebook press').'</a>';
-		elseif( $this->pressType=='PublicPressOnly' )
-			$alternatives[]='<a href="press.php#publicPress">'.l_t('Public messaging only').'</a>';
-		
-		if($this->playerTypes=='Mixed')
-			$alternatives[]=l_t('Fill with Bots');
-
-		if($this->playerTypes=='MemberVsBots')
-			$alternatives[]=l_t('Bot Game');
-		
-		if( $this->anon=='Yes' )
-			$alternatives[]=l_t('Anon');
-
-		$alternatives[]=$this->Scoring->abbr();
-
-		if( $this->drawType=='draw-votes-hidden')
-			$alternatives[]=l_t('Hidden draw votes');
-
-		if( $this->missingPlayerPolicy=='Wait' )
-			$alternatives[]=l_t('Wait for orders');
-
-		//	Show the end of the game in the options if set.
-		if(( $this->targetSCs > 0) && ($this->maxTurns > 0))
-			$alternatives[]='EoG: '.$this->targetSCs.' SCs or "'.$this->Variant->turnAsDate($this->maxTurns -1).'"';
-		elseif( $this->maxTurns > 0)
-			$alternatives[]='EoG: "'.$this->Variant->turnAsDate($this->maxTurns -1).'"';
-		elseif( $this->targetSCs > 0)
-			$alternatives[]='EoG: '.$this->targetSCs.' SCs';
-		if( $this->chooseYourCountry=='Yes' )
-			$alternatives[]=l_t('ChooseYourCountry');
-			
-		if( $this->noProcess != '')
-			$alternatives[]=l_t('noProcess:'.str_replace(array('1', '2', '3', '4', '5', '6', '0'), 
-					array(l_t('Mon'), l_t('Tue'), l_t('Wed'), l_t('Thu'), l_t('Fri'), l_t('Sat'), l_t('Sun')), $this->noProcess));
+		$alternatives = $this->getAlternatives();
 
 		if ( $alternatives )
 			return '<div class="titleBarLeftSide">
@@ -388,6 +348,9 @@ class panelGame extends Game
 	function gameHoursPerPhase()
 	{
 		$buf = l_t('<strong>%s</strong> /phase',libTime::timeLengthText($this->phaseMinutes*60));
+		if ($this->phaseMinutesRB != -1) {
+			$buf = $buf . l_t(' (M) | <strong>%s</strong> /phase (R, B)', libTime::timeLengthText($this->phaseMinutesRB*60));
+		}
 		return $buf ;
 	}
 
@@ -465,6 +428,7 @@ class panelGame extends Game
 	{
 		$buf = '
 			<div class="bar enterBar">
+				<a name="enterBar"></a>
 				<div class="enterBarJoin">
 					'.$this->joinBar().'
 				</div>
@@ -491,11 +455,40 @@ class panelGame extends Game
 				- <a href="board.php?gameID='.$this->id.'&amp;viewArchive=Messages">'.l_t('Messages').'</a>
 				- <a href="board.php?gameID='.$this->id.'&amp;viewArchive=Graph">'.l_t('Graph').'</a>';
 		else	
-			return '<strong>'.l_t('Archive:').'</strong> '.
+		return '<strong>'.l_t('Archive:').'</strong> '.
 				'<a href="board.php?gameID='.$this->id.'&amp;viewArchive=Orders">'.l_t('Orders').'</a>
 				- <a href="board.php?gameID='.$this->id.'&amp;viewArchive=Maps">'.l_t('Maps').'</a>
 				- <a href="board.php?gameID='.$this->id.'&amp;viewArchive=Messages">'.l_t('Messages').'</a>';
-	//			- <a href="board.php?gameID='.$this->id.'&amp;viewArchive=Reports">Reports</a>';
+	}
+
+	/**
+	 * Links to the sandbox operations
+	 * @return string
+	 */
+	function sandboxBar()
+	{
+		global $User;
+
+		if( !$User->type['User'] ) return '';
+
+		return '<br /><strong>'.l_t('Sandbox:').'</strong> 
+			<a href="javascript:copySandboxFromGame('.$this->id.')">'.l_t('Copy game to sandbox').'</a>'.
+			(!is_null($this->sandboxCreatedByUserID) && $User->id == $this->sandboxCreatedByUserID ? '
+			- <a name="movedBack" href="javascript:moveSandboxTurnBack('.$this->id.')">'.l_t('Move sandbox back a turn').'</a>
+			- <a href="javascript:deleteSandbox('.$this->id.')">'.l_t('Delete sandbox').'</a>
+			- <a href="board.php?gameID='.$this->id.'&sbToken='.libAuth::sandboxToken_Key($this->id).'">'.l_t('Public link to sandbox').'</a>' : '');
+	}
+
+	/**
+	 * Links to the point and click UI, if a classic game
+	 * @return string
+	 */
+	function pointAndClickBar()
+	{
+		if( !$this->isClassicGame() ) return '';
+
+		return '<br /><strong>'.l_t('Point and click UI:').'</strong> 
+			<a href="board.php?gameID='.$this->id.'&view=pointAndClick">'.l_t('Open').'</a>';
 	}
 
 	/**
@@ -636,7 +629,7 @@ class panelGame extends Game
 			}
 			if( $User->type['User'] && $this->phase != 'Finished')
 			{
-				$buf .= '<form method="post" action="redirect.php">'
+				$buf .= '<form method="post" action="index.php">'
 						.libAuth::formTokenHTML()
 				       .'<input type="hidden" name="gameID" value="'.$this->id.'">';
 				if( ! $this->watched() ) {
@@ -659,20 +652,15 @@ class panelGame extends Game
 	 */
 	function openBar()
 	{
-		global $User;
-
 /*		I've put the following code in remarks to isplay the view Button, even if it's the PreGame-Phase 
 		(to view the chat for example).
 		if( !$this->Members->isJoined() && $this->phase == 'Pre-game' )
 			return '';
 */
-		return '<a href="board.php?gameID='.$this->id.'#gamePanel">'.
-			l_t($this->Members->isJoined()?'Open':'View').'</a>';
-
-		return '<form method="get" action="board.php#gamePanel"><div>
-			<input type="hidden" name="gameID" value="'.$this->id.'" />
-			<input type="submit" value="" class="form-submit" />
-			</div></form>';
+		return
+			'
+				<a href="board.php?gameID='.$this->id.'#gamePanel">'.l_t($this->Members->isJoined()?'Open':'View').'</a>
+			';
 	}
 	
 	/**
